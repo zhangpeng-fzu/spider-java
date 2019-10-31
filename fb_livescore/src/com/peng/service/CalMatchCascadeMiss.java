@@ -7,9 +7,7 @@ import com.peng.repository.MacthCascadeRepository;
 import com.peng.util.DateUtil;
 
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 public class CalMatchCascadeMiss {
 
@@ -28,7 +26,7 @@ public class CalMatchCascadeMiss {
             Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchList(lastDate);
 
             //如果没有一场赛事，可能没有抓取数据
-            if (matchBeans.size() == 0){
+            if (matchBeans.size() == 0) {
                 break;
             }
 
@@ -54,9 +52,9 @@ public class CalMatchCascadeMiss {
                     matchCascadeBean.setFs(matchCascadeBean.getFs() + 1);
                     matchCascadeBean.setFp(matchCascadeBean.getFp() + 1);
                     matchCascadeBean.setFf(matchCascadeBean.getFf() + 1);
-
                     MatchBean pre = matchBeans.get(formatMatchNum(i - 1));
                     MatchBean cur = matchBeans.get(formatMatchNum(i));
+
 
                     if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
                         matchCascadeBean.setSs(0);
@@ -77,7 +75,16 @@ public class CalMatchCascadeMiss {
                     } else {
                         matchCascadeBean.setFf(0);
                     }
+                    List<Float> odds = new ArrayList<>();
+                    for (int j = 0; j < pre.getOdds().length; j++) {
+                        for (int k = 0; k < cur.getOdds().length; k++) {
+                            odds.add(pre.getOdds()[j] * cur.getOdds()[k]);
+                        }
+                    }
+                    matchCascadeBean.setOdds(Arrays.toString(new List[]{odds}));
                 }
+
+
                 MacthCascadeRepository.insert(matchCascadeBean);
             }
             calendar.add(Calendar.DATE, 1);

@@ -19,15 +19,13 @@ public class LoadHistoryData {
         List<String> weekDays = Arrays.asList("周日", "周一", "周二", "周三", "周四", "周五", "周六");
         String lastDate = LiveDataRepository.clearLastThreeDayData();
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DATE, -1);
-        Date yesterday = calendar.getTime();
         boolean hasMore = true;
         int page = 1;
 
         String response;
         while (hasMore) {
             response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
-                    page, lastDate, DateUtil.getDateFormat().format(yesterday)), "gb2312");
+                    page, lastDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
             String matchListData = response.substring(response.indexOf("<div class=\"match_list\">"), response.indexOf("<div class=\"m-notice\">"));
             String[] matchData = matchListData.split("</tr>");
             if (matchData.length < 34) {

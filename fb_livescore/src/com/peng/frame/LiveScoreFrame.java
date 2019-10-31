@@ -9,6 +9,7 @@ import com.peng.repository.MatchNumRepository;
 import com.peng.util.DateUtil;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.text.ParseException;
@@ -22,7 +23,7 @@ public class LiveScoreFrame extends JFrame {
 
     public LiveScoreFrame() throws ParseException {
         super();
-        setTitle("竞彩数据分析工具");
+        setTitle("稳操胜券竞彩分析软件");
 
         setBounds(400, 200, 900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -60,46 +61,58 @@ public class LiveScoreFrame extends JFrame {
 
         btn.addActionListener(e -> {
             try {
-                jTabbedPane.setComponentAt(0,this.getData1(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(1,this.getData2(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(2,this.getData3(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(0, this.getData1(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(1, this.getData2(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(2, this.getData3(DateUtil.getDateFormat().parse(txt1.getText())));
             } catch (ParseException ex) {
                 ex.printStackTrace();
             }
         });
     }
 
-    private void setTableHeader(JTable table) {
+    private LiveScoreFrame setTableHeader(JTable table) {
         JTableHeader tableHeader = table.getTableHeader();
         tableHeader.setPreferredSize(new Dimension(tableHeader.getWidth(), 30));
         table.setRowHeight(25);
+        return this;
+    }
+
+    private LiveScoreFrame setTableCell(JTable table) {
+        DefaultTableCellRenderer tcr = new DefaultTableCellRenderer();
+        tcr.setHorizontalAlignment(SwingConstants.CENTER);// 这句和上句作用一样
+        table.setDefaultRenderer(Object.class, tcr);
+        return this;
     }
 
 
     private JScrollPane getData1(Date date) {
 
-        String[] columnNames = new String[]{"赛事编号", "比赛时间", "赛事", "状态", "主队", "客队", "赔率(胜)", "赔率(胜)", "赔率(胜)", "比分", "赛果"};// 定义表格列名数组
+        String[] columnNames = new String[]{"赛事编号", "比赛时间", "赛事", "状态", "主队", "客队", "胜赔率", "平赔率", "负赔率", "比分", "赛果"};// 定义表格列名数组
         List<MatchBean> matchBeanList = LiveDataRepository.getMatchData(date);
 
         String[][] rowData = new String[matchBeanList.size()][11];
 
+
         for (int i = 0; i < matchBeanList.size(); i++) {
             MatchBean matchBean = matchBeanList.get(i);
-            String status = "已完成";
-            if (matchBean.getStatus().equals("2")){
+            String result = matchBean.getResult();
+
+            String status = "完";
+            if (matchBean.getStatus().equals("2")) {
                 status = "取消";
-            }else  if (matchBean.getStatus().equals("0")){
-                status = "未完成";
+            } else if (matchBean.getStatus().equals("0")) {
+                status = "未";
+                result = "";
             }
             rowData[i] = new String[]{matchBean.getMatchNum(), matchBean.getLiveDate(), matchBean.getGroupName(), status, matchBean.getHostTeam(),
                     matchBean.getGuestTeam(), String.valueOf(matchBean.getOdds()[0]), String.valueOf(matchBean.getOdds()[1]), String.valueOf(matchBean.getOdds()[2]),
-                    String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()), matchBean.getResult()};
+                    status.equals("完") ? String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()) : "", result};
         }
 
 
         JTable table = new JTable(rowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table);
+        this.setTableHeader(table).setTableCell(table);
         return new JScrollPane(table);
     }
 
@@ -126,8 +139,9 @@ public class LiveScoreFrame extends JFrame {
 
 
         JTable table = new JTable(rowData, columnNames);
+
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table);
+        this.setTableHeader(table).setTableCell(table);
         return new JScrollPane(table);
     }
 
@@ -146,7 +160,7 @@ public class LiveScoreFrame extends JFrame {
 
         JTable table = new JTable(rowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table);
+        this.setTableHeader(table).setTableCell(table);
         return new JScrollPane(table);
     }
 }

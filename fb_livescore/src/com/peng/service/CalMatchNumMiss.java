@@ -26,9 +26,9 @@ public class CalMatchNumMiss {
         lastDate = calendar.getTime();
         while (lastDate.before(new Date())) {
             //获取当天所有的赛事
-            Map<String,MatchBean> matchBeans = LiveDataRepository.getMatchList(lastDate);
+            Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchList(lastDate);
             //如果没有一场赛事，可能没有抓取数据
-            if (matchBeans.size() == 0){
+            if (matchBeans.size() == 0) {
                 break;
             }
             for (int i = 1; i <= 300; i++) {
@@ -45,22 +45,56 @@ public class CalMatchNumMiss {
                 matchNumBean.setMatchNum(formatMatchNum(i));
 
                 MatchBean matchBean = matchBeans.get(formatMatchNum(i));
-                if (matchBean != null && matchBean.getStatus().equals("1")){
+                if (matchBean != null && matchBean.getStatus().equals("1")) {
                     //如果有比赛，未中加1，中改0
                     matchNumBean.setZero(matchNumBean.getZero() + 1);
                     matchNumBean.setOne_three(matchNumBean.getOne_three() + 1);
                     matchNumBean.setTwo_four(matchNumBean.getTwo_four() + 1);
                     matchNumBean.setFive_(matchNumBean.getFive_() + 1);
-                    if (matchBean.getNum() == 0) {
-                        matchNumBean.setZero(0);
-                    } else if (matchBean.getNum() == 1 || matchBean.getNum() == 3) {
-                        matchNumBean.setOne_three(0);
-                    } else if (matchBean.getNum() == 2 || matchBean.getNum() == 4) {
-                        matchNumBean.setTwo_four(0);
-                    } else {
-                        matchNumBean.setFive_(0);
+                    matchNumBean.setOne(matchNumBean.getOne() + 1);
+                    matchNumBean.setTwo(matchNumBean.getTwo() + 1);
+                    matchNumBean.setThree(matchNumBean.getThree() + 1);
+                    matchNumBean.setFour(matchNumBean.getFour() + 1);
+                    matchNumBean.setFive(matchNumBean.getFive() + 1);
+                    matchNumBean.setSix(matchNumBean.getSix() + 1);
+                    matchNumBean.setSeven(matchNumBean.getSeven() + 1);
+                    switch (matchBean.getNum()) {
+                        case 0:
+                            matchNumBean.setZero(0);
+                            break;
+                        case 1:
+                            matchNumBean.setOne(0);
+                            matchNumBean.setOne_three(0);
+                            break;
+                        case 2:
+                            matchNumBean.setTwo(0);
+                            matchNumBean.setTwo_four(0);
+                            break;
+                        case 3:
+                            matchNumBean.setThree(0);
+                            matchNumBean.setOne_three(0);
+                            break;
+                        case 4:
+                            matchNumBean.setFour(0);
+                            matchNumBean.setTwo_four(0);
+                            break;
+                        case 5:
+                            matchNumBean.setFive(0);
+                            matchNumBean.setFive_(0);
+                            break;
+                        case 6:
+                            matchNumBean.setSix(0);
+                            matchNumBean.setFive_(0);
+
+                            break;
+                        case 7:
+                            matchNumBean.setSeven(0);
+                            matchNumBean.setFive_(0);
+                            break;
+                        default:
+                            matchNumBean.setFive_(0);
                     }
-                }else {
+                } else {
                     //该场次没有比赛，使用昨日的数据
                 }
                 MatchNumRepository.insert(matchNumBean);
@@ -72,11 +106,11 @@ public class CalMatchNumMiss {
     }
 
 
-    static String formatMatchNum(int i){
-        if (i < 10){
-            return "00"+i;
+    static String formatMatchNum(int i) {
+        if (i < 10) {
+            return "00" + i;
         }
-        if (i< 100){
+        if (i < 100) {
             return "0" + i;
         }
         return String.valueOf(i);

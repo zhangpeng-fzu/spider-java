@@ -14,8 +14,10 @@ public class MatchCascadeBean {
     private int fs;
     private int fp;
     private int ff;
+    private String odds;
 
-    public MatchCascadeBean(){
+
+    public MatchCascadeBean() {
         this.ss = 0;
         this.sp = 0;
         this.sf = 0;
@@ -113,5 +115,13 @@ public class MatchCascadeBean {
 
     public void setFf(int ff) {
         this.ff = ff;
+    }
+
+    public String getOdds() {
+        return odds;
+    }
+
+    public void setOdds(String odds) {
+        this.odds = odds;
     }
 }
