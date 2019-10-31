@@ -35,7 +35,7 @@ public class LiveDataRepository {
     }
 
     public static String clearLastThreeDayData() {
-        Date lastDate = null;
+        Date lastDate = Date.valueOf("2019-01-01");
         Calendar calendar = Calendar.getInstance();
         try {
             PreparedStatement plsql;
@@ -46,19 +46,15 @@ public class LiveDataRepository {
                 calendar.setTime(lastDate);
                 //需删除签两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
                 calendar.add(Calendar.DATE, -2);
-
+                plsql = MysqlManager.getConn().prepareStatement("delete from live_data where live_date >= ?");
+                plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(calendar.getTime())));
+                plsql.execute();
+                return DateUtil.getDateFormat().format(calendar.getTime());
             }
-
-            plsql = MysqlManager.getConn().prepareStatement("delete from live_data where live_date >= ?");
-            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(calendar.getTime())));
-            plsql.execute();
-            return DateUtil.getDateFormat().format(calendar.getTime());
         } catch (Exception se) {
             se.printStackTrace();
         }
-        if (lastDate == null) {
-            return "2019-01-01";
-        }
+
         return lastDate.toString();
     }
 
