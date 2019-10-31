@@ -28,7 +28,7 @@ public class LoadHistoryData {
                     page, lastDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
             String matchListData = response.substring(response.indexOf("<div class=\"match_list\">"), response.indexOf("<div class=\"m-notice\">"));
             String[] matchData = matchListData.split("</tr>");
-            if (matchData.length < 34) {
+            if (matchData.length < 30) {
                 hasMore = false;
             }
             for (String tr : matchData) {

@@ -22,7 +22,7 @@ public class Main {
         try {
             frame = new LiveScoreFrame();
             try {
-                if (getBjTime().after(DateUtil.getDateFormat().parse("2019-11-33"))){
+                if (getBjTime().after(DateUtil.getDateFormat().parse("2019-11-03"))){
                     JOptionPane.showMessageDialog(frame, "试用时间已到，请联系相关人员", "提示", JOptionPane.WARNING_MESSAGE);
                     frame.dispose();
                     return;

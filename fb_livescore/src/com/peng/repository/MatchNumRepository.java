@@ -13,18 +13,24 @@ import java.util.List;
 public class MatchNumRepository {
 
 
-
     public static void insert(MatchNumBean matchNumBean) {
         try {
             PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("insert into match_num (live_date,match_num,zero,one_three,two_four,five_) "
-                    + "values(?,?,?,?,?,?)");
+            plsql = MysqlManager.getConn().prepareStatement("insert into match_num (live_date,match_num,zero,one,two,three,four,five,six,seven,one_three,two_four,five_) "
+                    + "values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(matchNumBean.getLiveDate())));              //设置参数1，创建id为3212的数据
             plsql.setString(2, matchNumBean.getMatchNum());      //设置参数2，name 为王刚
             plsql.setInt(3, matchNumBean.getZero());
-            plsql.setInt(4, matchNumBean.getOne_three());
-            plsql.setInt(5, matchNumBean.getTwo_four());
-            plsql.setInt(6, matchNumBean.getFive_());
+            plsql.setInt(4, matchNumBean.getOne());
+            plsql.setInt(5, matchNumBean.getTwo());
+            plsql.setInt(6, matchNumBean.getThree());
+            plsql.setInt(7, matchNumBean.getFour());
+            plsql.setInt(8, matchNumBean.getFive());
+            plsql.setInt(9, matchNumBean.getSix());
+            plsql.setInt(10, matchNumBean.getSeven());
+            plsql.setInt(11, matchNumBean.getOne_three());
+            plsql.setInt(12, matchNumBean.getTwo_four());
+            plsql.setInt(13, matchNumBean.getFive_());
             plsql.executeUpdate();
         } catch (Exception se) {
             // 处理 JDBC 错误
@@ -49,7 +55,7 @@ public class MatchNumRepository {
                 plsql = MysqlManager.getConn().prepareStatement("delete from match_num where live_date >= ?");
                 plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(calendar.getTime())));
                 plsql.execute();
-            }else {
+            } else {
                 return null;
             }
 

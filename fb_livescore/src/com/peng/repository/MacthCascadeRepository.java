@@ -14,8 +14,8 @@ public class MacthCascadeRepository {
     public static void insert(MatchCascadeBean matchCascadeBean) {
         try {
             PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("insert into match_cascade (live_date,match_cascade_num,ss,sp,sf,ps,pp,pf,fs,fp,ff) "
-                    + "values(?,?,?,?,?,?,?,?,?,?,?)");
+            plsql = MysqlManager.getConn().prepareStatement("insert into match_cascade (live_date,match_cascade_num,ss,sp,sf,ps,pp,pf,fs,fp,ff,odds) "
+                    + "values(?,?,?,?,?,?,?,?,?,?,?,?)");
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(matchCascadeBean.getLiveDate())));              //设置参数1，创建id为3212的数据
             plsql.setString(2, matchCascadeBean.getMatchCascadeNum());      //设置参数2，name 为王刚
             plsql.setInt(3, matchCascadeBean.getSs());
@@ -27,6 +27,7 @@ public class MacthCascadeRepository {
             plsql.setInt(9, matchCascadeBean.getFs());
             plsql.setInt(10, matchCascadeBean.getFp());
             plsql.setInt(11, matchCascadeBean.getFf());
+            plsql.setString(12, matchCascadeBean.getOdds());
 
             plsql.executeUpdate();
         } catch (Exception se) {
@@ -113,6 +114,7 @@ public class MacthCascadeRepository {
                 matchCascadeBean.setFs(rs.getInt("fs"));
                 matchCascadeBean.setFp(rs.getInt("fp"));
                 matchCascadeBean.setFf(rs.getInt("ff"));
+                matchCascadeBean.setOdds(rs.getString("odds"));
                 matchCascadeBeans.add(matchCascadeBean);
             }
 

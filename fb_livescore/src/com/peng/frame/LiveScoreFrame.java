@@ -7,12 +7,14 @@ import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MacthCascadeRepository;
 import com.peng.repository.MatchNumRepository;
 import com.peng.util.DateUtil;
+import com.sun.deploy.util.StringUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -125,16 +127,20 @@ public class LiveScoreFrame extends JFrame {
 
         for (int i = 0; i < matchCascadeBeans.size(); i++) {
             MatchCascadeBean matchCascadeBean = matchCascadeBeans.get(i);
+            String[] odds = new String[9];
+            if (matchCascadeBean.getOdds() != null && matchCascadeBean.getOdds().length() > 0) {
+                odds = matchCascadeBean.getOdds().replace("[", "").replace("]", "").split(",");
+            }
             int j = i * 9;
-            rowData[j] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜胜", String.valueOf(matchCascadeBean.getSs()), ""};
-            rowData[j + 1] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜平", String.valueOf(matchCascadeBean.getSp()), ""};
-            rowData[j + 2] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜负", String.valueOf(matchCascadeBean.getSf()), ""};
-            rowData[j + 3] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平胜", String.valueOf(matchCascadeBean.getPs()), ""};
-            rowData[j + 4] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平平", String.valueOf(matchCascadeBean.getPp()), ""};
-            rowData[j + 5] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平负", String.valueOf(matchCascadeBean.getPf()), ""};
-            rowData[j + 6] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负胜", String.valueOf(matchCascadeBean.getFs()), ""};
-            rowData[j + 7] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负平", String.valueOf(matchCascadeBean.getFp()), ""};
-            rowData[j + 8] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负负", String.valueOf(matchCascadeBean.getFf()), ""};
+            rowData[j] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜胜", String.valueOf(matchCascadeBean.getSs()), odds[0]};
+            rowData[j + 1] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜平", String.valueOf(matchCascadeBean.getSp()), odds[1]};
+            rowData[j + 2] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜负", String.valueOf(matchCascadeBean.getSf()), odds[2]};
+            rowData[j + 3] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平胜", String.valueOf(matchCascadeBean.getPs()), odds[3]};
+            rowData[j + 4] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平平", String.valueOf(matchCascadeBean.getPp()), odds[4]};
+            rowData[j + 5] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平负", String.valueOf(matchCascadeBean.getPf()), odds[5]};
+            rowData[j + 6] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负胜", String.valueOf(matchCascadeBean.getFs()), odds[6]};
+            rowData[j + 7] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负平", String.valueOf(matchCascadeBean.getFp()), odds[7]};
+            rowData[j + 8] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负负", String.valueOf(matchCascadeBean.getFf()), odds[8]};
         }
 
 
@@ -146,13 +152,15 @@ public class LiveScoreFrame extends JFrame {
     }
 
     private JScrollPane getData3(Date date) {
-        String[] columnNames = new String[]{"赛事编号", "0球", "1球3球", "2球4球", "5球6球7球"
+        String[] columnNames = new String[]{"赛事编号", "0球","1球","2球","3球","4球","5球","6球","7球", "1球3球", "2球4球", "5球6球7球"
         };
         List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumData(date);
-        String[][] rowData = new String[matchNumBeans.size()][5];
+        String[][] rowData = new String[matchNumBeans.size()][12];
         for (int i = 0; i < matchNumBeans.size(); i++) {
             MatchNumBean matchNumBean = matchNumBeans.get(i);
-            rowData[i] = new String[]{matchNumBean.getMatchNum(), String.valueOf(matchNumBean.getZero()),
+            rowData[i] = new String[]{matchNumBean.getMatchNum(), String.valueOf(matchNumBean.getZero()),String.valueOf(matchNumBean.getOne()),
+                    String.valueOf(matchNumBean.getTwo()),String.valueOf(matchNumBean.getThree()),String.valueOf(matchNumBean.getFour()),
+                    String.valueOf(matchNumBean.getFive()),String.valueOf(matchNumBean.getSix()),String.valueOf(matchNumBean.getSeven()),
                     String.valueOf(matchNumBean.getOne_three()), String.valueOf(matchNumBean.getTwo_four()),
                     String.valueOf(matchNumBean.getFive_())};
         }

@@ -21,15 +21,15 @@ public class CalMatchCascadeMiss {
         calendar.setTime(lastDate);
         calendar.add(Calendar.DATE, 0);
         lastDate = calendar.getTime();
+        Date maxDate = LiveDataRepository.getMaxLiveDate();
         while (lastDate.before(new Date())) {
             //获取当天所有的赛事
             Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchList(lastDate);
 
-            //如果没有一场赛事，可能没有抓取数据
-            if (matchBeans.size() == 0) {
+            //如果没有一场赛事，可能没有抓取数据 并且数据库最大数据日期小于当前日期时
+            if (matchBeans.size() == 0 && maxDate.before(lastDate)) {
                 break;
             }
-
 
             for (int i = 2; i <= 300; i++) {
                 //获取昨天的记录

@@ -6,6 +6,7 @@ import com.peng.util.DateUtil;
 
 import java.sql.*;
 import java.sql.Date;
+import java.text.ParseException;
 import java.util.*;
 
 public class LiveDataRepository {
@@ -59,6 +60,22 @@ public class LiveDataRepository {
             return "2019-01-01";
         }
         return lastDate.toString();
+    }
+
+    public static java.util.Date getMaxLiveDate() throws ParseException {
+        Date maxDate = Date.valueOf("2019-01-01");
+        Calendar calendar = Calendar.getInstance();
+        try {
+            PreparedStatement plsql;
+            plsql = MysqlManager.getConn().prepareStatement("select distinct live_date from live_data order by live_date desc limit 1");
+            ResultSet rs = plsql.executeQuery();
+            if (rs.next()) {
+                maxDate = rs.getDate("live_date");
+            }
+        } catch (Exception se) {
+            se.printStackTrace();
+        }
+        return DateUtil.getDateFormat().parse(maxDate.toString());
     }
 
     public static Map<String, MatchBean> getMatchList(java.util.Date date) {
