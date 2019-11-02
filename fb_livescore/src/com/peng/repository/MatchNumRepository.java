@@ -80,6 +80,13 @@ public class MatchNumRepository {
                 matchNumBean.setLiveDate(rs.getDate("live_date"));
                 matchNumBean.setMatchNum(rs.getString("match_num"));
                 matchNumBean.setZero(rs.getInt("zero"));
+                matchNumBean.setOne(rs.getInt("one"));
+                matchNumBean.setTwo(rs.getInt("two"));
+                matchNumBean.setThree(rs.getInt("three"));
+                matchNumBean.setFour(rs.getInt("four"));
+                matchNumBean.setFive(rs.getInt("five"));
+                matchNumBean.setSix(rs.getInt("six"));
+                matchNumBean.setSeven(rs.getInt("seven"));
                 matchNumBean.setOne_three(rs.getInt("one_three"));
                 matchNumBean.setTwo_four(rs.getInt("two_four"));
                 matchNumBean.setFive_(rs.getInt("five_"));
@@ -105,6 +112,13 @@ public class MatchNumRepository {
                 matchNumBean.setLiveDate(rs.getDate("live_date"));
                 matchNumBean.setMatchNum(rs.getString("match_num"));
                 matchNumBean.setZero(rs.getInt("zero"));
+                matchNumBean.setOne(rs.getInt("one"));
+                matchNumBean.setTwo(rs.getInt("two"));
+                matchNumBean.setThree(rs.getInt("three"));
+                matchNumBean.setFour(rs.getInt("four"));
+                matchNumBean.setFive(rs.getInt("five"));
+                matchNumBean.setSix(rs.getInt("six"));
+                matchNumBean.setSeven(rs.getInt("seven"));
                 matchNumBean.setOne_three(rs.getInt("one_three"));
                 matchNumBean.setTwo_four(rs.getInt("two_four"));
                 matchNumBean.setFive_(rs.getInt("five_"));
@@ -112,6 +126,36 @@ public class MatchNumRepository {
             }
 
 
+        } catch (Exception se) {
+            se.printStackTrace();
+        }
+        return matchNumBeans;
+    }
+
+    public static List<MatchNumBean> getMatchNumDataByNum(String matchNum) {
+        List<MatchNumBean> matchNumBeans = new ArrayList<>();
+        try {
+            PreparedStatement plsql;
+            plsql = MysqlManager.getConn().prepareStatement("select * from match_num where match_num = ?");
+            plsql.setString(1, matchNum);
+            ResultSet rs = plsql.executeQuery();
+            while (rs.next()) {
+                MatchNumBean matchNumBean = new MatchNumBean();
+                matchNumBean.setLiveDate(rs.getDate("live_date"));
+                matchNumBean.setMatchNum(rs.getString("match_num"));
+                matchNumBean.setZero(rs.getInt("zero"));
+                matchNumBean.setOne(rs.getInt("one"));
+                matchNumBean.setTwo(rs.getInt("two"));
+                matchNumBean.setThree(rs.getInt("three"));
+                matchNumBean.setFour(rs.getInt("four"));
+                matchNumBean.setFive(rs.getInt("five"));
+                matchNumBean.setSix(rs.getInt("six"));
+                matchNumBean.setSeven(rs.getInt("seven"));
+                matchNumBean.setOne_three(rs.getInt("one_three"));
+                matchNumBean.setTwo_four(rs.getInt("two_four"));
+                matchNumBean.setFive_(rs.getInt("five_"));
+                matchNumBeans.add(matchNumBean);
+            }
         } catch (Exception se) {
             se.printStackTrace();
         }

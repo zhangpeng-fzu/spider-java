@@ -88,12 +88,9 @@ public class CalMatchNumMiss {
                             matchNumBean.setFive_(0);
 
                             break;
-                        case 7:
-                            matchNumBean.setSeven(0);
-                            matchNumBean.setFive_(0);
-                            break;
                         default:
                             matchNumBean.setFive_(0);
+                            matchNumBean.setSeven(0);
                     }
                 } else {
                     //该场次没有比赛，使用昨日的数据
@@ -107,7 +104,7 @@ public class CalMatchNumMiss {
     }
 
 
-    static String formatMatchNum(int i) {
+    private static String formatMatchNum(int i) {
         if (i < 10) {
             return "00" + i;
         }

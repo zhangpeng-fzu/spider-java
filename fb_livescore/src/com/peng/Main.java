@@ -22,7 +22,8 @@ public class Main {
         try {
             frame = new LiveScoreFrame();
             try {
-                if (getBjTime().after(DateUtil.getDateFormat().parse("2019-11-03"))){
+                JOptionPane.showInputDialog(frame, "请输入激活码", "提示", JOptionPane.WARNING_MESSAGE);
+                if (getBjTime().after(DateUtil.getDateFormat().parse("2019-11-03"))) {
                     JOptionPane.showMessageDialog(frame, "试用时间已到，请联系相关人员", "提示", JOptionPane.WARNING_MESSAGE);
                     frame.dispose();
                     return;
@@ -35,18 +36,13 @@ public class Main {
             }
             frame.setVisible(true);
             JOptionPane.showMessageDialog(frame, "当前处于试用状态，试用截止时间2019/11/3 00:00:00", "标题", JOptionPane.WARNING_MESSAGE);
-            //开启异步线程计算数据
+//            开启异步线程计算数据
             new Thread(() -> {
                 //加载所有场次数据
                 System.out.println("正在加载所有场次数据");
                 LoadHistoryData.loadHistoryData();
-                //加载今天的数据
-                try {
-                    System.out.println("正在加载当天所有场次数据");
-                    ParseTodayData.getMatchData();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
+                LiveScoreFrame.syncMatchData();
+
                 new Thread(() -> {
                     System.out.println("正在计算赛事场次数据");
                     try {
@@ -75,7 +71,7 @@ public class Main {
         URLConnection uc = url.openConnection();//生成连接对象
         uc.connect(); //发出连接
         long ld = uc.getDate(); //取得网站日期时间（时间戳）
-        if (ld == 0){
+        if (ld == 0) {
             return new Date();
         }
         return new Date(ld);

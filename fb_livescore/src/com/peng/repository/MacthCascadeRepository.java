@@ -124,4 +124,35 @@ public class MacthCascadeRepository {
         }
         return matchCascadeBeans;
     }
+
+    public static List<MatchCascadeBean> getMatchCascadeDataByNum(String matchCascadeNum) {
+        List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
+        try {
+            PreparedStatement plsql;
+            plsql = MysqlManager.getConn().prepareStatement("select * from match_cascade where match_cascade_num = ? ");
+            plsql.setString(1, matchCascadeNum);
+            ResultSet rs = plsql.executeQuery();
+            while (rs.next()) {
+                MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
+                matchCascadeBean.setLiveDate(rs.getDate("live_date"));
+                matchCascadeBean.setMatchCascadeNum(rs.getString("match_cascade_num"));
+                matchCascadeBean.setSs(rs.getInt("ss"));
+                matchCascadeBean.setSp(rs.getInt("sp"));
+                matchCascadeBean.setSf(rs.getInt("sf"));
+                matchCascadeBean.setPs(rs.getInt("ps"));
+                matchCascadeBean.setPp(rs.getInt("pp"));
+                matchCascadeBean.setPf(rs.getInt("pf"));
+                matchCascadeBean.setFs(rs.getInt("fs"));
+                matchCascadeBean.setFp(rs.getInt("fp"));
+                matchCascadeBean.setFf(rs.getInt("ff"));
+                matchCascadeBean.setOdds(rs.getString("odds"));
+                matchCascadeBeans.add(matchCascadeBean);
+            }
+
+
+        } catch (Exception se) {
+            se.printStackTrace();
+        }
+        return matchCascadeBeans;
+    }
 }

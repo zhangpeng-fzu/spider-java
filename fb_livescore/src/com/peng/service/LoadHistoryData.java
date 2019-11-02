@@ -16,21 +16,24 @@ import java.util.regex.Pattern;
 public class LoadHistoryData {
 
     public static void loadHistoryData() {
+        //删除今日数据，避免同步导致的日期错误
+        LiveDataRepository.delete(new Date());
+
         List<String> weekDays = Arrays.asList("周日", "周一", "周二", "周三", "周四", "周五", "周六");
         String lastDate = LiveDataRepository.clearLastThreeDayData();
         Calendar calendar = Calendar.getInstance();
-        boolean hasMore = true;
-        int page = 1;
+        String response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
+                1, lastDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
+        String total = response.substring(response.indexOf("查询结果：有"), response.indexOf("场赛事符合条件")).replace("查询结果：有<span class=\"u-org\">", "").replace("</span>", "");
+        int page = Integer.parseInt(total) / 30 + 1;
 
-        String response;
-        while (hasMore) {
+        for (; page > 0; page--) {
             response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
                     page, lastDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
+
             String matchListData = response.substring(response.indexOf("<div class=\"match_list\">"), response.indexOf("<div class=\"m-notice\">"));
             String[] matchData = matchListData.split("</tr>");
-            if (matchData.length < 30) {
-                hasMore = false;
-            }
+
             for (String tr : matchData) {
                 String[] tds = tr.split("\r\n|>VS<");
                 StringBuilder tdData = new StringBuilder();
@@ -111,8 +114,13 @@ public class LoadHistoryData {
                     matchBean.setHostNum(0);
                     matchBean.setGuestNum(0);
                 } else {
-                    matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
-                    matchBean.setGuestNum(Integer.parseInt(tdDataArr[6].split(":")[1]));
+                    if (tdDataArr[6].length() > 0) {
+                        matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
+                        matchBean.setGuestNum(Integer.parseInt(tdDataArr[6].split(":")[1]));
+                    } else {
+                        matchBean.setHostNum(0);
+                        matchBean.setGuestNum(0);
+                    }
                 }
 
                 matchBean.setStatus(status);
@@ -120,7 +128,6 @@ public class LoadHistoryData {
 
             }
 
-            page++;
             System.out.println("正在抓取第" + page + "页");
             try {
                 Thread.sleep(1000);
@@ -128,7 +135,5 @@ public class LoadHistoryData {
                 e.printStackTrace();
             }
         }
-
-
     }
 }

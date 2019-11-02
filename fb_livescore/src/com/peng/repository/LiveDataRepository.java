@@ -15,7 +15,7 @@ public class LiveDataRepository {
         try {
             PreparedStatement plsql;
             plsql = MysqlManager.getConn().prepareStatement("insert into live_data (live_date,match_num,match_group,host_team,guest_team,host_num,guest_num,odds_s,odds_p,odds_f,status) "
-                    + "values(?,?,?,?,?,?,?,?,?,?,?)");
+                    + "values(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE match_num=?,host_num=?,guest_num=?,odds_s=?,odds_p=?,odds_f=?,status=?");
             plsql.setDate(1, Date.valueOf(matchBean.getLiveDate()));              //设置参数1，创建id为3212的数据
             plsql.setString(2, matchBean.getMatchNum());      //设置参数2，name 为王刚
             plsql.setString(3, matchBean.getGroupName());
@@ -27,6 +27,13 @@ public class LiveDataRepository {
             plsql.setFloat(9, matchBean.getOdds()[1] != null ? matchBean.getOdds()[1] : 0);
             plsql.setFloat(10, matchBean.getOdds()[2] != null ? matchBean.getOdds()[2] : 0);
             plsql.setString(11, matchBean.getStatus());
+            plsql.setString(12, matchBean.getMatchNum());
+            plsql.setInt(13, matchBean.getHostNum());
+            plsql.setInt(14, matchBean.getGuestNum());
+            plsql.setFloat(15, matchBean.getOdds()[0] != null ? matchBean.getOdds()[0] : 0);
+            plsql.setFloat(16, matchBean.getOdds()[1] != null ? matchBean.getOdds()[1] : 0);
+            plsql.setFloat(17, matchBean.getOdds()[2] != null ? matchBean.getOdds()[2] : 0);
+            plsql.setString(18, matchBean.getStatus());
             plsql.executeUpdate();
         } catch (Exception se) {
             // 处理 JDBC 错误
@@ -129,5 +136,17 @@ public class LiveDataRepository {
             se.printStackTrace();
         }
         return matchBeans;
+    }
+
+    public static void delete(java.util.Date date) {
+        PreparedStatement plsql;
+        try {
+            plsql = MysqlManager.getConn().prepareStatement("delete from live_data where live_date = ? and (status != '1' and status != '2')");
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(date)));
+            plsql.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 }
