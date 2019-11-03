@@ -13,12 +13,13 @@ import java.util.List;
 public class MatchNumRepository {
 
 
-    public static void insert(MatchNumBean matchNumBean) {
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("insert into match_num (live_date,match_num,zero,one,two,three,four,five,six,seven,one_three,two_four,five_) "
-                    + "values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(matchNumBean.getLiveDate())));              //设置参数1，创建id为3212的数据
+    public static void insert(List<MatchNumBean> matchNumBeans) throws SQLException {
+        PreparedStatement plsql;
+        plsql = MysqlManager.getConnForNum().prepareStatement("insert into match_num (live_date,match_num,zero,one,two,three,four,five,six,seven,one_three,two_four,five_) "
+                + "values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+
+        for (MatchNumBean matchNumBean : matchNumBeans) {
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(matchNumBean.getLiveDate())));              //设置参数1，创建id为3212的数据
             plsql.setString(2, matchNumBean.getMatchNum());      //设置参数2，name 为王刚
             plsql.setInt(3, matchNumBean.getZero());
             plsql.setInt(4, matchNumBean.getOne());
@@ -31,11 +32,10 @@ public class MatchNumRepository {
             plsql.setInt(11, matchNumBean.getOne_three());
             plsql.setInt(12, matchNumBean.getTwo_four());
             plsql.setInt(13, matchNumBean.getFive_());
-            plsql.executeUpdate();
-        } catch (Exception se) {
-            // 处理 JDBC 错误
-            se.printStackTrace();
+            plsql.addBatch();
         }
+        plsql.executeBatch();
+
     }
 
     public static java.util.Date clearLastThreeDayData() {
@@ -43,7 +43,7 @@ public class MatchNumRepository {
 
         try {
             PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select * from match_num order by live_date desc limit 1");
+            plsql = MysqlManager.getConnForNum().prepareStatement("select * from match_num order by live_date desc limit 1");
 
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
@@ -52,8 +52,8 @@ public class MatchNumRepository {
                 //需删除签两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
                 calendar.add(Calendar.DATE, -2);
 
-                plsql = MysqlManager.getConn().prepareStatement("delete from match_num where live_date >= ?");
-                plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(calendar.getTime())));
+                plsql = MysqlManager.getConnForNum().prepareStatement("delete from match_num where live_date >= ?");
+                plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(calendar.getTime())));
                 plsql.execute();
             } else {
                 return null;
@@ -72,8 +72,8 @@ public class MatchNumRepository {
         MatchNumBean matchNumBean = new MatchNumBean();
         try {
             PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select * from match_num where live_date = ? and match_num = ?");
-            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(lastDate)));
+            plsql = MysqlManager.getConnForNum().prepareStatement("select * from match_num where live_date = ? and match_num = ?");
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(lastDate)));
             plsql.setString(2, matchNum);
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
@@ -104,8 +104,8 @@ public class MatchNumRepository {
         List<MatchNumBean> matchNumBeans = new ArrayList<>();
         try {
             PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select * from match_num where live_date = ?");
-            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(date)));
+            plsql = MysqlManager.getConnForNum().prepareStatement("select * from match_num where live_date = ?");
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(date)));
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
                 MatchNumBean matchNumBean = new MatchNumBean();
@@ -136,7 +136,7 @@ public class MatchNumRepository {
         List<MatchNumBean> matchNumBeans = new ArrayList<>();
         try {
             PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select * from match_num where match_num = ?");
+            plsql = MysqlManager.getConnForNum().prepareStatement("select * from match_num where match_num = ?");
             plsql.setString(1, matchNum);
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {

@@ -5,15 +5,21 @@ import com.peng.service.CalMatchCascadeMiss;
 import com.peng.service.CalMatchNumMiss;
 import com.peng.service.LoadHistoryData;
 import com.peng.service.ParseTodayData;
+import com.peng.util.AesUtil;
 import com.peng.util.DateUtil;
+import org.apache.commons.io.FileUtils;
+import sun.reflect.misc.FieldUtil;
 
 import javax.swing.*;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.logging.SimpleFormatter;
 
 public class Main {
 
@@ -21,21 +27,44 @@ public class Main {
         LiveScoreFrame frame;
         try {
             frame = new LiveScoreFrame();
+            String licencePath = "/Users/zhangpeng/._licence";
+            String invalid_timestamp;
+
             try {
-                JOptionPane.showInputDialog(frame, "请输入激活码", "提示", JOptionPane.WARNING_MESSAGE);
-                if (getBjTime().after(DateUtil.getDateFormat().parse("2019-11-03"))) {
-                    JOptionPane.showMessageDialog(frame, "试用时间已到，请联系相关人员", "提示", JOptionPane.WARNING_MESSAGE);
+                if (new File(licencePath).exists()) {
+                    String licence = FileUtils.readFileToString(new File(licencePath));
+                    invalid_timestamp = AesUtil.decrypt(licence, AesUtil.KEY);
+                    if (invalid_timestamp == null || System.currentTimeMillis() > Long.parseLong(invalid_timestamp)) {
+                        JOptionPane.showMessageDialog(frame, "激活码已过期，请重新激活", "提示", JOptionPane.WARNING_MESSAGE);
+                        frame.dispose();
+                        return;
+                    }
+                } else {
+                    String licence = JOptionPane.showInputDialog(frame, "请输入激活码", "提示", JOptionPane.WARNING_MESSAGE);
+                    invalid_timestamp = AesUtil.decrypt(licence, AesUtil.KEY);
+                    if (invalid_timestamp == null || System.currentTimeMillis() > Long.parseLong(invalid_timestamp)) {
+                        JOptionPane.showMessageDialog(frame, "激活码已过期，请重新激活", "提示", JOptionPane.WARNING_MESSAGE);
+                        frame.dispose();
+                        return;
+                    } else {
+                        FileUtils.writeStringToFile(new File(licencePath), licence);
+                    }
+                }
+
+                if (getBjTime().after(new Date(Long.parseLong(invalid_timestamp)))) {
+                    JOptionPane.showMessageDialog(frame, "激活码已过期，请重新激活", "提示", JOptionPane.WARNING_MESSAGE);
                     frame.dispose();
                     return;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(frame, "试用时间已到，请联系相关人员", "提示", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "激活码已过期，请重新激活", "提示", JOptionPane.WARNING_MESSAGE);
                 frame.dispose();
                 return;
             }
             frame.setVisible(true);
-            JOptionPane.showMessageDialog(frame, "当前处于试用状态，试用截止时间2019/11/3 00:00:00", "标题", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "激活码有效时间：" +
+                    new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date(Long.parseLong(invalid_timestamp))), "提示", JOptionPane.WARNING_MESSAGE);
 //            开启异步线程计算数据
             new Thread(() -> {
                 //加载所有场次数据

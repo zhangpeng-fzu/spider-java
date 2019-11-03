@@ -67,7 +67,6 @@ public class LiveDataRepository {
 
     public static java.util.Date getMaxLiveDate() throws ParseException {
         Date maxDate = Date.valueOf("2019-01-01");
-        Calendar calendar = Calendar.getInstance();
         try {
             PreparedStatement plsql;
             plsql = MysqlManager.getConn().prepareStatement("select distinct live_date from live_data order by live_date desc limit 1");

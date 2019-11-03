@@ -3,18 +3,19 @@ package com.peng.service;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MatchCascadeBean;
 import com.peng.repository.LiveDataRepository;
-import com.peng.repository.MacthCascadeRepository;
+import com.peng.repository.MatchCascadeRepository;
 import com.peng.util.DateUtil;
 
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
 
 public class CalMatchCascadeMiss {
 
     public static void calculate() throws ParseException {
-        Date lastDate = MacthCascadeRepository.clearLastThreeDayData();
+        Date lastDate = MatchCascadeRepository.clearLastThreeDayData();
         if (lastDate == null) {
-            lastDate = DateUtil.getDateFormat().parse("2019-01-01");
+            lastDate = DateUtil.getDateFormat(2).parse("2019-01-01");
         }
 
         Calendar calendar = Calendar.getInstance();
@@ -22,20 +23,23 @@ public class CalMatchCascadeMiss {
         calendar.add(Calendar.DATE, 0);
         lastDate = calendar.getTime();
         Date maxDate = LiveDataRepository.getMaxLiveDate();
+        Map<String, MatchBean> matchBeans;
+        List<MatchCascadeBean> matchCascadeBeans;
         while (lastDate.before(new Date())) {
             //获取当天所有的赛事
-            Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchList(lastDate);
+            matchBeans = LiveDataRepository.getMatchList(lastDate);
 
             //如果没有一场赛事，可能没有抓取数据 并且数据库最大数据日期小于当前日期时
             if (matchBeans.size() == 0 && maxDate.before(lastDate)) {
                 break;
             }
-
+            matchCascadeBeans = new ArrayList<>();
+            MatchCascadeBean matchCascadeBean;
             for (int i = 2; i <= 300; i++) {
                 //获取昨天的记录
                 calendar.add(Calendar.DATE, -1);
                 lastDate = calendar.getTime();
-                MatchCascadeBean matchCascadeBean = MacthCascadeRepository.findByLiveDateAndCascadeNum(lastDate, formatMatchNum(i - 1) + "串" + formatMatchNum(i));
+                matchCascadeBean = MatchCascadeRepository.findByLiveDateAndCascadeNum(lastDate, formatMatchNum(i - 1) + "串" + formatMatchNum(i));
                 calendar.add(Calendar.DATE, 1);
                 lastDate = calendar.getTime();
                 matchCascadeBean.setLiveDate(lastDate);
@@ -83,10 +87,15 @@ public class CalMatchCascadeMiss {
                     }
                     matchCascadeBean.setOdds(Arrays.toString(new List[]{odds}));
                 }
-
-
-                MacthCascadeRepository.insert(matchCascadeBean);
+                matchCascadeBeans.add(matchCascadeBean);
             }
+            try {
+                MatchCascadeRepository.insert(matchCascadeBeans);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                break;
+            }
+
             calendar.add(Calendar.DATE, 1);
             lastDate = calendar.getTime();
         }

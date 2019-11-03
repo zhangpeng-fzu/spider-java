@@ -6,10 +6,9 @@ import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchNumRepository;
 import com.peng.util.DateUtil;
 
+import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 public class CalMatchNumMiss {
 
@@ -17,7 +16,7 @@ public class CalMatchNumMiss {
     public static void calculate() throws ParseException {
         Date lastDate = MatchNumRepository.clearLastThreeDayData();
         if (lastDate == null) {
-            lastDate = DateUtil.getDateFormat().parse("2019-01-01");
+            lastDate = DateUtil.getDateFormat(3).parse("2019-01-01");
         }
 
         Calendar calendar = Calendar.getInstance();
@@ -25,19 +24,23 @@ public class CalMatchNumMiss {
         calendar.add(Calendar.DATE, 0);
         lastDate = calendar.getTime();
         Date maxDate = LiveDataRepository.getMaxLiveDate();
+        Map<String, MatchBean> matchBeans;
+        List<MatchNumBean> matchNumBeans;
         while (lastDate.before(new Date())) {
             //获取当天所有的赛事
-            Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchList(lastDate);
+            matchBeans = LiveDataRepository.getMatchList(lastDate);
             //如果没有一场赛事，可能没有抓取数据 并且数据库最大数据日期小于当前日期时
             if (matchBeans.size() == 0 && maxDate.before(lastDate)) {
                 break;
             }
-            for (int i = 1; i <= 300; i++) {
 
+            matchNumBeans = new ArrayList<>();
+            MatchNumBean matchNumBean;
+            for (int i = 1; i <= 300; i++) {
                 //获取昨天的记录
                 calendar.add(Calendar.DATE, -1);
                 lastDate = calendar.getTime();
-                MatchNumBean matchNumBean = MatchNumRepository.findByLiveDateAndNum(lastDate, formatMatchNum(i));
+                matchNumBean = MatchNumRepository.findByLiveDateAndNum(lastDate, formatMatchNum(i));
 
                 calendar.add(Calendar.DATE, 1);
                 lastDate = calendar.getTime();
@@ -95,7 +98,13 @@ public class CalMatchNumMiss {
                 } else {
                     //该场次没有比赛，使用昨日的数据
                 }
-                MatchNumRepository.insert(matchNumBean);
+                matchNumBeans.add(matchNumBean);
+            }
+            try {
+                MatchNumRepository.insert(matchNumBeans);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                break;
             }
             calendar.add(Calendar.DATE, 1);
             lastDate = calendar.getTime();

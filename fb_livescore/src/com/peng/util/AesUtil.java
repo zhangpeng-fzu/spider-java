@@ -19,11 +19,12 @@ public class AesUtil {
 
     private static final String KEY_ALGORITHM = "AES";
     private static final String DEFAULT_CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";//默认的加密算法
+    public static final String KEY = "live_score_20191102";
 
     /**
      * AES 加密操作
      *
-     * @param content 待加密内容
+     * @param content  待加密内容
      * @param password 加密密码
      * @return 返回Base64转码后的加密数据
      */
@@ -97,8 +98,8 @@ public class AesUtil {
     }
 
     public static void main(String[] args) {
-        System.out.println(AesUtil.encrypt("","123"));
-        System.out.println(AesUtil.decrypt("ET5pqdBRoBECR2a/u10deQ==","123"));
+        System.out.println(AesUtil.encrypt(String.valueOf(System.currentTimeMillis() + 86400L * 30 * 1000), KEY));
+        System.out.println(AesUtil.decrypt("2d4XS8MDsuuBmGajRbDnIg==", KEY));
 
     }
 }

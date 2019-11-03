@@ -4,7 +4,7 @@ import com.peng.bean.MatchBean;
 import com.peng.bean.MatchCascadeBean;
 import com.peng.bean.MatchNumBean;
 import com.peng.repository.LiveDataRepository;
-import com.peng.repository.MacthCascadeRepository;
+import com.peng.repository.MatchCascadeRepository;
 import com.peng.repository.MatchNumRepository;
 import com.peng.util.DateUtil;
 
@@ -117,14 +117,17 @@ public class PaneFactory {
 
     JScrollPane showMatchCascadePane(Date date) {
         String[] columnNames = new String[]{"串关场次", "胜平负组合", "当前遗漏值", "赔率"};// 定义表格列名数组
-        java.util.List<MatchCascadeBean> matchCascadeBeans = MacthCascadeRepository.getMatchCascadeData(date);
+        java.util.List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.getMatchCascadeData(date);
         String[][] rowData = new String[matchCascadeBeans.size() * 9][4];
         int column = 0;
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
             String[] matchNums = matchCascadeBean.getMatchCascadeNum().split("串");
             //只显示有比赛的场次
             if (!matchStatusMap.containsKey(matchNums[0]) || !matchStatusMap.containsKey(matchNums[1]) ||
-                    (!matchStatusMap.get(matchNums[0]).equals("0")) && !matchStatusMap.get(matchNums[0]).equals("0")) {
+                    (!matchStatusMap.get(matchNums[0]).equals("0") && !matchStatusMap.get(matchNums[1]).equals("0")
+//                            && !matchStatusMap.get(matchNums[0]).contains("分") && !matchStatusMap.get(matchNums[1]).contains("分")
+                    )
+            ) {
                 continue;
             }
 
@@ -209,7 +212,7 @@ public class PaneFactory {
 
     JScrollPane showMatchCascadePaneByNum(String matchCascadeNum) {
         String[] columnNames = new String[]{"日期", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};// 定义表格列名数组
-        List<MatchCascadeBean> matchCascadeBeans = MacthCascadeRepository.getMatchCascadeDataByNum(matchCascadeNum);
+        List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.getMatchCascadeDataByNum(matchCascadeNum);
         String[][] rowData = new String[matchCascadeBeans.size()][10];
         int column = 0;
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {

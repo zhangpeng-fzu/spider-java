@@ -46,9 +46,9 @@ public class LiveScoreFrame extends JFrame {
 
         jTabbedPane = new JTabbedPane();
         Date selectDate = DateUtil.getDateFormat().parse(txt1.getText());
-        jTabbedPane.add("赛事数据", PaneFactory.getInstance().showMatchDataPane(selectDate));
-        jTabbedPane.add("串关场次分析", PaneFactory.getInstance().showMatchCascadePane(selectDate));
-        jTabbedPane.add("赛事分析", PaneFactory.getInstance().showMatchNumPaneByDate(selectDate));
+        jTabbedPane.add("当天赛事", PaneFactory.getInstance().showMatchDataPane(selectDate));
+        jTabbedPane.add("串关分析", PaneFactory.getInstance().showMatchCascadePane(selectDate));
+        jTabbedPane.add("进球分析", PaneFactory.getInstance().showMatchNumPaneByDate(selectDate));
 
         jTabbedPane.setSelectedIndex(0);
         getContentPane().add(jTabbedPane, BorderLayout.CENTER);
