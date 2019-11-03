@@ -86,6 +86,12 @@ public class LoadHistoryData {
                         if (c == 1 && w == 6) {
                             offset = 2;
                         }
+                        if (c == 0 && w == 2) {
+                            offset = -2;
+                        }
+                        if (c == 2 && w == 0) {
+                            offset = 2;
+                        }
                         if (c == 5 && w == 0) {
                             offset = -2;
                         }

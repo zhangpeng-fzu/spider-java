@@ -2,14 +2,14 @@ package com.peng.util;
 
 import org.apache.commons.codec.binary.Base64;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @version V1.0
@@ -17,9 +17,9 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class AesUtil {
 
+    public static final String KEY = "live_score_20191102";
     private static final String KEY_ALGORITHM = "AES";
     private static final String DEFAULT_CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";//默认的加密算法
-    public static final String KEY = "live_score_20191102";
 
     /**
      * AES 加密操作
@@ -98,7 +98,7 @@ public class AesUtil {
     }
 
     public static void main(String[] args) {
-        System.out.println(AesUtil.encrypt(String.valueOf(System.currentTimeMillis() + 86400L * 30 * 1000), KEY));
+        System.out.println(AesUtil.encrypt(String.valueOf(System.currentTimeMillis() + 86400L * 3 * 1000), KEY));
         System.out.println(AesUtil.decrypt("2d4XS8MDsuuBmGajRbDnIg==", KEY));
 
     }

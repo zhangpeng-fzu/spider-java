@@ -4,11 +4,8 @@ import com.peng.frame.LiveScoreFrame;
 import com.peng.service.CalMatchCascadeMiss;
 import com.peng.service.CalMatchNumMiss;
 import com.peng.service.LoadHistoryData;
-import com.peng.service.ParseTodayData;
 import com.peng.util.AesUtil;
-import com.peng.util.DateUtil;
 import org.apache.commons.io.FileUtils;
-import sun.reflect.misc.FieldUtil;
 
 import javax.swing.*;
 import java.io.File;
@@ -19,7 +16,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.logging.SimpleFormatter;
 
 public class Main {
 
@@ -29,32 +25,29 @@ public class Main {
             frame = new LiveScoreFrame();
             String licencePath = "/Users/zhangpeng/._licence";
             String invalid_timestamp;
-
+            String licence;
             try {
                 if (new File(licencePath).exists()) {
-                    String licence = FileUtils.readFileToString(new File(licencePath));
+                    licence = FileUtils.readFileToString(new File(licencePath));
                     invalid_timestamp = AesUtil.decrypt(licence, AesUtil.KEY);
-                    if (invalid_timestamp == null || System.currentTimeMillis() > Long.parseLong(invalid_timestamp)) {
+                    if (invalid_timestamp == null || getBjTime().getTime() > Long.parseLong(invalid_timestamp)) {
                         JOptionPane.showMessageDialog(frame, "激活码已过期，请重新激活", "提示", JOptionPane.WARNING_MESSAGE);
-                        frame.dispose();
-                        return;
+                        licence = JOptionPane.showInputDialog(frame, "请输入激活码", "提示", JOptionPane.WARNING_MESSAGE);
                     }
                 } else {
-                    String licence = JOptionPane.showInputDialog(frame, "请输入激活码", "提示", JOptionPane.WARNING_MESSAGE);
-                    invalid_timestamp = AesUtil.decrypt(licence, AesUtil.KEY);
-                    if (invalid_timestamp == null || System.currentTimeMillis() > Long.parseLong(invalid_timestamp)) {
-                        JOptionPane.showMessageDialog(frame, "激活码已过期，请重新激活", "提示", JOptionPane.WARNING_MESSAGE);
-                        frame.dispose();
-                        return;
-                    } else {
-                        FileUtils.writeStringToFile(new File(licencePath), licence);
-                    }
+                    licence = JOptionPane.showInputDialog(frame, "请输入激活码", "提示", JOptionPane.WARNING_MESSAGE);
                 }
-
-                if (getBjTime().after(new Date(Long.parseLong(invalid_timestamp)))) {
+                if (licence == null || licence.length() == 0) {
+                    frame.dispose();
+                    return;
+                }
+                invalid_timestamp = AesUtil.decrypt(licence, AesUtil.KEY);
+                if (invalid_timestamp == null || getBjTime().getTime() > Long.parseLong(invalid_timestamp)) {
                     JOptionPane.showMessageDialog(frame, "激活码已过期，请重新激活", "提示", JOptionPane.WARNING_MESSAGE);
                     frame.dispose();
                     return;
+                } else {
+                    FileUtils.writeStringToFile(new File(licencePath), licence);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
