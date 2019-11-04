@@ -4,8 +4,10 @@ import com.peng.bean.MatchNumBean;
 import com.peng.database.MysqlManager;
 import com.peng.util.DateUtil;
 
-import java.sql.*;
-import java.text.SimpleDateFormat;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -35,7 +37,7 @@ public class MatchNumRepository {
             plsql.addBatch();
         }
         plsql.executeBatch();
-
+        plsql.close();
     }
 
     public static java.util.Date clearLastThreeDayData() {
@@ -58,7 +60,7 @@ public class MatchNumRepository {
             } else {
                 return null;
             }
-
+            plsql.close();
 
         } catch (Exception se) {
             se.printStackTrace();
@@ -93,7 +95,7 @@ public class MatchNumRepository {
 
             }
 
-
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -124,7 +126,7 @@ public class MatchNumRepository {
                 matchNumBean.setFive_(rs.getInt("five_"));
                 matchNumBeans.add(matchNumBean);
             }
-
+            plsql.close();
 
         } catch (Exception se) {
             se.printStackTrace();
@@ -156,6 +158,7 @@ public class MatchNumRepository {
                 matchNumBean.setFive_(rs.getInt("five_"));
                 matchNumBeans.add(matchNumBean);
             }
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }

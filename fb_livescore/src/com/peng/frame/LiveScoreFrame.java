@@ -6,7 +6,7 @@ import com.peng.util.DateUtil;
 import javax.swing.*;
 import java.awt.*;
 import java.text.ParseException;
-import java.util.*;
+import java.util.Date;
 
 public class LiveScoreFrame extends JFrame {
 
@@ -68,27 +68,24 @@ public class LiveScoreFrame extends JFrame {
 
 
     public static void syncMatchData() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                //当前不是今天，停止同步
-                while (isToday) {
-                    System.out.println(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
+        new Thread(() -> {
+            //当前不是今天，停止同步
+            while (isToday) {
+                System.out.println(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
 
-                    try {
-                        ParseTodayData.getMatchData();
-                        jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(new Date()));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    try {
-                        Thread.sleep(60000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    ParseTodayData.getMatchData();
+                    jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(new Date()));
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-
+                try {
+                    Thread.sleep(60000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+
         }).start();
     }
 }

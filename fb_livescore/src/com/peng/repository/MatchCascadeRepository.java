@@ -4,7 +4,10 @@ import com.peng.bean.MatchCascadeBean;
 import com.peng.database.MysqlManager;
 import com.peng.util.DateUtil;
 
-import java.sql.*;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -31,6 +34,7 @@ public class MatchCascadeRepository {
             plsql.addBatch();
         }
         plsql.executeBatch();
+        plsql.close();
     }
 
     public static java.util.Date clearLastThreeDayData() {
@@ -52,7 +56,7 @@ public class MatchCascadeRepository {
             } else {
                 return null;
             }
-
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
             return null;
@@ -83,7 +87,7 @@ public class MatchCascadeRepository {
                 matchCascadeBean.setFf(rs.getInt("ff"));
             }
 
-
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -115,7 +119,7 @@ public class MatchCascadeRepository {
                 matchCascadeBeans.add(matchCascadeBean);
             }
 
-
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -145,7 +149,7 @@ public class MatchCascadeRepository {
                 matchCascadeBean.setOdds(rs.getString("odds"));
                 matchCascadeBeans.add(matchCascadeBean);
             }
-
+            plsql.close();
 
         } catch (Exception se) {
             se.printStackTrace();

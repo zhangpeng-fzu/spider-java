@@ -4,8 +4,10 @@ import com.peng.bean.MatchBean;
 import com.peng.database.MysqlManager;
 import com.peng.util.DateUtil;
 
-import java.sql.*;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
 
@@ -35,6 +37,7 @@ public class LiveDataRepository {
             plsql.setFloat(17, matchBean.getOdds()[2] != null ? matchBean.getOdds()[2] : 0);
             plsql.setString(18, matchBean.getStatus());
             plsql.executeUpdate();
+            plsql.close();
         } catch (Exception se) {
             // 处理 JDBC 错误
             se.printStackTrace();
@@ -58,6 +61,7 @@ public class LiveDataRepository {
                 plsql.execute();
                 return DateUtil.getDateFormat().format(calendar.getTime());
             }
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -74,6 +78,7 @@ public class LiveDataRepository {
             if (rs.next()) {
                 maxDate = rs.getDate("live_date");
             }
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -102,6 +107,7 @@ public class LiveDataRepository {
                 matchBean.setStatus(rs.getString("status"));
                 matchBeans.put(matchBean.getMatchNum(), matchBean);
             }
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -131,6 +137,7 @@ public class LiveDataRepository {
                 matchBean.setStatus(rs.getString("status"));
                 matchBeans.add(matchBean);
             }
+            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -143,9 +150,39 @@ public class LiveDataRepository {
             plsql = MysqlManager.getConn().prepareStatement("delete from live_data where live_date = ? and (status != '1' and status != '2')");
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(date)));
             plsql.execute();
+            plsql.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
+    }
+
+    public static List<MatchBean> getMatchListByNum(String matchNum) {
+        List<MatchBean> matchBeans = new ArrayList<>();
+        try {
+            PreparedStatement plsql;
+            plsql = MysqlManager.getConn().prepareStatement("select * from live_data where match_num like ?");
+            plsql.setString(1, "%" + matchNum);
+
+
+            ResultSet rs = plsql.executeQuery();
+            while (rs.next()) {
+                MatchBean matchBean = new MatchBean();
+                matchBean.setMatchNum(rs.getString("match_num"));
+                matchBean.setHostNum(rs.getInt("host_num"));
+                matchBean.setGuestNum(rs.getInt("guest_num"));
+                matchBean.setLiveDate(rs.getDate("live_date").toString());
+                matchBean.setGroupName(rs.getString("match_group"));
+                matchBean.setHostTeam(rs.getString("host_team"));
+                matchBean.setGuestTeam(rs.getString("guest_team"));
+                matchBean.setOdds(new Float[]{rs.getFloat("odds_s"), rs.getFloat("odds_p"), rs.getFloat("odds_f")});
+                matchBean.setStatus(rs.getString("status"));
+                matchBeans.add(matchBean);
+            }
+            plsql.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        }
+        return matchBeans;
     }
 }

@@ -9,9 +9,7 @@ import com.peng.repository.MatchNumRepository;
 import com.peng.util.DateUtil;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableColumn;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -28,13 +26,12 @@ public class PaneFactory {
         paneFactory = new PaneFactory();
     }
 
+    private Map<String, String> matchStatusMap = new HashMap<>();
+    private JFrame innerFrame = null;
 
     static PaneFactory getInstance() {
         return paneFactory;
     }
-
-    private Map<String, String> matchStatusMap = new HashMap<>();
-    private JFrame innerFrame = null;
 
     private PaneFactory setTableHeader(JTable table) {
         table.setAutoCreateRowSorter(true);
@@ -47,19 +44,40 @@ public class PaneFactory {
     }
 
     private PaneFactory setTableCell(JTable table) {
-        DefaultTableCellRenderer tcr = new DefaultTableCellRenderer();
+        DefaultTableCellRenderer tcr = new MCellRenderer();
         tcr.setHorizontalAlignment(SwingConstants.CENTER);// 这句和上句作用一样
         table.setDefaultRenderer(Object.class, tcr);
         return this;
     }
 
+    private PaneFactory setTableSorter(JTable table, Integer[] columns) {
+        final TableRowSorter<TableModel> sorter = new TableRowSorter<>(
+                table.getModel());
+
+        for (Integer column : columns) {
+            sorter.setComparator(column, (arg0, arg1) -> {
+                try {
+                    int a = Integer.parseInt(arg0.toString());
+                    int b = Integer.parseInt(arg1.toString());
+                    return a - b;
+                } catch (NumberFormatException e) {
+                    return 0;
+                }
+            });
+        }
+        table.setRowSorter(sorter);
+        return this;
+    }
+
+
     private PaneFactory setTableClick(JTable table) {
         table.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent e) {
                 String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
 
                 innerFrame = new JFrame("详细数据");
-                innerFrame.setBounds(400, 250, 900, 400);
+                innerFrame.setBounds(400, 100, 600, 800);
                 if (clickValue.contains("串")) {
                     innerFrame.getContentPane().add(showMatchCascadePaneByNum(clickValue));
                 } else {
@@ -123,10 +141,11 @@ public class PaneFactory {
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
             String[] matchNums = matchCascadeBean.getMatchCascadeNum().split("串");
             //只显示有比赛的场次
-            if (!matchStatusMap.containsKey(matchNums[0]) || !matchStatusMap.containsKey(matchNums[1]) ||
+            if (DateUtil.getDateFormat().format(date).equals(DateUtil.getDateFormat().format(new Date()))
+                    && (!matchStatusMap.containsKey(matchNums[0]) || !matchStatusMap.containsKey(matchNums[1]) ||
                     (!matchStatusMap.get(matchNums[0]).equals("0") && !matchStatusMap.get(matchNums[1]).equals("0")
 //                            && !matchStatusMap.get(matchNums[0]).contains("分") && !matchStatusMap.get(matchNums[1]).contains("分")
-                    )
+                    ))
             ) {
                 continue;
             }
@@ -149,12 +168,14 @@ public class PaneFactory {
         }
 
         String[][] newRowData = new String[column * 9][4];
-        if (column * 9 >= 0) System.arraycopy(rowData, 0, newRowData, 0, column * 9);
+        if (column * 9 >= 0) {
+            System.arraycopy(rowData, 0, newRowData, 0, column * 9);
+        }
 
 
         JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table);
+        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{2});
         return new JScrollPane(table);
     }
 
@@ -166,7 +187,8 @@ public class PaneFactory {
         int column = 0;
         for (MatchNumBean matchNumBean : matchNumBeans) {
             //只显示未完成的场次
-            if (!matchStatusMap.containsKey(matchNumBean.getMatchNum()) || !matchStatusMap.get(matchNumBean.getMatchNum()).equals("0")) {
+            if (DateUtil.getDateFormat().format(date).equals(DateUtil.getDateFormat().format(new Date()))
+                    && (!matchStatusMap.containsKey(matchNumBean.getMatchNum()) || !matchStatusMap.get(matchNumBean.getMatchNum()).equals("0"))) {
                 continue;
             }
             rowData[column] = new String[]{matchNumBean.getMatchNum(), String.valueOf(matchNumBean.getZero()), String.valueOf(matchNumBean.getOne()),
@@ -180,29 +202,42 @@ public class PaneFactory {
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table);
+        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
         return new JScrollPane(table);
     }
 
     JScrollPane showMatchNumPaneByNum(String matchNum) {
         String[] columnNames = new String[]{"日期", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "1球3球", "2球4球", "5球6球7球"
         };
-        java.util.List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumDataByNum(matchNum);
+        List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumDataByNum(matchNum);
         String[][] rowData = new String[matchNumBeans.size()][12];
         int column = 0;
+
+        List<MatchBean> matchBeans = LiveDataRepository.getMatchListByNum(matchNum);
+        Map<String, String> matchStatusMapByNum = new HashMap<>();
+        for (MatchBean matchBean : matchBeans) {
+            matchStatusMapByNum.put(matchBean.getLiveDate(), matchBean.getStatus());
+        }
         for (MatchNumBean matchNumBean : matchNumBeans) {
-            //只显示未完成的场次
-            if (!matchStatusMap.containsKey(matchNumBean.getMatchNum()) || !matchStatusMap.get(matchNumBean.getMatchNum()).equals("0")) {
+            String date = DateUtil.getDateFormat().format(matchNumBean.getLiveDate());
+            //不显示已取消或者不存在的场次
+            if (!matchStatusMapByNum.containsKey(date)
+                    || matchStatusMapByNum.get(date).equals("2")) {
                 continue;
             }
-            rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate()), String.valueOf(matchNumBean.getZero()), String.valueOf(matchNumBean.getOne()),
-                    String.valueOf(matchNumBean.getTwo()), String.valueOf(matchNumBean.getThree()), String.valueOf(matchNumBean.getFour()),
-                    String.valueOf(matchNumBean.getFive()), String.valueOf(matchNumBean.getSix()), String.valueOf(matchNumBean.getSeven()),
-                    String.valueOf(matchNumBean.getOne_three()), String.valueOf(matchNumBean.getTwo_four()),
-                    String.valueOf(matchNumBean.getFive_())};
-            column++;
+            //当天未完成的场次 显示空行
+            if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
+                    !matchStatusMapByNum.get(date).equals("1")) {
+                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate()), "", "", "", "", "", "", "", "", "", "", ""};
+            } else {
+                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate()), String.valueOf(matchNumBean.getZero()), String.valueOf(matchNumBean.getOne()),
+                        String.valueOf(matchNumBean.getTwo()), String.valueOf(matchNumBean.getThree()), String.valueOf(matchNumBean.getFour()),
+                        String.valueOf(matchNumBean.getFive()), String.valueOf(matchNumBean.getSix()), String.valueOf(matchNumBean.getSeven()),
+                        String.valueOf(matchNumBean.getOne_three()), String.valueOf(matchNumBean.getTwo_four()),
+                        String.valueOf(matchNumBean.getFive_())};
+                column++;
+            }
         }
-
 
         JTable table = new JTable(rowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
@@ -214,14 +249,44 @@ public class PaneFactory {
         String[] columnNames = new String[]{"日期", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};// 定义表格列名数组
         List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.getMatchCascadeDataByNum(matchCascadeNum);
         String[][] rowData = new String[matchCascadeBeans.size()][10];
+        String[] matchNums = matchCascadeNum.split("串");
+
+        //获取前面编号的状态
+        List<MatchBean> matchBeans = LiveDataRepository.getMatchListByNum(matchNums[0]);
+        Map<String, String> matchStatusMapByNum1 = new HashMap<>();
+        for (MatchBean matchBean : matchBeans) {
+            matchStatusMapByNum1.put(matchBean.getLiveDate(), matchBean.getStatus());
+        }
+
+        //获取后面编号的状态
+        matchBeans = LiveDataRepository.getMatchListByNum(matchNums[1]);
+        Map<String, String> matchStatusMapByNum2 = new HashMap<>();
+        for (MatchBean matchBean : matchBeans) {
+            matchStatusMapByNum2.put(matchBean.getLiveDate(), matchBean.getStatus());
+        }
         int column = 0;
+
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
-            rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate()),
-                    String.valueOf(matchCascadeBean.getSs()), String.valueOf(matchCascadeBean.getSp()),
-                    String.valueOf(matchCascadeBean.getSf()), String.valueOf(matchCascadeBean.getPs()),
-                    String.valueOf(matchCascadeBean.getPp()), String.valueOf(matchCascadeBean.getPf()),
-                    String.valueOf(matchCascadeBean.getFs()), String.valueOf(matchCascadeBean.getFp()),
-                    String.valueOf(matchCascadeBean.getFf())};
+            //不显示已取消或者不存在的场次
+            String date = DateUtil.getDateFormat().format(matchCascadeBean.getLiveDate());
+            if (!matchStatusMapByNum1.containsKey(date) ||
+                    !matchStatusMapByNum2.containsKey(date) ||
+                    matchStatusMapByNum1.get(date).equals("2") ||
+                    matchStatusMapByNum2.get(date).equals("2")) {
+                continue;
+            }
+            if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
+                    (!matchStatusMapByNum1.get(date).equals("1") ||
+                            !matchStatusMapByNum2.get(date).equals("1"))) {
+                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate()), "", "", "", "", "", "", "", "", ""};
+            } else {
+                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate()),
+                        String.valueOf(matchCascadeBean.getSs()), String.valueOf(matchCascadeBean.getSp()),
+                        String.valueOf(matchCascadeBean.getSf()), String.valueOf(matchCascadeBean.getPs()),
+                        String.valueOf(matchCascadeBean.getPp()), String.valueOf(matchCascadeBean.getPf()),
+                        String.valueOf(matchCascadeBean.getFs()), String.valueOf(matchCascadeBean.getFp()),
+                        String.valueOf(matchCascadeBean.getFf())};
+            }
             column++;
         }
 
