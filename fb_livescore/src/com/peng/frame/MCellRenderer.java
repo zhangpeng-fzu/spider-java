@@ -16,7 +16,14 @@ public class MCellRenderer extends DefaultTableCellRenderer {
         if (String.valueOf(value).equals("0")) {
             component.setBackground(Color.RED);
         } else {
-            component.setBackground(Color.WHITE);
+            String columnName = String.valueOf(table.getColumnModel().getColumn(column).getHeaderValue());
+
+            if (columnName.equals("1球3球") || columnName.equals("2球4球") || columnName.equals("5球6球7球")) {
+                component.setBackground(Color.LIGHT_GRAY);
+            } else {
+                component.setBackground(Color.WHITE);
+
+            }
         }
 
         return component;

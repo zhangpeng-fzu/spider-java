@@ -69,7 +69,7 @@ public class MatchCascadeRepository {
         MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
         try {
             PreparedStatement plsql;
-            plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date < ? and match_cascade_num = ? order by live_date desc limit 1");
+            plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date = ? and match_cascade_num = ?");
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(lastDate)));
             plsql.setString(2, matchCascadeNum);
             ResultSet rs = plsql.executeQuery();

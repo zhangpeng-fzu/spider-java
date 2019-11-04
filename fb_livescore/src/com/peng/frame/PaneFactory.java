@@ -235,13 +235,15 @@ public class PaneFactory {
                         String.valueOf(matchNumBean.getFive()), String.valueOf(matchNumBean.getSix()), String.valueOf(matchNumBean.getSeven()),
                         String.valueOf(matchNumBean.getOne_three()), String.valueOf(matchNumBean.getTwo_four()),
                         String.valueOf(matchNumBean.getFive_())};
-                column++;
             }
+            column++;
         }
 
-        JTable table = new JTable(rowData, columnNames);
+        String[][] newRowData = new String[column][12];
+        System.arraycopy(rowData, 0, newRowData, 0, column);
+        JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table);
+        this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
         return new JScrollPane(table);
     }
 
@@ -291,10 +293,12 @@ public class PaneFactory {
         }
 
 
-        JTable table = new JTable(rowData, columnNames);
+        String[][] newRowData = new String[column][10];
+        System.arraycopy(rowData, 0, newRowData, 0, column);
+        JTable table = new JTable(newRowData, columnNames);
 
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table);
+        this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9});
         return new JScrollPane(table);
     }
 }

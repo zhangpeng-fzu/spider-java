@@ -37,7 +37,12 @@ public class CalMatchCascadeMiss {
             MatchCascadeBean matchCascadeBean;
             for (int i = 2; i <= 300; i++) {
 
+                //获取昨天的记录
+                calendar.add(Calendar.DATE, -1);
+                lastDate = calendar.getTime();
                 matchCascadeBean = MatchCascadeRepository.findByLiveDateAndCascadeNum(lastDate, formatMatchNum(i - 1) + "串" + formatMatchNum(i));
+                calendar.add(Calendar.DATE, 1);
+                lastDate = calendar.getTime();
 
                 matchCascadeBean.setLiveDate(lastDate);
                 matchCascadeBean.setMatchCascadeNum(formatMatchNum(i - 1) + "串" + formatMatchNum(i));
@@ -83,8 +88,8 @@ public class CalMatchCascadeMiss {
                         } else {
                             matchCascadeBean.setFf(0);
                         }
-                        matchCascadeBeans.add(matchCascadeBean);
                     }
+                    matchCascadeBeans.add(matchCascadeBean);
                 }
             }
             try {

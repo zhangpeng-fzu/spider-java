@@ -10,7 +10,7 @@ public class MysqlManager {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/livescore?characterEncoding=utf8";
     // 数据库的用户名与密码，需要根据自己的设置
     private static final String USER = "root";
-    private static final String PASS = "admin";
+    private static final String PASS = "root";
     private static Connection connForCascade;
     private static Connection connForNum;
     private static Connection conn;
