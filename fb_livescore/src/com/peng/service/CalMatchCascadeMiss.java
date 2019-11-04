@@ -36,49 +36,16 @@ public class CalMatchCascadeMiss {
             matchCascadeBeans = new ArrayList<>();
             MatchCascadeBean matchCascadeBean;
             for (int i = 2; i <= 300; i++) {
-                //获取昨天的记录
-                calendar.add(Calendar.DATE, -1);
-                lastDate = calendar.getTime();
+
                 matchCascadeBean = MatchCascadeRepository.findByLiveDateAndCascadeNum(lastDate, formatMatchNum(i - 1) + "串" + formatMatchNum(i));
-                calendar.add(Calendar.DATE, 1);
-                lastDate = calendar.getTime();
+
                 matchCascadeBean.setLiveDate(lastDate);
                 matchCascadeBean.setMatchCascadeNum(formatMatchNum(i - 1) + "串" + formatMatchNum(i));
 
-                if (matchBeans.containsKey(formatMatchNum(i - 1)) && matchBeans.containsKey(formatMatchNum(i))
-                        && matchBeans.get(formatMatchNum(i - 1)).getStatus().equals("1") && matchBeans.get(formatMatchNum(i)).getStatus().equals("1")) {
-                    matchCascadeBean.setSs(matchCascadeBean.getSs() + 1);
-                    matchCascadeBean.setSp(matchCascadeBean.getSp() + 1);
-                    matchCascadeBean.setSf(matchCascadeBean.getSf() + 1);
-                    matchCascadeBean.setPs(matchCascadeBean.getPs() + 1);
-                    matchCascadeBean.setPp(matchCascadeBean.getPp() + 1);
-                    matchCascadeBean.setPf(matchCascadeBean.getPf() + 1);
-                    matchCascadeBean.setFs(matchCascadeBean.getFs() + 1);
-                    matchCascadeBean.setFp(matchCascadeBean.getFp() + 1);
-                    matchCascadeBean.setFf(matchCascadeBean.getFf() + 1);
+                if (matchBeans.containsKey(formatMatchNum(i - 1)) && matchBeans.containsKey(formatMatchNum(i))) {
                     MatchBean pre = matchBeans.get(formatMatchNum(i - 1));
                     MatchBean cur = matchBeans.get(formatMatchNum(i));
-
-
-                    if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                        matchCascadeBean.setSs(0);
-                    } else if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                        matchCascadeBean.setSp(0);
-                    } else if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() < 0) {
-                        matchCascadeBean.setSf(0);
-                    } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                        matchCascadeBean.setPs(0);
-                    } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                        matchCascadeBean.setPp(0);
-                    } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() < 0) {
-                        matchCascadeBean.setPf(0);
-                    } else if (pre.getHostNum() - pre.getGuestNum() < 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                        matchCascadeBean.setFs(0);
-                    } else if (pre.getHostNum() - pre.getGuestNum() < 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                        matchCascadeBean.setFp(0);
-                    } else {
-                        matchCascadeBean.setFf(0);
-                    }
+                    //计算赔率
                     List<Float> odds = new ArrayList<>();
                     for (int j = 0; j < pre.getOdds().length; j++) {
                         for (int k = 0; k < cur.getOdds().length; k++) {
@@ -86,8 +53,39 @@ public class CalMatchCascadeMiss {
                         }
                     }
                     matchCascadeBean.setOdds(Arrays.toString(new List[]{odds}));
+                    if (matchBeans.get(formatMatchNum(i - 1)).getStatus().equals("1") &&
+                            matchBeans.get(formatMatchNum(i)).getStatus().equals("1")) {
+                        matchCascadeBean.setSs(matchCascadeBean.getSs() + 1);
+                        matchCascadeBean.setSp(matchCascadeBean.getSp() + 1);
+                        matchCascadeBean.setSf(matchCascadeBean.getSf() + 1);
+                        matchCascadeBean.setPs(matchCascadeBean.getPs() + 1);
+                        matchCascadeBean.setPp(matchCascadeBean.getPp() + 1);
+                        matchCascadeBean.setPf(matchCascadeBean.getPf() + 1);
+                        matchCascadeBean.setFs(matchCascadeBean.getFs() + 1);
+                        matchCascadeBean.setFp(matchCascadeBean.getFp() + 1);
+                        matchCascadeBean.setFf(matchCascadeBean.getFf() + 1);
+                        if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
+                            matchCascadeBean.setSs(0);
+                        } else if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
+                            matchCascadeBean.setSp(0);
+                        } else if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() < 0) {
+                            matchCascadeBean.setSf(0);
+                        } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
+                            matchCascadeBean.setPs(0);
+                        } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
+                            matchCascadeBean.setPp(0);
+                        } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() < 0) {
+                            matchCascadeBean.setPf(0);
+                        } else if (pre.getHostNum() - pre.getGuestNum() < 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
+                            matchCascadeBean.setFs(0);
+                        } else if (pre.getHostNum() - pre.getGuestNum() < 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
+                            matchCascadeBean.setFp(0);
+                        } else {
+                            matchCascadeBean.setFf(0);
+                        }
+                        matchCascadeBeans.add(matchCascadeBean);
+                    }
                 }
-                matchCascadeBeans.add(matchCascadeBean);
             }
             try {
                 MatchCascadeRepository.insert(matchCascadeBeans);
