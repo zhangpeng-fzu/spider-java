@@ -57,9 +57,9 @@ public class PaneFactory {
         for (Integer column : columns) {
             sorter.setComparator(column, (arg0, arg1) -> {
                 try {
-                    int a = Integer.parseInt(arg0.toString());
-                    int b = Integer.parseInt(arg1.toString());
-                    return a - b;
+                    float a = Float.parseFloat(arg0.toString());
+                    float b = Float.parseFloat(arg1.toString());
+                    return (int) (a - b);
                 } catch (NumberFormatException e) {
                     return 0;
                 }
@@ -77,7 +77,7 @@ public class PaneFactory {
                 String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
 
                 innerFrame = new JFrame("详细数据");
-                innerFrame.setBounds(400, 100, 600, 800);
+                innerFrame.setBounds(400, 100, 640, 800);
                 if (clickValue.contains("串")) {
                     innerFrame.getContentPane().add(showMatchCascadePaneByNum(clickValue));
                 } else {
@@ -175,7 +175,7 @@ public class PaneFactory {
 
         JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{2});
+        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{2, 3});
         return new JScrollPane(table);
     }
 

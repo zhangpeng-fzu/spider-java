@@ -74,7 +74,7 @@ public class MatchNumRepository {
         MatchNumBean matchNumBean = new MatchNumBean();
         try {
             PreparedStatement plsql;
-            plsql = MysqlManager.getConnForNum().prepareStatement("select * from match_num where live_date = ? and match_num = ?");
+            plsql = MysqlManager.getConnForNum().prepareStatement("select * from match_num where live_date < ? and match_num = ? order by live_date desc limit 1");
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(lastDate)));
             plsql.setString(2, matchNum);
             ResultSet rs = plsql.executeQuery();

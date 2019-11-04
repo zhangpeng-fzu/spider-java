@@ -37,14 +37,7 @@ public class CalMatchNumMiss {
             matchNumBeans = new ArrayList<>();
             MatchNumBean matchNumBean;
             for (int i = 1; i <= 300; i++) {
-                //获取昨天的记录
-                calendar.add(Calendar.DATE, -1);
-                lastDate = calendar.getTime();
                 matchNumBean = MatchNumRepository.findByLiveDateAndNum(lastDate, formatMatchNum(i));
-
-                calendar.add(Calendar.DATE, 1);
-                lastDate = calendar.getTime();
-
                 matchNumBean.setLiveDate(lastDate);
                 matchNumBean.setMatchNum(formatMatchNum(i));
 
@@ -95,10 +88,8 @@ public class CalMatchNumMiss {
                             matchNumBean.setFive_(0);
                             matchNumBean.setSeven(0);
                     }
-                } else {
-                    //该场次没有比赛，使用昨日的数据
+                    matchNumBeans.add(matchNumBean);
                 }
-                matchNumBeans.add(matchNumBean);
             }
             try {
                 MatchNumRepository.insert(matchNumBeans);
