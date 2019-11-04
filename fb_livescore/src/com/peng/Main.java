@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,12 +24,13 @@ public class Main {
         LiveScoreFrame frame;
         try {
             frame = new LiveScoreFrame();
-            String licencePath = "/Users/zhangpeng/._licence";
+            String licencePath = "C:/._licence";
+//            String licencePath = "/Users/zhangpeng/._licence";
             String invalid_timestamp;
             String licence;
             try {
                 if (new File(licencePath).exists()) {
-                    licence = FileUtils.readFileToString(new File(licencePath));
+                    licence = FileUtils.readFileToString(new File(licencePath), StandardCharsets.UTF_8);
                     invalid_timestamp = AesUtil.decrypt(licence, AesUtil.KEY);
                     if (invalid_timestamp == null || getBjTime().getTime() > Long.parseLong(invalid_timestamp)) {
                         JOptionPane.showMessageDialog(frame, "激活码已过期，请重新激活", "提示", JOptionPane.WARNING_MESSAGE);
@@ -47,7 +49,7 @@ public class Main {
                     frame.dispose();
                     return;
                 } else {
-                    FileUtils.writeStringToFile(new File(licencePath), licence);
+                    FileUtils.writeStringToFile(new File(licencePath), licence, StandardCharsets.UTF_8);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -66,7 +68,7 @@ public class Main {
                 LiveScoreFrame.syncMatchData();
 
                 new Thread(() -> {
-                    System.out.println("正在计算赛事场次数据");
+                    System.out.println("正在计算进球数据");
                     try {
                         CalMatchNumMiss.calculate();
                     } catch (ParseException e) {
@@ -74,7 +76,7 @@ public class Main {
                     }
                 }).start();
                 try {
-                    System.out.println("正在计算串关场次数据");
+                    System.out.println("正在计算串关数据");
                     CalMatchCascadeMiss.calculate();
                 } catch (ParseException e) {
                     e.printStackTrace();
