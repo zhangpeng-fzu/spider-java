@@ -18,7 +18,7 @@ public class MCellRenderer extends DefaultTableCellRenderer {
         } else {
             String columnName = String.valueOf(table.getColumnModel().getColumn(column).getHeaderValue());
 
-            if (columnName.equals("1球3球") || columnName.equals("2球4球") || columnName.equals("5球6球7球")) {
+            if (columnName.equals("零球") || columnName.equals("1球3球") || columnName.equals("2球4球") || columnName.equals("5球6球7球")) {
                 component.setBackground(Color.LIGHT_GRAY);
             } else {
                 component.setBackground(Color.WHITE);
