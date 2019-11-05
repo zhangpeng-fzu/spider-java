@@ -65,7 +65,7 @@ public class PaneFactory {
                 try {
                     float a = Float.parseFloat(arg0.toString());
                     float b = Float.parseFloat(arg1.toString());
-                    return (int) (a - b);
+                    return a > b ? 1 : -1;
                 } catch (NumberFormatException e) {
                     return 0;
                 }
@@ -162,6 +162,15 @@ public class PaneFactory {
             if (matchCascadeBean.getOdds() != null && matchCascadeBean.getOdds().length() > 0) {
                 odds = matchCascadeBean.getOdds().replace("[", "").replace("]", "").split(",");
             }
+
+            for (int i = 0; i < odds.length; i++) {
+                String odd = odds[i];
+                if (odd != null && odd.trim().length() > 5) {
+                    odd = odd.trim().substring(0, 4);
+                }
+                odds[i] = odd;
+            }
+
             int j = column * 9;
             rowData[j] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜胜", String.valueOf(matchCascadeBean.getSs()), odds[0]};
             rowData[j + 1] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜平", String.valueOf(matchCascadeBean.getSp()), odds[1]};
