@@ -7,6 +7,7 @@ import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchCascadeRepository;
 import com.peng.repository.MatchNumRepository;
 import com.peng.util.DateUtil;
+import sun.swing.table.DefaultTableCellHeaderRenderer;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -40,12 +41,17 @@ public class PaneFactory {
         table.setRowHeight(25);
         TableColumn column = table.getColumnModel().getColumn(0);
         column.setMinWidth(120);
+
+        DefaultTableCellHeaderRenderer hr = new DefaultTableCellHeaderRenderer();
+        hr.setHorizontalAlignment(JLabel.CENTER);
+        table.getTableHeader().setDefaultRenderer(hr);
+
         return this;
     }
 
     private PaneFactory setTableCell(JTable table) {
         DefaultTableCellRenderer tcr = new MCellRenderer();
-        tcr.setHorizontalAlignment(SwingConstants.CENTER);// 这句和上句作用一样
+        tcr.setHorizontalAlignment(SwingConstants.CENTER);
         table.setDefaultRenderer(Object.class, tcr);
         return this;
     }
