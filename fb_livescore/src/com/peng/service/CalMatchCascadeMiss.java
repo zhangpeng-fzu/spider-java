@@ -89,8 +89,8 @@ public class CalMatchCascadeMiss {
                             matchCascadeBean.setFf(0);
                         }
                     }
-                    matchCascadeBeans.add(matchCascadeBean);
                 }
+                matchCascadeBeans.add(matchCascadeBean);
             }
             try {
                 MatchCascadeRepository.insert(matchCascadeBeans);
