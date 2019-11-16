@@ -18,7 +18,7 @@ public class ParseTodayData {
     static String queryToday() {
 
         return HttpClientUtil
-                .doGet("https://i.sporttery.cn/api/match_live_2/get_match_list?callback=?&_=" + System.currentTimeMillis(), StandardCharsets.UTF_8.displayName());
+                .doGet("https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=hhad&poolcode[]=had&_" + "1573876793274", StandardCharsets.UTF_8.displayName());
 
     }
 
@@ -27,21 +27,37 @@ public class ParseTodayData {
         LiveDataRepository.delete(new Date());
 
         List<String> weekDays = Arrays.asList("周日", "周一", "周二", "周三", "周四", "周五", "周六");
-        String queryData = queryToday().replace("var match_list = ", "");
-        queryData = queryData.substring(0, queryData.lastIndexOf(";"));
+        String queryData = queryToday().replace("getData(", "").replace(");", "");
         Calendar calendar = Calendar.getInstance();
-        JSONObject matchList = JSON.parseObject(queryData);
+        calendar.add(Calendar.DATE, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date tomorrow = calendar.getTime();
+        calendar.add(Calendar.DATE, -1);
+        JSONObject matchList = JSON.parseObject(queryData).getJSONObject("data");
         for (String key : matchList.keySet()) {
 
             JSONObject match = (JSONObject) matchList.get(key);
+
+            //超过今天的数据
+            if (DateUtil.getDateFormat().parse(String.valueOf(match.get("date"))).after(tomorrow)) {
+                continue;
+            }
+
             MatchBean matchBean = new MatchBean();
-            matchBean.setMatchNum(match.getString("match_num"));
-            matchBean.setLiveDate(match.getString("date_cn"));
-            matchBean.setGroupName(match.getString("l_cn"));
+            matchBean.setMatchNum(match.getString("num"));
+            matchBean.setLiveDate(match.getString("date"));
+            matchBean.setGroupName(match.getString("l_cn_abbr"));
             matchBean.setStatus(match.getString("status"));
             matchBean.setHostTeam(match.getString("h_cn"));
             matchBean.setGuestTeam(match.getString("a_cn"));
-            matchBean.setOdds(new Float[]{match.getFloat("h"), match.getFloat("d"), match.getFloat("a")});
+            if (match.getJSONObject("had") != null) {
+                matchBean.setOdds(new Float[]{match.getJSONObject("had").getFloat("h"), match.getJSONObject("had").getFloat("d"), match.getJSONObject("had").getFloat("a")});
+            } else {
+                matchBean.setOdds(new Float[]{0F, 0F, 0F});
+
+            }
             if (matchBean.getStatus().equals("Played")) {
                 matchBean.setHostNum(match.getInteger("fs_h"));
                 matchBean.setGuestNum(match.getInteger("fs_a"));

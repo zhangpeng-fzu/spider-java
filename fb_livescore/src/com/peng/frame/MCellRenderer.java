@@ -13,7 +13,7 @@ public class MCellRenderer extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-        if (String.valueOf(value).equals("0")) {
+        if ((String.valueOf(value).equals("0") || String.valueOf(value).contains(":")) && !table.getColumnName(column).equals("比分")) {
             component.setBackground(Color.RED);
         } else {
             String columnName = String.valueOf(table.getColumnModel().getColumn(column).getHeaderValue());

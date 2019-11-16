@@ -98,7 +98,7 @@ public class AesUtil {
     }
 
     public static void main(String[] args) {
-        System.out.println(AesUtil.encrypt(String.valueOf(System.currentTimeMillis() + 86400L * 3 * 1000), KEY));
+        System.out.println(AesUtil.encrypt(String.valueOf(System.currentTimeMillis() + 86400L * 30 * 1000), KEY));
         System.out.println(AesUtil.decrypt("2d4XS8MDsuuBmGajRbDnIg==", KEY));
 
     }
