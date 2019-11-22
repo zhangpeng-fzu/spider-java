@@ -23,8 +23,8 @@ public class Main {
         LiveScoreFrame frame;
         try {
             frame = new LiveScoreFrame();
-//            String licencePath = "C:/._licence";
-            String licencePath = "/Users/zhangpeng/._licence";
+            String licencePath = "C:/._licence";
+//            String licencePath = "/Users/zhangpeng/._licence";
             String invalid_timestamp;
             String licence;
             try {
@@ -64,7 +64,7 @@ public class Main {
                 //加载所有场次数据
                 System.out.println("正在加载所有场次数据");
                 LoadHistoryData.loadHistoryData();
-                LiveScoreFrame.syncMatchData();
+                LiveScoreFrame.syncMatchData(true);
 
                 new Thread(() -> {
                     System.out.println("正在计算进球数据");

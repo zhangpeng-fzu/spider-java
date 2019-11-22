@@ -67,7 +67,16 @@ public class LiveScoreFrame extends JFrame {
     }
 
 
-    public static void syncMatchData() {
+    public static void syncMatchData(boolean isFirst) {
+        if (isFirst) {
+            try {
+                ParseTodayData.getMatchData();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(new Date()));
+        }
+
         new Thread(() -> {
             //当前不是今天，停止同步
             while (isToday) {

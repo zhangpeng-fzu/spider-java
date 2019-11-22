@@ -90,7 +90,7 @@ public class PaneFactory {
                 String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
 
                 innerFrame = new JFrame(clickValue + "详细数据");
-                innerFrame.setBounds(400, 100, 500, 1000);
+                innerFrame.setBounds(400, 50, 500, 900);
                 if (clickValue.contains("串")) {
                     innerFrame.getContentPane().add(showMatchCascadePaneByNum(clickValue));
                 } else {
