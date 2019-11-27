@@ -63,6 +63,19 @@ public class PaneFactory {
         for (Integer column : columns) {
             sorter.setComparator(column, (arg0, arg1) -> {
                 try {
+                    if (String.valueOf(arg0).contains(" ")) {
+                        return 1;
+                    }
+                    if (String.valueOf(arg1).contains(" ")) {
+                        return -1;
+                    }
+
+                    if (String.valueOf(arg0).equals("")) {
+                        arg0 = "0";
+                    }
+                    if (String.valueOf(arg1).equals("")) {
+                        arg1 = "0";
+                    }
                     //有比分，设置成0
                     if (String.valueOf(arg0).contains(":")) {
                         arg0 = "0";
@@ -72,7 +85,7 @@ public class PaneFactory {
                     }
                     float a = Float.parseFloat(arg0.toString());
                     float b = Float.parseFloat(arg1.toString());
-                    return a > b ? 1 : -1;
+                    return a >= b ? 1 : -1;
                 } catch (NumberFormatException e) {
                     return 0;
                 }
@@ -354,23 +367,25 @@ public class PaneFactory {
             column++;
         }
         int total = column - 1;
-        rowData[column] = new String[]{"出现总次数", String.valueOf(matchNumCountArr[0]), String.valueOf(matchNumCountArr[1]),
-                String.valueOf(matchNumCountArr[2]), String.valueOf(matchNumCountArr[3]), String.valueOf(matchNumCountArr[4]),
-                String.valueOf(matchNumCountArr[5]), String.valueOf(matchNumCountArr[6]), String.valueOf(matchNumCountArr[7]),
-                String.valueOf(matchNumCountArr[0]), String.valueOf(matchNumCountArr[8]), String.valueOf(matchNumCountArr[9]),
-                String.valueOf(matchNumCountArr[10]), String.valueOf(matchNumCountArr[11]), String.valueOf(matchNumCountArr[12]), String.valueOf(matchNumCountArr[13])};
+        rowData[column] = new String[]{"出现总次数", handleTableData(matchNumCountArr[0]),
+                handleTableData(matchNumCountArr[1]),
+                handleTableData(matchNumCountArr[2]), handleTableData(matchNumCountArr[3]), handleTableData(matchNumCountArr[4]),
+                handleTableData(matchNumCountArr[5]), handleTableData(matchNumCountArr[6]), handleTableData(matchNumCountArr[7]),
+                handleTableData(matchNumCountArr[0]), handleTableData(matchNumCountArr[8]), handleTableData(matchNumCountArr[9]),
+                handleTableData(matchNumCountArr[10]), handleTableData(matchNumCountArr[11]), handleTableData(matchNumCountArr[12]), handleTableData(matchNumCountArr[13])}
+        ;
 
-        rowData[++column] = new String[]{"平均遗漏值", String.valueOf(total / matchNumCountArr[0]), String.valueOf(total / matchNumCountArr[1]),
-                String.valueOf(total / matchNumCountArr[2]), String.valueOf(total / matchNumCountArr[3]), String.valueOf(total / matchNumCountArr[4]),
-                String.valueOf(total / matchNumCountArr[5]), String.valueOf(total / matchNumCountArr[6]), String.valueOf(total / matchNumCountArr[7]),
-                String.valueOf(total / matchNumCountArr[0]), String.valueOf(total / matchNumCountArr[8]), String.valueOf(total / matchNumCountArr[9]),
-                String.valueOf(total / matchNumCountArr[10]), String.valueOf(total / matchNumCountArr[11]), String.valueOf(total / matchNumCountArr[12]), String.valueOf(total / matchNumCountArr[13])};
+        rowData[++column] = new String[]{"平均遗漏值", handleTableData(total / matchNumCountArr[0]), handleTableData(total / matchNumCountArr[1]),
+                handleTableData(total / matchNumCountArr[2]), handleTableData(total / matchNumCountArr[3]), handleTableData(total / matchNumCountArr[4]),
+                handleTableData(total / matchNumCountArr[5]), handleTableData(total / matchNumCountArr[6]), handleTableData(total / matchNumCountArr[7]),
+                handleTableData(total / matchNumCountArr[0]), handleTableData(total / matchNumCountArr[8]), handleTableData(total / matchNumCountArr[9]),
+                handleTableData(total / matchNumCountArr[10]), handleTableData(total / matchNumCountArr[11]), handleTableData(total / matchNumCountArr[12]), handleTableData(total / matchNumCountArr[13])};
 
-        rowData[++column] = new String[]{"最大遗漏值", String.valueOf(matchNumMaxArr[0]), String.valueOf(matchNumMaxArr[1]),
-                String.valueOf(matchNumMaxArr[2]), String.valueOf(matchNumMaxArr[3]), String.valueOf(matchNumMaxArr[4]),
-                String.valueOf(matchNumMaxArr[5]), String.valueOf(matchNumMaxArr[6]), String.valueOf(matchNumMaxArr[7]),
-                String.valueOf(matchNumMaxArr[0]), String.valueOf(matchNumMaxArr[8]), String.valueOf(matchNumMaxArr[9]),
-                String.valueOf(matchNumMaxArr[10]), String.valueOf(matchNumMaxArr[11]), String.valueOf(matchNumMaxArr[12]), String.valueOf(matchNumMaxArr[13])};
+        rowData[++column] = new String[]{"最大遗漏值", handleTableData(matchNumMaxArr[0]), handleTableData(matchNumMaxArr[1]),
+                handleTableData(matchNumMaxArr[2]), handleTableData(matchNumMaxArr[3]), handleTableData(matchNumMaxArr[4]),
+                handleTableData(matchNumMaxArr[5]), handleTableData(matchNumMaxArr[6]), handleTableData(matchNumMaxArr[7]),
+                handleTableData(matchNumMaxArr[0]), handleTableData(matchNumMaxArr[8]), handleTableData(matchNumMaxArr[9]),
+                handleTableData(matchNumMaxArr[10]), handleTableData(matchNumMaxArr[11]), handleTableData(matchNumMaxArr[12]), handleTableData(matchNumMaxArr[13])};
 
         String[][] newRowData = new String[++column][16];
         System.arraycopy(rowData, 0, newRowData, 0, column);
@@ -388,6 +403,11 @@ public class PaneFactory {
         Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
         table.scrollRectToVisible(rect);
         return sPane;
+    }
+
+
+    private String handleTableData(int value) {
+        return value + " ";
     }
 
     JScrollPane showMatchCascadePaneByNum(String matchCascadeNum) {
@@ -476,20 +496,20 @@ public class PaneFactory {
         }
         int total = column - 1;
 
-        rowData[column] = new String[]{"出现次数", String.valueOf(matchCascadeCountArr[0]), String.valueOf(matchCascadeCountArr[1]),
-                String.valueOf(matchCascadeCountArr[2]), String.valueOf(matchCascadeCountArr[3]), String.valueOf(matchCascadeCountArr[4]),
-                String.valueOf(matchCascadeCountArr[5]), String.valueOf(matchCascadeCountArr[6]), String.valueOf(matchCascadeCountArr[7]),
-                String.valueOf(matchCascadeCountArr[8])};
+        rowData[column] = new String[]{"出现次数", handleTableData(matchCascadeCountArr[0]), handleTableData(matchCascadeCountArr[1]),
+                handleTableData(matchCascadeCountArr[2]), handleTableData(matchCascadeCountArr[3]), handleTableData(matchCascadeCountArr[4]),
+                handleTableData(matchCascadeCountArr[5]), handleTableData(matchCascadeCountArr[6]), handleTableData(matchCascadeCountArr[7]),
+                handleTableData(matchCascadeCountArr[8])};
 
-        rowData[++column] = new String[]{"平均遗漏值", String.valueOf(total / matchCascadeCountArr[0]), String.valueOf(total / matchCascadeCountArr[1]),
-                String.valueOf(total / matchCascadeCountArr[2]), String.valueOf(total / matchCascadeCountArr[3]), String.valueOf(total / matchCascadeCountArr[4]),
-                String.valueOf(total / matchCascadeCountArr[5]), String.valueOf(total / matchCascadeCountArr[6]), String.valueOf(total / matchCascadeCountArr[7]),
-                String.valueOf(total / matchCascadeCountArr[8])};
+        rowData[++column] = new String[]{"平均遗漏值", handleTableData(total / matchCascadeCountArr[0]), handleTableData(total / matchCascadeCountArr[1]),
+                handleTableData(total / matchCascadeCountArr[2]), handleTableData(total / matchCascadeCountArr[3]), handleTableData(total / matchCascadeCountArr[4]),
+                handleTableData(total / matchCascadeCountArr[5]), handleTableData(total / matchCascadeCountArr[6]), handleTableData(total / matchCascadeCountArr[7]),
+                handleTableData(total / matchCascadeCountArr[8])};
 
-        rowData[++column] = new String[]{"最大遗漏值", String.valueOf(matchCascadeMaxArr[0]), String.valueOf(matchCascadeMaxArr[1]),
-                String.valueOf(matchCascadeMaxArr[2]), String.valueOf(matchCascadeMaxArr[3]), String.valueOf(matchCascadeMaxArr[4]),
-                String.valueOf(matchCascadeMaxArr[5]), String.valueOf(matchCascadeMaxArr[6]), String.valueOf(matchCascadeMaxArr[7]),
-                String.valueOf(matchCascadeMaxArr[8])};
+        rowData[++column] = new String[]{"最大遗漏值", handleTableData(matchCascadeMaxArr[0]), handleTableData(matchCascadeMaxArr[1]),
+                handleTableData(matchCascadeMaxArr[2]), handleTableData(matchCascadeMaxArr[3]), handleTableData(matchCascadeMaxArr[4]),
+                handleTableData(matchCascadeMaxArr[5]), handleTableData(matchCascadeMaxArr[6]), handleTableData(matchCascadeMaxArr[7]),
+                handleTableData(matchCascadeMaxArr[8])};
 
 
         String[][] newRowData = new String[++column][10];
