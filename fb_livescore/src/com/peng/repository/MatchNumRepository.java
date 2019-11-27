@@ -35,7 +35,7 @@ public class MatchNumRepository {
             plsql.setInt(12, matchNumBean.getTwoFour());
             plsql.setInt(13, matchNumBean.getFive_());
             plsql.setInt(14, matchNumBean.getOneTwo());
-            plsql.setInt(15, matchNumBean.getTwoFour());
+            plsql.setInt(15, matchNumBean.getTwoThree());
             plsql.setInt(16, matchNumBean.getThreeFour());
             plsql.addBatch();
         }
