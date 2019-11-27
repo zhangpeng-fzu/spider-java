@@ -204,10 +204,10 @@ public class PaneFactory {
     }
 
     JScrollPane showMatchNumPaneByDate(Date date) {
-        String[] columnNames = new String[]{"赛事编号", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球"
+        String[] columnNames = new String[]{"赛事编号", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球", "1球2球", "2球3球", "3球4球"
         };
         java.util.List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumData(date);
-        String[][] rowData = new String[matchNumBeans.size()][13];
+        String[][] rowData = new String[matchNumBeans.size()][16];
         int column = 0;
         for (MatchNumBean matchNumBean : matchNumBeans) {
             //只显示未完成的场次
@@ -219,23 +219,23 @@ public class PaneFactory {
             rowData[column] = new String[]{matchNumBean.getMatchNum(), String.valueOf(matchNumBean.getZero()), String.valueOf(matchNumBean.getOne()),
                     String.valueOf(matchNumBean.getTwo()), String.valueOf(matchNumBean.getThree()), String.valueOf(matchNumBean.getFour()),
                     String.valueOf(matchNumBean.getFive()), String.valueOf(matchNumBean.getSix()), String.valueOf(matchNumBean.getSeven()), String.valueOf(matchNumBean.getZero()),
-                    String.valueOf(matchNumBean.getOne_three()), String.valueOf(matchNumBean.getTwo_four()),
-                    String.valueOf(matchNumBean.getFive_())};
+                    String.valueOf(matchNumBean.getOneThree()), String.valueOf(matchNumBean.getTwoFour()),
+                    String.valueOf(matchNumBean.getFive_()), String.valueOf(matchNumBean.getOneTwo()), String.valueOf(matchNumBean.getTwoThree()), String.valueOf(matchNumBean.getThreeFour())};
             column++;
         }
-        String[][] newRowData = new String[column][13];
+        String[][] newRowData = new String[column][16];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
         return new JScrollPane(table);
     }
 
     JScrollPane showMatchNumPaneByNum(String matchNum) {
-        String[] columnNames = new String[]{"日期", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球"
+        String[] columnNames = new String[]{"日期", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球", "1球2球", "2球3球", "3球4球"
         };
         List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumDataByNum(matchNum);
-        String[][] rowData = new String[matchNumBeans.size()][13];
+        String[][] rowData = new String[matchNumBeans.size()][16];
         int column = 0;
 
         List<MatchBean> matchBeans = LiveDataRepository.getMatchListByNum(matchNum);
@@ -243,6 +243,8 @@ public class PaneFactory {
         for (MatchBean matchBean : matchBeans) {
             matchStatusMapByNum.put(matchBean.getLiveDate(), matchBean);
         }
+        int[] matchNumCountArr = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
         for (MatchNumBean matchNumBean : matchNumBeans) {
             String date = DateUtil.getDateFormat().format(matchNumBean.getLiveDate());
             //不显示已取消或者不存在的场次
@@ -253,7 +255,7 @@ public class PaneFactory {
             //当天未完成的场次 显示空行
             if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
                     !matchStatusMapByNum.get(date).getStatus().equals("1")) {
-                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate()), "", "", "", "", "", "", "", "", "", "", "", ""};
+                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate()), "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
             } else {
                 String zero = String.valueOf(matchNumBean.getZero());
                 String one = String.valueOf(matchNumBean.getOne());
@@ -263,57 +265,90 @@ public class PaneFactory {
                 String five = String.valueOf(matchNumBean.getFive());
                 String six = String.valueOf(matchNumBean.getSix());
                 String seven = String.valueOf(matchNumBean.getSeven());
-                String oneThree = String.valueOf(matchNumBean.getOne_three());
-                String twoFour = String.valueOf(matchNumBean.getTwo_four());
+                String oneThree = String.valueOf(matchNumBean.getOneThree());
+                String twoFour = String.valueOf(matchNumBean.getTwoFour());
                 String five_ = String.valueOf(matchNumBean.getFive_());
+                String oneTwo = String.valueOf(matchNumBean.getOneTwo());
+                String twoThree = String.valueOf(matchNumBean.getTwoThree());
+                String threeFour = String.valueOf(matchNumBean.getThreeFour());
+
 
                 String matchNumStr = matchStatusMapByNum.get(date).getHostNum() + ":" + matchStatusMapByNum.get(date).getGuestNum();
 
                 if (matchNumBean.getZero() == 0) {
                     zero = matchNumStr;
+                    matchNumCountArr[0]++;
                 }
                 if (matchNumBean.getOne() == 0) {
                     one = matchNumStr;
+                    matchNumCountArr[1]++;
                 }
                 if (matchNumBean.getTwo() == 0) {
                     two = matchNumStr;
+                    matchNumCountArr[2]++;
                 }
                 if (matchNumBean.getThree() == 0) {
                     three = matchNumStr;
+                    matchNumCountArr[3]++;
                 }
                 if (matchNumBean.getFour() == 0) {
                     four = matchNumStr;
+                    matchNumCountArr[4]++;
                 }
                 if (matchNumBean.getFive() == 0) {
                     five = matchNumStr;
+                    matchNumCountArr[5]++;
                 }
                 if (matchNumBean.getSix() == 0) {
                     six = matchNumStr;
+                    matchNumCountArr[6]++;
                 }
                 if (matchNumBean.getSeven() == 0) {
                     seven = matchNumStr;
+                    matchNumCountArr[7]++;
                 }
-                if (matchNumBean.getOne_three() == 0) {
+                if (matchNumBean.getOneThree() == 0) {
                     oneThree = matchNumStr;
+                    matchNumCountArr[8]++;
                 }
-                if (matchNumBean.getTwo_four() == 0) {
+                if (matchNumBean.getTwoFour() == 0) {
                     twoFour = matchNumStr;
+                    matchNumCountArr[9]++;
                 }
                 if (matchNumBean.getFive_() == 0) {
                     five_ = matchNumStr;
+                    matchNumCountArr[10]++;
+                }
+                if (matchNumBean.getOneTwo() == 0) {
+                    oneTwo = matchNumStr;
+                    matchNumCountArr[11]++;
+                }
+                if (matchNumBean.getTwoThree() == 0) {
+                    twoThree = matchNumStr;
+                    matchNumCountArr[12]++;
+                }
+                if (matchNumBean.getThreeFour() == 0) {
+                    threeFour = matchNumStr;
+                    matchNumCountArr[13]++;
                 }
 
                 rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate()), zero, one,
-                        two, three, four, five, six, seven, zero, oneThree, twoFour, five_};
+                        two, three, four, five, six, seven, zero, oneThree, twoFour, five_, oneTwo, twoThree, threeFour};
             }
             column++;
         }
+        rowData[column] = new String[]{"出现次数", String.valueOf(matchNumCountArr[0]), String.valueOf(matchNumCountArr[1]),
+                String.valueOf(matchNumCountArr[2]), String.valueOf(matchNumCountArr[3]), String.valueOf(matchNumCountArr[4]),
+                String.valueOf(matchNumCountArr[5]), String.valueOf(matchNumCountArr[6]), String.valueOf(matchNumCountArr[7]),
+                String.valueOf(matchNumCountArr[0]), String.valueOf(matchNumCountArr[8]), String.valueOf(matchNumCountArr[9]),
+                String.valueOf(matchNumCountArr[10]), String.valueOf(matchNumCountArr[11]), String.valueOf(matchNumCountArr[12]), String.valueOf(matchNumCountArr[13])};
 
-        String[][] newRowData = new String[column][13];
+
+        String[][] newRowData = new String[column][16];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+        this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
 
         JScrollPane sPane = new JScrollPane(table);
         JScrollBar sBar = sPane.getVerticalScrollBar();
@@ -347,7 +382,9 @@ public class PaneFactory {
             matchStatusMapByNum2.put(matchBean.getLiveDate(), matchBean.getStatus());
         }
         int column = 0;
-
+        int[] matchCascadeCountArr = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] matchCascadeAvgArr = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] matchCascadeMaxArr = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
             //不显示已取消或者不存在的场次
             String date = DateUtil.getDateFormat().format(matchCascadeBean.getLiveDate());
@@ -362,6 +399,35 @@ public class PaneFactory {
                             !matchStatusMapByNum2.get(date).equals("1"))) {
                 rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate()), "", "", "", "", "", "", "", "", ""};
             } else {
+
+                if (matchCascadeBean.getSs() == 0) {
+                    matchCascadeCountArr[0]++;
+                }
+                if (matchCascadeBean.getSp() == 0) {
+                    matchCascadeCountArr[1]++;
+                }
+                if (matchCascadeBean.getSf() == 0) {
+                    matchCascadeCountArr[2]++;
+                }
+                if (matchCascadeBean.getPs() == 0) {
+                    matchCascadeCountArr[3]++;
+                }
+                if (matchCascadeBean.getPp() == 0) {
+                    matchCascadeCountArr[4]++;
+                }
+                if (matchCascadeBean.getPf() == 0) {
+                    matchCascadeCountArr[5]++;
+                }
+                if (matchCascadeBean.getFs() == 0) {
+                    matchCascadeCountArr[5]++;
+                }
+                if (matchCascadeBean.getFp() == 0) {
+                    matchCascadeCountArr[7]++;
+                }
+                if (matchCascadeBean.getFf() == 0) {
+                    matchCascadeCountArr[8]++;
+                }
+
                 rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate()),
                         String.valueOf(matchCascadeBean.getSs()), String.valueOf(matchCascadeBean.getSp()),
                         String.valueOf(matchCascadeBean.getSf()), String.valueOf(matchCascadeBean.getPs()),
@@ -371,7 +437,15 @@ public class PaneFactory {
             }
             column++;
         }
+        rowData[column] = new String[]{"出现次数", String.valueOf(matchCascadeCountArr[0]), String.valueOf(matchCascadeCountArr[1]),
+                String.valueOf(matchCascadeCountArr[2]), String.valueOf(matchCascadeCountArr[3]), String.valueOf(matchCascadeCountArr[4]),
+                String.valueOf(matchCascadeCountArr[5]), String.valueOf(matchCascadeCountArr[6]), String.valueOf(matchCascadeCountArr[7]),
+                String.valueOf(matchCascadeCountArr[8])};
 
+        for (int i = 0; i < matchCascadeCountArr.length; i++) {
+
+
+        }
 
         String[][] newRowData = new String[column][10];
         System.arraycopy(rowData, 0, newRowData, 0, column);

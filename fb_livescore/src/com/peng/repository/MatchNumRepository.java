@@ -17,8 +17,8 @@ public class MatchNumRepository {
 
     public static void insert(List<MatchNumBean> matchNumBeans) throws SQLException {
         PreparedStatement plsql;
-        plsql = MysqlManager.getConnForNum().prepareStatement("insert into match_num (live_date,match_num,zero,one,two,three,four,five,six,seven,one_three,two_four,five_) "
-                + "values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        plsql = MysqlManager.getConnForNum().prepareStatement("insert into match_num (live_date,match_num,zero,one,two,three,four,five,six,seven,one_three,two_four,five_,one_two,two_three,three_four) "
+                + "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
         for (MatchNumBean matchNumBean : matchNumBeans) {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(matchNumBean.getLiveDate())));              //设置参数1，创建id为3212的数据
@@ -31,9 +31,12 @@ public class MatchNumRepository {
             plsql.setInt(8, matchNumBean.getFive());
             plsql.setInt(9, matchNumBean.getSix());
             plsql.setInt(10, matchNumBean.getSeven());
-            plsql.setInt(11, matchNumBean.getOne_three());
-            plsql.setInt(12, matchNumBean.getTwo_four());
+            plsql.setInt(11, matchNumBean.getOneThree());
+            plsql.setInt(12, matchNumBean.getTwoFour());
             plsql.setInt(13, matchNumBean.getFive_());
+            plsql.setInt(14, matchNumBean.getOneTwo());
+            plsql.setInt(15, matchNumBean.getTwoFour());
+            plsql.setInt(16, matchNumBean.getThreeFour());
             plsql.addBatch();
         }
         plsql.executeBatch();
@@ -79,20 +82,7 @@ public class MatchNumRepository {
             plsql.setString(2, matchNum);
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
-                matchNumBean.setLiveDate(rs.getDate("live_date"));
-                matchNumBean.setMatchNum(rs.getString("match_num"));
-                matchNumBean.setZero(rs.getInt("zero"));
-                matchNumBean.setOne(rs.getInt("one"));
-                matchNumBean.setTwo(rs.getInt("two"));
-                matchNumBean.setThree(rs.getInt("three"));
-                matchNumBean.setFour(rs.getInt("four"));
-                matchNumBean.setFive(rs.getInt("five"));
-                matchNumBean.setSix(rs.getInt("six"));
-                matchNumBean.setSeven(rs.getInt("seven"));
-                matchNumBean.setOne_three(rs.getInt("one_three"));
-                matchNumBean.setTwo_four(rs.getInt("two_four"));
-                matchNumBean.setFive_(rs.getInt("five_"));
-
+                matchNumBean = new MatchNumBean(rs);
             }
 
             plsql.close();
@@ -110,20 +100,7 @@ public class MatchNumRepository {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(date)));
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchNumBean matchNumBean = new MatchNumBean();
-                matchNumBean.setLiveDate(rs.getDate("live_date"));
-                matchNumBean.setMatchNum(rs.getString("match_num"));
-                matchNumBean.setZero(rs.getInt("zero"));
-                matchNumBean.setOne(rs.getInt("one"));
-                matchNumBean.setTwo(rs.getInt("two"));
-                matchNumBean.setThree(rs.getInt("three"));
-                matchNumBean.setFour(rs.getInt("four"));
-                matchNumBean.setFive(rs.getInt("five"));
-                matchNumBean.setSix(rs.getInt("six"));
-                matchNumBean.setSeven(rs.getInt("seven"));
-                matchNumBean.setOne_three(rs.getInt("one_three"));
-                matchNumBean.setTwo_four(rs.getInt("two_four"));
-                matchNumBean.setFive_(rs.getInt("five_"));
+                MatchNumBean matchNumBean = new MatchNumBean(rs);
                 matchNumBeans.add(matchNumBean);
             }
             plsql.close();
@@ -142,20 +119,7 @@ public class MatchNumRepository {
             plsql.setString(1, matchNum);
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchNumBean matchNumBean = new MatchNumBean();
-                matchNumBean.setLiveDate(rs.getDate("live_date"));
-                matchNumBean.setMatchNum(rs.getString("match_num"));
-                matchNumBean.setZero(rs.getInt("zero"));
-                matchNumBean.setOne(rs.getInt("one"));
-                matchNumBean.setTwo(rs.getInt("two"));
-                matchNumBean.setThree(rs.getInt("three"));
-                matchNumBean.setFour(rs.getInt("four"));
-                matchNumBean.setFive(rs.getInt("five"));
-                matchNumBean.setSix(rs.getInt("six"));
-                matchNumBean.setSeven(rs.getInt("seven"));
-                matchNumBean.setOne_three(rs.getInt("one_three"));
-                matchNumBean.setTwo_four(rs.getInt("two_four"));
-                matchNumBean.setFive_(rs.getInt("five_"));
+                MatchNumBean matchNumBean = new MatchNumBean(rs);
                 matchNumBeans.add(matchNumBean);
             }
             plsql.close();

@@ -1,5 +1,7 @@
 package com.peng.bean;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 
 public class MatchNumBean {
@@ -13,15 +15,18 @@ public class MatchNumBean {
     private int five;
     private int six;
     private int seven;
-    private int one_three;
-    private int two_four;
+    private int oneThree;
+    private int twoFour;
     private int five_;
+    private int oneTwo;
+    private int twoThree;
+    private int threeFour;
 
 
     public MatchNumBean() {
         this.zero = 0;
-        this.one_three = 0;
-        this.two_four = 0;
+        this.oneThree = 0;
+        this.twoFour = 0;
         this.five_ = 0;
         this.one = 0;
         this.two = 0;
@@ -30,7 +35,30 @@ public class MatchNumBean {
         this.five = 0;
         this.six = 0;
         this.seven = 0;
+        this.oneTwo = 0;
+        this.twoThree = 0;
+        this.threeFour = 0;
 
+    }
+
+
+    public MatchNumBean(ResultSet rs) throws SQLException {
+        this.setLiveDate(rs.getDate("live_date"));
+        this.setMatchNum(rs.getString("match_num"));
+        this.setZero(rs.getInt("zero"));
+        this.setOne(rs.getInt("one"));
+        this.setTwo(rs.getInt("two"));
+        this.setThree(rs.getInt("three"));
+        this.setFour(rs.getInt("four"));
+        this.setFive(rs.getInt("five"));
+        this.setSix(rs.getInt("six"));
+        this.setSeven(rs.getInt("seven"));
+        this.setOneThree(rs.getInt("one_three"));
+        this.setTwoFour(rs.getInt("two_four"));
+        this.setFive_(rs.getInt("five_"));
+        this.setOneTwo(rs.getInt("one_two"));
+        this.setTwoThree(rs.getInt("two_three"));
+        this.setThreeFour(rs.getInt("three_four"));
     }
 
     public Date getLiveDate() {
@@ -57,20 +85,20 @@ public class MatchNumBean {
         this.zero = zero;
     }
 
-    public int getOne_three() {
-        return one_three;
+    public int getOneThree() {
+        return oneThree;
     }
 
-    public void setOne_three(int one_three) {
-        this.one_three = one_three;
+    public void setOneThree(int oneThree) {
+        this.oneThree = oneThree;
     }
 
-    public int getTwo_four() {
-        return two_four;
+    public int getTwoFour() {
+        return twoFour;
     }
 
-    public void setTwo_four(int two_four) {
-        this.two_four = two_four;
+    public void setTwoFour(int twoFour) {
+        this.twoFour = twoFour;
     }
 
     public int getFive_() {
@@ -137,4 +165,27 @@ public class MatchNumBean {
         this.seven = seven;
     }
 
+    public int getOneTwo() {
+        return oneTwo;
+    }
+
+    public void setOneTwo(int oneTwo) {
+        this.oneTwo = oneTwo;
+    }
+
+    public int getTwoThree() {
+        return twoThree;
+    }
+
+    public void setTwoThree(int twoThree) {
+        this.twoThree = twoThree;
+    }
+
+    public int getThreeFour() {
+        return threeFour;
+    }
+
+    public void setThreeFour(int threeFour) {
+        this.threeFour = threeFour;
+    }
 }

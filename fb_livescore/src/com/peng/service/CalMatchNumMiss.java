@@ -49,8 +49,8 @@ public class CalMatchNumMiss {
                 if (matchBean != null && matchBean.getStatus().equals("1")) {
                     //如果有比赛，未中加1，中改0
                     matchNumBean.setZero(matchNumBean.getZero() + 1);
-                    matchNumBean.setOne_three(matchNumBean.getOne_three() + 1);
-                    matchNumBean.setTwo_four(matchNumBean.getTwo_four() + 1);
+                    matchNumBean.setOneThree(matchNumBean.getOneThree() + 1);
+                    matchNumBean.setTwoFour(matchNumBean.getTwoFour() + 1);
                     matchNumBean.setFive_(matchNumBean.getFive_() + 1);
                     matchNumBean.setOne(matchNumBean.getOne() + 1);
                     matchNumBean.setTwo(matchNumBean.getTwo() + 1);
@@ -59,25 +59,34 @@ public class CalMatchNumMiss {
                     matchNumBean.setFive(matchNumBean.getFive() + 1);
                     matchNumBean.setSix(matchNumBean.getSix() + 1);
                     matchNumBean.setSeven(matchNumBean.getSeven() + 1);
+                    matchNumBean.setOneTwo(matchNumBean.getOneTwo() + 1);
+                    matchNumBean.setTwoThree(matchNumBean.getTwoThree() + 1);
+                    matchNumBean.setThreeFour(matchNumBean.getThreeFour() + 1);
                     switch (matchBean.getNum()) {
                         case 0:
                             matchNumBean.setZero(0);
                             break;
                         case 1:
                             matchNumBean.setOne(0);
-                            matchNumBean.setOne_three(0);
+                            matchNumBean.setOneThree(0);
+                            matchNumBean.setOneTwo(0);
                             break;
                         case 2:
                             matchNumBean.setTwo(0);
-                            matchNumBean.setTwo_four(0);
+                            matchNumBean.setTwoFour(0);
+                            matchNumBean.setOneTwo(0);
+                            matchNumBean.setTwoThree(0);
                             break;
                         case 3:
                             matchNumBean.setThree(0);
-                            matchNumBean.setOne_three(0);
+                            matchNumBean.setOneThree(0);
+                            matchNumBean.setTwoThree(0);
+                            matchNumBean.setThreeFour(0);
                             break;
                         case 4:
                             matchNumBean.setFour(0);
-                            matchNumBean.setTwo_four(0);
+                            matchNumBean.setTwoFour(0);
+                            matchNumBean.setThreeFour(0);
                             break;
                         case 5:
                             matchNumBean.setFive(0);

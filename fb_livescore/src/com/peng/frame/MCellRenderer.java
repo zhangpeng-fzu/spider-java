@@ -20,9 +20,10 @@ public class MCellRenderer extends DefaultTableCellRenderer {
 
             if (columnName.equals("零球") || columnName.equals("1球3球") || columnName.equals("2球4球") || columnName.equals("5球6球7球")) {
                 component.setBackground(Color.LIGHT_GRAY);
+            } else if (columnName.equals("1球2球") || columnName.equals("2球3球") || columnName.equals("3球4球")) {
+                component.setBackground(Color.CYAN);
             } else {
                 component.setBackground(Color.WHITE);
-
             }
         }
 
