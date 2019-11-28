@@ -33,6 +33,7 @@ public class CalMatchCascadeMiss {
             if (matchBeans.size() == 0 && maxDate.before(lastDate)) {
                 break;
             }
+            System.out.println(String.format("正在计算%s的串关数据", DateUtil.getDateFormat().format(lastDate)));
             matchCascadeBeans = new ArrayList<>();
             MatchCascadeBean matchCascadeBean;
             for (int i = 2; i <= 300; i++) {

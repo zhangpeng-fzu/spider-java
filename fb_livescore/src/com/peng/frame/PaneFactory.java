@@ -248,7 +248,7 @@ public class PaneFactory {
         String[] columnNames = new String[]{"日期", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球", "1球2球", "2球3球", "3球4球"
         };
         List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumDataByNum(matchNum);
-        String[][] rowData = new String[matchNumBeans.size()][16];
+        String[][] rowData = new String[matchNumBeans.size() + 3][16];
         int column = 0;
 
         List<MatchBean> matchBeans = LiveDataRepository.getMatchListByNum(matchNum);
@@ -413,7 +413,7 @@ public class PaneFactory {
     JScrollPane showMatchCascadePaneByNum(String matchCascadeNum) {
         String[] columnNames = new String[]{"日期", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};// 定义表格列名数组
         List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.getMatchCascadeDataByNum(matchCascadeNum);
-        String[][] rowData = new String[matchCascadeBeans.size()][10];
+        String[][] rowData = new String[matchCascadeBeans.size() + 3][10];
         String[] matchNums = matchCascadeNum.split("串");
 
         //获取前面编号的状态

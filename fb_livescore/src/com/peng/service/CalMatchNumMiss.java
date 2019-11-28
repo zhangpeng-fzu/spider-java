@@ -33,7 +33,7 @@ public class CalMatchNumMiss {
             if (matchBeans.size() == 0 && maxDate.before(lastDate)) {
                 break;
             }
-
+            System.out.println(String.format("正在计算%s的进球数据", DateUtil.getDateFormat().format(lastDate)));
             matchNumBeans = new ArrayList<>();
             MatchNumBean matchNumBean;
             for (int i = 1; i <= 300; i++) {

@@ -4,10 +4,7 @@ import com.peng.bean.MatchCascadeBean;
 import com.peng.database.MysqlManager;
 import com.peng.util.DateUtil;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -16,7 +13,9 @@ public class MatchCascadeRepository {
 
     public static void insert(List<MatchCascadeBean> matchCascadeBeans) throws SQLException {
         PreparedStatement plsql;
-        plsql = MysqlManager.getConnForCascade().prepareStatement("insert into match_cascade (live_date,match_cascade_num,ss,sp,sf,ps,pp,pf,fs,fp,ff,odds) "
+        Connection connection = MysqlManager.getConnForCascade();
+        connection.setAutoCommit(false);
+        plsql = connection.prepareStatement("insert into match_cascade (live_date,match_cascade_num,ss,sp,sf,ps,pp,pf,fs,fp,ff,odds) "
                 + "values(?,?,?,?,?,?,?,?,?,?,?,?)");
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(matchCascadeBean.getLiveDate())));              //设置参数1，创建id为3212的数据
@@ -34,6 +33,8 @@ public class MatchCascadeRepository {
             plsql.addBatch();
         }
         plsql.executeBatch();
+        plsql.clearBatch();
+        connection.commit();
         plsql.close();
     }
 

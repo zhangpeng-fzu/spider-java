@@ -4,10 +4,7 @@ import com.peng.bean.MatchNumBean;
 import com.peng.database.MysqlManager;
 import com.peng.util.DateUtil;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -17,9 +14,10 @@ public class MatchNumRepository {
 
     public static void insert(List<MatchNumBean> matchNumBeans) throws SQLException {
         PreparedStatement plsql;
-        plsql = MysqlManager.getConnForNum().prepareStatement("insert into match_num (live_date,match_num,zero,one,two,three,four,five,six,seven,one_three,two_four,five_,one_two,two_three,three_four) "
+        Connection connection = MysqlManager.getConnForNum();
+        plsql = connection.prepareStatement("insert into match_num (live_date,match_num,zero,one,two,three,four,five,six,seven,one_three,two_four,five_,one_two,two_three,three_four) "
                 + "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-
+        connection.setAutoCommit(false);
         for (MatchNumBean matchNumBean : matchNumBeans) {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(matchNumBean.getLiveDate())));              //设置参数1，创建id为3212的数据
             plsql.setString(2, matchNumBean.getMatchNum());      //设置参数2，name 为王刚
@@ -40,6 +38,8 @@ public class MatchNumRepository {
             plsql.addBatch();
         }
         plsql.executeBatch();
+        plsql.clearBatch();
+        connection.commit();
         plsql.close();
     }
 
