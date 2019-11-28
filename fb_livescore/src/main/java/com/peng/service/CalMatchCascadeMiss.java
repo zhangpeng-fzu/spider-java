@@ -61,33 +61,28 @@ public class CalMatchCascadeMiss {
                     matchCascadeBean.setOdds(Arrays.toString(new List[]{odds}));
                     if (matchBeans.get(formatMatchNum(i - 1)).getStatus().equals("1") &&
                             matchBeans.get(formatMatchNum(i)).getStatus().equals("1")) {
-                        matchCascadeBean.setSs(matchCascadeBean.getSs() + 1);
-                        matchCascadeBean.setSp(matchCascadeBean.getSp() + 1);
-                        matchCascadeBean.setSf(matchCascadeBean.getSf() + 1);
-                        matchCascadeBean.setPs(matchCascadeBean.getPs() + 1);
-                        matchCascadeBean.setPp(matchCascadeBean.getPp() + 1);
-                        matchCascadeBean.setPf(matchCascadeBean.getPf() + 1);
-                        matchCascadeBean.setFs(matchCascadeBean.getFs() + 1);
-                        matchCascadeBean.setFp(matchCascadeBean.getFp() + 1);
-                        matchCascadeBean.setFf(matchCascadeBean.getFf() + 1);
+                        for (int i1 = 0; i1 < matchCascadeBean.getMissValues().length; i1++) {
+                            matchCascadeBean.getMissValues()[i1]++;
+                        }
+
                         if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                            matchCascadeBean.setSs(0);
+                            matchCascadeBean.getMissValues()[0] = 0;
                         } else if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                            matchCascadeBean.setSp(0);
+                            matchCascadeBean.getMissValues()[1] = 0;
                         } else if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() < 0) {
-                            matchCascadeBean.setSf(0);
+                            matchCascadeBean.getMissValues()[2] = 0;
                         } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                            matchCascadeBean.setPs(0);
+                            matchCascadeBean.getMissValues()[3] = 0;
                         } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                            matchCascadeBean.setPp(0);
+                            matchCascadeBean.getMissValues()[4] = 0;
                         } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() < 0) {
-                            matchCascadeBean.setPf(0);
+                            matchCascadeBean.getMissValues()[5] = 0;
                         } else if (pre.getHostNum() - pre.getGuestNum() < 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                            matchCascadeBean.setFs(0);
+                            matchCascadeBean.getMissValues()[6] = 0;
                         } else if (pre.getHostNum() - pre.getGuestNum() < 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                            matchCascadeBean.setFp(0);
+                            matchCascadeBean.getMissValues()[7] = 0;
                         } else {
-                            matchCascadeBean.setFf(0);
+                            matchCascadeBean.getMissValues()[8] = 0;
                         }
                     }
                 }

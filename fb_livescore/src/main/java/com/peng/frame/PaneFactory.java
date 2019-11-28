@@ -192,15 +192,10 @@ public class PaneFactory {
             }
 
             int j = column * 9;
-            rowData[j] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜胜", String.valueOf(matchCascadeBean.getSs()), odds[0]};
-            rowData[j + 1] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜平", String.valueOf(matchCascadeBean.getSp()), odds[1]};
-            rowData[j + 2] = new String[]{matchCascadeBean.getMatchCascadeNum(), "胜负", String.valueOf(matchCascadeBean.getSf()), odds[2]};
-            rowData[j + 3] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平胜", String.valueOf(matchCascadeBean.getPs()), odds[3]};
-            rowData[j + 4] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平平", String.valueOf(matchCascadeBean.getPp()), odds[4]};
-            rowData[j + 5] = new String[]{matchCascadeBean.getMatchCascadeNum(), "平负", String.valueOf(matchCascadeBean.getPf()), odds[5]};
-            rowData[j + 6] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负胜", String.valueOf(matchCascadeBean.getFs()), odds[6]};
-            rowData[j + 7] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负平", String.valueOf(matchCascadeBean.getFp()), odds[7]};
-            rowData[j + 8] = new String[]{matchCascadeBean.getMatchCascadeNum(), "负负", String.valueOf(matchCascadeBean.getFf()), odds[8]};
+            String[] columns = {"胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};
+            for (int i = 0; i < matchCascadeBean.getMissValues().length; i++) {
+                rowData[j + i] = new String[]{matchCascadeBean.getMatchCascadeNum(), columns[i], String.valueOf(matchCascadeBean.getMissValues()[i]), odds[i]};
+            }
             column++;
         }
 
@@ -446,71 +441,37 @@ public class PaneFactory {
                             !matchStatusMapByNum2.get(date).equals("1"))) {
                 rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate()), "", "", "", "", "", "", "", "", ""};
             } else {
-
-                if (matchCascadeBean.getSs() == 0) {
-                    matchCascadeCountArr[0]++;
+                rowData[column] = new String[10];
+                rowData[column][0] = DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate());
+                for (int i = 0; i < matchCascadeBean.getMissValues().length; i++) {
+                    if (matchCascadeBean.getMissValues()[i] == 0) {
+                        matchCascadeCountArr[i]++;
+                    }
+                    matchCascadeMaxArr[i] = Math.max(matchCascadeMaxArr[i], matchCascadeBean.getMissValues()[i]);
+                    rowData[column][i + 1] = String.valueOf(matchCascadeBean.getMissValues()[i]);
                 }
-                if (matchCascadeBean.getSp() == 0) {
-                    matchCascadeCountArr[1]++;
-                }
-                if (matchCascadeBean.getSf() == 0) {
-                    matchCascadeCountArr[2]++;
-                }
-                if (matchCascadeBean.getPs() == 0) {
-                    matchCascadeCountArr[3]++;
-                }
-                if (matchCascadeBean.getPp() == 0) {
-                    matchCascadeCountArr[4]++;
-                }
-                if (matchCascadeBean.getPf() == 0) {
-                    matchCascadeCountArr[5]++;
-                }
-                if (matchCascadeBean.getFs() == 0) {
-                    matchCascadeCountArr[6]++;
-                }
-                if (matchCascadeBean.getFp() == 0) {
-                    matchCascadeCountArr[7]++;
-                }
-                if (matchCascadeBean.getFf() == 0) {
-                    matchCascadeCountArr[8]++;
-                }
-
-                matchCascadeMaxArr[0] = Math.max(matchCascadeMaxArr[0], matchCascadeBean.getSs());
-                matchCascadeMaxArr[1] = Math.max(matchCascadeMaxArr[1], matchCascadeBean.getSp());
-                matchCascadeMaxArr[2] = Math.max(matchCascadeMaxArr[2], matchCascadeBean.getSf());
-                matchCascadeMaxArr[3] = Math.max(matchCascadeMaxArr[3], matchCascadeBean.getPs());
-                matchCascadeMaxArr[4] = Math.max(matchCascadeMaxArr[4], matchCascadeBean.getPp());
-                matchCascadeMaxArr[5] = Math.max(matchCascadeMaxArr[5], matchCascadeBean.getPf());
-                matchCascadeMaxArr[6] = Math.max(matchCascadeMaxArr[6], matchCascadeBean.getFs());
-                matchCascadeMaxArr[7] = Math.max(matchCascadeMaxArr[7], matchCascadeBean.getFp());
-                matchCascadeMaxArr[8] = Math.max(matchCascadeMaxArr[8], matchCascadeBean.getFf());
-
-                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate()),
-                        String.valueOf(matchCascadeBean.getSs()), String.valueOf(matchCascadeBean.getSp()),
-                        String.valueOf(matchCascadeBean.getSf()), String.valueOf(matchCascadeBean.getPs()),
-                        String.valueOf(matchCascadeBean.getPp()), String.valueOf(matchCascadeBean.getPf()),
-                        String.valueOf(matchCascadeBean.getFs()), String.valueOf(matchCascadeBean.getFp()),
-                        String.valueOf(matchCascadeBean.getFf())};
             }
             column++;
         }
         int total = column - 1;
 
-        rowData[column] = new String[]{"出现次数", handleTableData(matchCascadeCountArr[0]), handleTableData(matchCascadeCountArr[1]),
-                handleTableData(matchCascadeCountArr[2]), handleTableData(matchCascadeCountArr[3]), handleTableData(matchCascadeCountArr[4]),
-                handleTableData(matchCascadeCountArr[5]), handleTableData(matchCascadeCountArr[6]), handleTableData(matchCascadeCountArr[7]),
-                handleTableData(matchCascadeCountArr[8])};
-
-        rowData[++column] = new String[]{"平均遗漏值", handleTableData(total / matchCascadeCountArr[0]), handleTableData(total / matchCascadeCountArr[1]),
-                handleTableData(total / matchCascadeCountArr[2]), handleTableData(total / matchCascadeCountArr[3]), handleTableData(total / matchCascadeCountArr[4]),
-                handleTableData(total / matchCascadeCountArr[5]), handleTableData(total / matchCascadeCountArr[6]), handleTableData(total / matchCascadeCountArr[7]),
-                handleTableData(total / matchCascadeCountArr[8])};
-
-        rowData[++column] = new String[]{"最大遗漏值", handleTableData(matchCascadeMaxArr[0]), handleTableData(matchCascadeMaxArr[1]),
-                handleTableData(matchCascadeMaxArr[2]), handleTableData(matchCascadeMaxArr[3]), handleTableData(matchCascadeMaxArr[4]),
-                handleTableData(matchCascadeMaxArr[5]), handleTableData(matchCascadeMaxArr[6]), handleTableData(matchCascadeMaxArr[7]),
-                handleTableData(matchCascadeMaxArr[8])};
-
+        rowData[column] = new String[10];
+        rowData[column][0] = "出现次数";
+        for (int i = 0; i < matchCascadeCountArr.length; i++) {
+            rowData[column][i + 1] = handleTableData(matchCascadeCountArr[i]);
+        }
+        column++;
+        rowData[column] = new String[10];
+        rowData[column][0] = "平均遗漏值";
+        for (int i = 0; i < matchCascadeCountArr.length; i++) {
+            rowData[column][i + 1] = handleTableData(total / matchCascadeCountArr[i]);
+        }
+        column++;
+        rowData[column] = new String[10];
+        rowData[column][0] = "最大遗漏值";
+        for (int i = 0; i < matchCascadeMaxArr.length; i++) {
+            rowData[column][i + 1] = handleTableData(matchCascadeMaxArr[i]);
+        }
 
         String[][] newRowData = new String[++column][10];
         System.arraycopy(rowData, 0, newRowData, 0, column);
