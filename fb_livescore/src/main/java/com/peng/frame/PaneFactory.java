@@ -36,6 +36,18 @@ public class PaneFactory {
         return paneFactory;
     }
 
+    private static boolean isPlaying(String status) {
+        return Constants.PLAYING.equals(status);
+    }
+
+    private static boolean isFinished(String status) {
+        return Constants.FINISHED.equals(status);
+    }
+
+    private static boolean isCancelled(String status) {
+        return Constants.CANCELLED.equals(status);
+    }
+
     private PaneFactory setTableHeader(JTable table) {
         table.setAutoCreateRowSorter(true);
         JTableHeader tableHeader = table.getTableHeader();
@@ -97,7 +109,6 @@ public class PaneFactory {
         return this;
     }
 
-
     private PaneFactory setTableClick(JTable table) {
         table.addMouseListener(new MouseAdapter() {
             @Override
@@ -118,7 +129,6 @@ public class PaneFactory {
         return this;
     }
 
-
     JScrollPane showMatchDataPane(Date date) {
 
         String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
@@ -135,14 +145,14 @@ public class PaneFactory {
 
             String status = matchBean.getStatus();
             switch (matchBean.getStatus()) {
-                case "2":
+                case Constants.CANCELLED:
                     status = "取消";
                     break;
-                case "0":
+                case Constants.PLAYING:
                     status = "未";
                     result = "";
                     break;
-                case "1":
+                case Constants.FINISHED:
                     status = "完";
                     break;
                 default:
@@ -170,13 +180,9 @@ public class PaneFactory {
             String[] matchNums = matchCascadeBean.getMatchCascadeNum().split("串");
             //只显示有比赛的场次
             if (!matchStatusMap.containsKey(matchNums[0]) || !matchStatusMap.containsKey(matchNums[1]) ||
-                    (DateUtil.getDateFormat().format(date).equals(DateUtil.getDateFormat().format(new Date()))
-                            && (!matchStatusMap.get(matchNums[0]).equals("0") || !matchStatusMap.get(matchNums[1]).equals("0"))
-                    )
-                    || (!DateUtil.getDateFormat().format(date).equals(DateUtil.getDateFormat().format(new Date()))
-                    && (!matchStatusMap.get(matchNums[0]).equals("1") || !matchStatusMap.get(matchNums[1]).equals("1"))
-            )
-            ) {
+                    (DateUtil.isToday(date) && (!isPlaying(matchStatusMap.get(matchNums[0])) || !isPlaying(matchStatusMap.get(matchNums[1]))))
+                    || (!DateUtil.isToday(date) && (!isFinished(matchStatusMap.get(matchNums[0])) || !isFinished(matchStatusMap.get(matchNums[1])))
+            )) {
                 continue;
             }
 
@@ -228,8 +234,8 @@ public class PaneFactory {
         for (MatchNumBean matchNumBean : matchNumBeans) {
             //只显示未完成的场次
             if (!matchStatusMap.containsKey(matchNumBean.getMatchNum()) ||
-                    (DateUtil.getDateFormat().format(date).equals(DateUtil.getDateFormat().format(new Date())) && !matchStatusMap.get(matchNumBean.getMatchNum()).equals("0"))
-                    || (!DateUtil.getDateFormat().format(date).equals(DateUtil.getDateFormat().format(new Date())) && !matchStatusMap.get(matchNumBean.getMatchNum()).equals("1"))) {
+                    (DateUtil.isToday(date) && !isPlaying(matchStatusMap.get(matchNumBean.getMatchNum())))
+                    || (!DateUtil.isToday(date) && !isFinished(matchStatusMap.get(matchNumBean.getMatchNum())))) {
                 continue;
             }
             rowData[column] = new String[16];
@@ -271,13 +277,12 @@ public class PaneFactory {
         for (MatchNumBean matchNumBean : matchNumBeans) {
             String date = DateUtil.getDateFormat().format(matchNumBean.getLiveDate());
             //不显示已取消或者不存在的场次
-            if (!matchStatusMapByNum.containsKey(date)
-                    || matchStatusMapByNum.get(date).getStatus().equals("2")) {
+            if (!matchStatusMapByNum.containsKey(date) || isCancelled(matchStatusMapByNum.get(date).getStatus())) {
                 continue;
             }
             //当天未完成的场次 显示空行
             if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
-                    !matchStatusMapByNum.get(date).getStatus().equals("1")) {
+                    !isFinished(matchStatusMapByNum.get(date).getStatus())) {
                 rowData[column] = new String[16];
                 rowData[column][0] = DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate());
             } else {
@@ -289,7 +294,7 @@ public class PaneFactory {
                         Field field = MatchNumBean.class.getDeclaredField(filedName);
                         field.setAccessible(true);
                         missValues[i] = String.valueOf(field.get(matchNumBean));
-                        if (String.valueOf(field.get(matchNumBean)).equals("0")) {
+                        if (isPlaying(String.valueOf(field.get(matchNumBean)))) {
                             missValues[i] = matchStatusMapByNum.get(date).getHostNum() + ":" + matchStatusMapByNum.get(date).getGuestNum();
                             matchNumCountArr[i]++;
                         }
@@ -341,7 +346,6 @@ public class PaneFactory {
         return sPane;
     }
 
-
     private String handleTableData(int value) {
         return value + " ";
     }
@@ -371,15 +375,13 @@ public class PaneFactory {
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
             //不显示已取消或者不存在的场次
             String date = DateUtil.getDateFormat().format(matchCascadeBean.getLiveDate());
-            if (!matchStatusMapByNum1.containsKey(date) ||
-                    !matchStatusMapByNum2.containsKey(date) ||
-                    matchStatusMapByNum1.get(date).equals("2") ||
-                    matchStatusMapByNum2.get(date).equals("2")) {
+            if (!matchStatusMapByNum1.containsKey(date) || !matchStatusMapByNum2.containsKey(date) ||
+                    isCancelled(matchStatusMapByNum1.get(date)) ||
+                    isCancelled(matchStatusMapByNum2.get(date))) {
                 continue;
             }
             if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
-                    (!matchStatusMapByNum1.get(date).equals("1") ||
-                            !matchStatusMapByNum2.get(date).equals("1"))) {
+                    (!isFinished(matchStatusMapByNum1.get(date)) || !isFinished(matchStatusMapByNum2.get(date)))) {
                 rowData[column] = new String[10];
                 rowData[column][0] = DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate());
             } else {

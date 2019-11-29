@@ -1,6 +1,6 @@
 package com.peng.frame;
 
-import com.peng.service.ParseTodayData;
+import com.peng.service.SyncTodayData;
 import com.peng.util.DateUtil;
 
 import javax.swing.*;
@@ -70,7 +70,7 @@ public class LiveScoreFrame extends JFrame {
     public static void syncMatchData(boolean isFirst) {
         if (isFirst) {
             try {
-                ParseTodayData.getMatchData();
+                SyncTodayData.getMatchData();
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -83,7 +83,7 @@ public class LiveScoreFrame extends JFrame {
                 System.out.println(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
 
                 try {
-                    ParseTodayData.getMatchData();
+                    SyncTodayData.getMatchData();
                     jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(new Date()));
                 } catch (ParseException e) {
                     e.printStackTrace();
