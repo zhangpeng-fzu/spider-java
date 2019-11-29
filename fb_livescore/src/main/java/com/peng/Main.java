@@ -23,7 +23,7 @@ public class Main {
         LiveScoreFrame frame;
         try {
             frame = new LiveScoreFrame();
-            String licencePath = "C:/._licence";
+            String licencePath = "D:/._licence";
 //            String licencePath = "/Users/zhangpeng/._licence";
             String invalid_timestamp;
             String licence;

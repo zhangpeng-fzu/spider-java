@@ -2,10 +2,12 @@ package com.peng.service;
 
 import com.peng.bean.MatchBean;
 import com.peng.bean.MatchNumBean;
+import com.peng.constant.Constants;
 import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchNumRepository;
 import com.peng.util.DateUtil;
 
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
@@ -48,58 +50,26 @@ public class CalMatchNumMiss {
                 MatchBean matchBean = matchBeans.get(formatMatchNum(i));
                 if (matchBean != null && matchBean.getStatus().equals("1")) {
                     //如果有比赛，未中加1，中改0
-                    matchNumBean.setZero(matchNumBean.getZero() + 1);
-                    matchNumBean.setOneThree(matchNumBean.getOneThree() + 1);
-                    matchNumBean.setTwoFour(matchNumBean.getTwoFour() + 1);
-                    matchNumBean.setFive_(matchNumBean.getFive_() + 1);
-                    matchNumBean.setOne(matchNumBean.getOne() + 1);
-                    matchNumBean.setTwo(matchNumBean.getTwo() + 1);
-                    matchNumBean.setThree(matchNumBean.getThree() + 1);
-                    matchNumBean.setFour(matchNumBean.getFour() + 1);
-                    matchNumBean.setFive(matchNumBean.getFive() + 1);
-                    matchNumBean.setSix(matchNumBean.getSix() + 1);
-                    matchNumBean.setSeven(matchNumBean.getSeven() + 1);
-                    matchNumBean.setOneTwo(matchNumBean.getOneTwo() + 1);
-                    matchNumBean.setTwoThree(matchNumBean.getTwoThree() + 1);
-                    matchNumBean.setThreeFour(matchNumBean.getThreeFour() + 1);
-                    switch (matchBean.getNum()) {
-                        case 0:
-                            matchNumBean.setZero(0);
-                            break;
-                        case 1:
-                            matchNumBean.setOne(0);
-                            matchNumBean.setOneThree(0);
-                            matchNumBean.setOneTwo(0);
-                            break;
-                        case 2:
-                            matchNumBean.setTwo(0);
-                            matchNumBean.setTwoFour(0);
-                            matchNumBean.setOneTwo(0);
-                            matchNumBean.setTwoThree(0);
-                            break;
-                        case 3:
-                            matchNumBean.setThree(0);
-                            matchNumBean.setOneThree(0);
-                            matchNumBean.setTwoThree(0);
-                            matchNumBean.setThreeFour(0);
-                            break;
-                        case 4:
-                            matchNumBean.setFour(0);
-                            matchNumBean.setTwoFour(0);
-                            matchNumBean.setThreeFour(0);
-                            break;
-                        case 5:
-                            matchNumBean.setFive(0);
-                            matchNumBean.setFive_(0);
-                            break;
-                        case 6:
-                            matchNumBean.setSix(0);
-                            matchNumBean.setFive_(0);
-
-                            break;
-                        default:
-                            matchNumBean.setFive_(0);
-                            matchNumBean.setSeven(0);
+                    String[] fields = Constants.MATCH_NUM_FIELD_ARR;
+                    for (int i1 = 0; i1 < fields.length; i1++) {
+                        String filedName = fields[i1];
+                        //zero重复，第一个zero不处理
+                        if (i1 == 1) {
+                            continue;
+                        }
+                        try {
+                            Field field = MatchNumBean.class.getDeclaredField(filedName);
+                            field.setAccessible(true);
+                            field.set(matchNumBean, Integer.parseInt(String.valueOf(field.get(matchNumBean))) + 1);
+                            if (filedName.contains(Constants.EN_NUM[matchBean.getNum()])) {
+                                field.set(matchNumBean, 0);
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (matchBean.getNum() >= 5) {
+                        matchNumBean.setFive_(0);
                     }
                 }
                 matchNumBeans.add(matchNumBean);

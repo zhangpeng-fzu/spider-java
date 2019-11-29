@@ -2,10 +2,12 @@ package com.peng.service;
 
 import com.peng.bean.MatchBean;
 import com.peng.bean.MatchCascadeBean;
+import com.peng.constant.Constants;
 import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchCascadeRepository;
 import com.peng.util.DateUtil;
 
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
@@ -61,28 +63,18 @@ public class CalMatchCascadeMiss {
                     matchCascadeBean.setOdds(Arrays.toString(new List[]{odds}));
                     if (matchBeans.get(formatMatchNum(i - 1)).getStatus().equals("1") &&
                             matchBeans.get(formatMatchNum(i)).getStatus().equals("1")) {
-                        for (int i1 = 0; i1 < matchCascadeBean.getMissValues().length; i1++) {
-                            matchCascadeBean.getMissValues()[i1]++;
-                        }
-
-                        if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                            matchCascadeBean.getMissValues()[0] = 0;
-                        } else if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                            matchCascadeBean.getMissValues()[1] = 0;
-                        } else if (pre.getHostNum() - pre.getGuestNum() > 0 && cur.getHostNum() - cur.getGuestNum() < 0) {
-                            matchCascadeBean.getMissValues()[2] = 0;
-                        } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                            matchCascadeBean.getMissValues()[3] = 0;
-                        } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                            matchCascadeBean.getMissValues()[4] = 0;
-                        } else if (pre.getHostNum() - pre.getGuestNum() == 0 && cur.getHostNum() - cur.getGuestNum() < 0) {
-                            matchCascadeBean.getMissValues()[5] = 0;
-                        } else if (pre.getHostNum() - pre.getGuestNum() < 0 && cur.getHostNum() - cur.getGuestNum() > 0) {
-                            matchCascadeBean.getMissValues()[6] = 0;
-                        } else if (pre.getHostNum() - pre.getGuestNum() < 0 && cur.getHostNum() - cur.getGuestNum() == 0) {
-                            matchCascadeBean.getMissValues()[7] = 0;
-                        } else {
-                            matchCascadeBean.getMissValues()[8] = 0;
+                        for (int j = 0; j < Constants.MATCH_CASCADE_FIELD_ARR.length; j++) {
+                            try {
+                                String fieldName = Constants.MATCH_CASCADE_FIELD_ARR[j];
+                                Field field = MatchCascadeBean.class.getDeclaredField(fieldName);
+                                field.setAccessible(true);
+                                field.set(matchCascadeBean, Integer.parseInt(String.valueOf(field.get(matchCascadeBean))) + 1);
+                                if ((pre.getResult() + cur.getResult()).equals(fieldName)) {
+                                    field.set(matchCascadeBean, 0);
+                                }
+                            } catch (NoSuchFieldException | IllegalAccessException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }

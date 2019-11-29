@@ -2,12 +2,10 @@ package com.peng.repository;
 
 import com.peng.bean.MatchCascadeBean;
 import com.peng.database.MysqlManager;
-import com.peng.util.ArrayUtil;
 import com.peng.util.DateUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -17,13 +15,21 @@ public class MatchCascadeRepository {
         PreparedStatement plsql;
         Connection connection = MysqlManager.getConnForCascade();
         connection.setAutoCommit(false);
-        plsql = connection.prepareStatement("insert into match_cascade (live_date,match_cascade_num,miss_values,odds) "
-                + "values(?,?,?,?)");
+        plsql = connection.prepareStatement("insert into match_cascade (live_date,match_cascade_num,ss,sp,sf,ps,pp,pf,fs,fp,ff,odds) "
+                + "values(?,?,?,?,?,?,?,?,?,?,?,?)");
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(matchCascadeBean.getLiveDate())));              //设置参数1，创建id为3212的数据
             plsql.setString(2, matchCascadeBean.getMatchCascadeNum());      //设置参数2，name 为王刚
-            plsql.setString(3, Arrays.toString(matchCascadeBean.getMissValues()));
-            plsql.setString(4, matchCascadeBean.getOdds());
+            plsql.setInt(3, matchCascadeBean.getSs());
+            plsql.setInt(4, matchCascadeBean.getSp());
+            plsql.setInt(5, matchCascadeBean.getSf());
+            plsql.setInt(6, matchCascadeBean.getPs());
+            plsql.setInt(7, matchCascadeBean.getPp());
+            plsql.setInt(8, matchCascadeBean.getPf());
+            plsql.setInt(9, matchCascadeBean.getFs());
+            plsql.setInt(10, matchCascadeBean.getFp());
+            plsql.setInt(11, matchCascadeBean.getFf());
+            plsql.setString(12, matchCascadeBean.getOdds());
             plsql.addBatch();
         }
         plsql.executeBatch();
@@ -69,9 +75,7 @@ public class MatchCascadeRepository {
             plsql.setString(2, matchCascadeNum);
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
-                matchCascadeBean.setLiveDate(rs.getDate("live_date"));
-                matchCascadeBean.setMatchCascadeNum(rs.getString("match_cascade_num"));
-                matchCascadeBean.setMissValues(ArrayUtil.string2IntArray(rs.getString("miss_values"), 9));
+                matchCascadeBean = new MatchCascadeBean(rs);
             }
 
             plsql.close();
@@ -90,11 +94,7 @@ public class MatchCascadeRepository {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(date)));
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
-                matchCascadeBean.setLiveDate(rs.getDate("live_date"));
-                matchCascadeBean.setMatchCascadeNum(rs.getString("match_cascade_num"));
-                matchCascadeBean.setMissValues(ArrayUtil.string2IntArray(rs.getString("miss_values"), 9));
-                matchCascadeBeans.add(matchCascadeBean);
+                matchCascadeBeans.add(new MatchCascadeBean(rs));
             }
 
             plsql.close();
@@ -112,12 +112,7 @@ public class MatchCascadeRepository {
             plsql.setString(1, matchCascadeNum);
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
-                matchCascadeBean.setLiveDate(rs.getDate("live_date"));
-                matchCascadeBean.setMatchCascadeNum(rs.getString("match_cascade_num"));
-                matchCascadeBean.setMissValues(ArrayUtil.string2IntArray(rs.getString("miss_values"), 9));
-                matchCascadeBean.setOdds(rs.getString("odds"));
-                matchCascadeBeans.add(matchCascadeBean);
+                matchCascadeBeans.add(new MatchCascadeBean(rs));
             }
             plsql.close();
 

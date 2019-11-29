@@ -3,6 +3,7 @@ package com.peng.frame;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MatchCascadeBean;
 import com.peng.bean.MatchNumBean;
+import com.peng.constant.Constants;
 import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchCascadeRepository;
 import com.peng.repository.MatchNumRepository;
@@ -14,6 +15,7 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -119,7 +121,7 @@ public class PaneFactory {
 
     JScrollPane showMatchDataPane(Date date) {
 
-        String[] columnNames = new String[]{"赛事编号", "比赛时间", "赛事", "状态", "主队", "客队", "胜赔率", "平赔率", "负赔率", "比分", "赛果"};// 定义表格列名数组
+        String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
         java.util.List<MatchBean> matchBeanList = LiveDataRepository.getMatchData(date);
 
         String[][] rowData = new String[matchBeanList.size()][11];
@@ -149,7 +151,7 @@ public class PaneFactory {
             }
             rowData[i] = new String[]{matchBean.getMatchNum(), matchBean.getLiveDate(), matchBean.getGroupName(), status, matchBean.getHostTeam(),
                     matchBean.getGuestTeam(), String.valueOf(matchBean.getOdds()[0]), String.valueOf(matchBean.getOdds()[1]), String.valueOf(matchBean.getOdds()[2]),
-                    status.equals("完") ? String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()) : "", result};
+                    status.equals("完") ? String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()) : "", Constants.MATCH_RES_MAP.get(result)};
         }
 
 
@@ -192,9 +194,16 @@ public class PaneFactory {
             }
 
             int j = column * 9;
-            String[] columns = {"胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};
-            for (int i = 0; i < matchCascadeBean.getMissValues().length; i++) {
-                rowData[j + i] = new String[]{matchCascadeBean.getMatchCascadeNum(), columns[i], String.valueOf(matchCascadeBean.getMissValues()[i]), odds[i]};
+            String[] columns = Constants.MATCH_CASCADE_COLUMNS;
+            for (int i = 0; i < Constants.MATCH_CASCADE_FIELD_ARR.length; i++) {
+                try {
+                    Field field = MatchCascadeBean.class.getDeclaredField(Constants.MATCH_CASCADE_FIELD_ARR[i]);
+                    field.setAccessible(true);
+                    rowData[j + i] = new String[]{matchCascadeBean.getMatchCascadeNum(), columns[i], String.valueOf(field.get(matchCascadeBean)), odds[i]};
+
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
             }
             column++;
         }
@@ -212,8 +221,7 @@ public class PaneFactory {
     }
 
     JScrollPane showMatchNumPaneByDate(Date date) {
-        String[] columnNames = new String[]{"赛事编号", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球", "1球2球", "2球3球", "3球4球"
-        };
+        String[] columnNames = Constants.MATCH_NUM_COLUMNS;
         java.util.List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumData(date);
         String[][] rowData = new String[matchNumBeans.size()][16];
         int column = 0;
@@ -224,11 +232,18 @@ public class PaneFactory {
                     || (!DateUtil.getDateFormat().format(date).equals(DateUtil.getDateFormat().format(new Date())) && !matchStatusMap.get(matchNumBean.getMatchNum()).equals("1"))) {
                 continue;
             }
-            rowData[column] = new String[]{matchNumBean.getMatchNum(), String.valueOf(matchNumBean.getZero()), String.valueOf(matchNumBean.getOne()),
-                    String.valueOf(matchNumBean.getTwo()), String.valueOf(matchNumBean.getThree()), String.valueOf(matchNumBean.getFour()),
-                    String.valueOf(matchNumBean.getFive()), String.valueOf(matchNumBean.getSix()), String.valueOf(matchNumBean.getSeven()), String.valueOf(matchNumBean.getZero()),
-                    String.valueOf(matchNumBean.getOneThree()), String.valueOf(matchNumBean.getTwoFour()),
-                    String.valueOf(matchNumBean.getFive_()), String.valueOf(matchNumBean.getOneTwo()), String.valueOf(matchNumBean.getTwoThree()), String.valueOf(matchNumBean.getThreeFour())};
+            rowData[column] = new String[16];
+            rowData[column][0] = matchNumBean.getMatchNum();
+            for (int i = 0; i < Constants.MATCH_NUM_FIELD_ARR.length; i++) {
+                try {
+                    Field field = MatchNumBean.class.getDeclaredField(Constants.MATCH_NUM_FIELD_ARR[i]);
+                    field.setAccessible(true);
+                    rowData[column][i + 1] = String.valueOf(field.get(matchNumBean));
+
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
             column++;
         }
         String[][] newRowData = new String[column][16];
@@ -240,8 +255,7 @@ public class PaneFactory {
     }
 
     JScrollPane showMatchNumPaneByNum(String matchNum) {
-        String[] columnNames = new String[]{"日期", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球", "1球2球", "2球3球", "3球4球"
-        };
+        String[] columnNames = Constants.MATCH_NUM_COLUMNS_DATE;
         List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumDataByNum(matchNum);
         String[][] rowData = new String[matchNumBeans.size() + 3][16];
         int column = 0;
@@ -251,8 +265,8 @@ public class PaneFactory {
         for (MatchBean matchBean : matchBeans) {
             matchStatusMapByNum.put(matchBean.getLiveDate(), matchBean);
         }
-        int[] matchNumCountArr = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        int[] matchNumMaxArr = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] matchNumCountArr = new int[15];
+        int[] matchNumMaxArr = new int[15];
 
         for (MatchNumBean matchNumBean : matchNumBeans) {
             String date = DateUtil.getDateFormat().format(matchNumBean.getLiveDate());
@@ -264,123 +278,50 @@ public class PaneFactory {
             //当天未完成的场次 显示空行
             if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
                     !matchStatusMapByNum.get(date).getStatus().equals("1")) {
-                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate()), "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
+                rowData[column] = new String[16];
+                rowData[column][0] = DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate());
             } else {
-                String zero = String.valueOf(matchNumBean.getZero());
-                String one = String.valueOf(matchNumBean.getOne());
-                String two = String.valueOf(matchNumBean.getTwo());
-                String three = String.valueOf(matchNumBean.getThree());
-                String four = String.valueOf(matchNumBean.getFour());
-                String five = String.valueOf(matchNumBean.getFive());
-                String six = String.valueOf(matchNumBean.getSix());
-                String seven = String.valueOf(matchNumBean.getSeven());
-                String oneThree = String.valueOf(matchNumBean.getOneThree());
-                String twoFour = String.valueOf(matchNumBean.getTwoFour());
-                String five_ = String.valueOf(matchNumBean.getFive_());
-                String oneTwo = String.valueOf(matchNumBean.getOneTwo());
-                String twoThree = String.valueOf(matchNumBean.getTwoThree());
-                String threeFour = String.valueOf(matchNumBean.getThreeFour());
 
-
-                String matchNumStr = matchStatusMapByNum.get(date).getHostNum() + ":" + matchStatusMapByNum.get(date).getGuestNum();
-
-                if (matchNumBean.getZero() == 0) {
-                    zero = matchNumStr;
-                    matchNumCountArr[0]++;
+                String[] missValues = new String[15];
+                for (int i = 0; i < Constants.MATCH_NUM_FIELD_ARR.length; i++) {
+                    String filedName = Constants.MATCH_NUM_FIELD_ARR[i];
+                    try {
+                        Field field = MatchNumBean.class.getDeclaredField(filedName);
+                        field.setAccessible(true);
+                        missValues[i] = String.valueOf(field.get(matchNumBean));
+                        if (String.valueOf(field.get(matchNumBean)).equals("0")) {
+                            missValues[i] = matchStatusMapByNum.get(date).getHostNum() + ":" + matchStatusMapByNum.get(date).getGuestNum();
+                            matchNumCountArr[i]++;
+                        }
+                        matchNumMaxArr[i] = Math.max(matchNumMaxArr[i], Integer.parseInt(String.valueOf(field.get(matchNumBean))));
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
                 }
-                if (matchNumBean.getOne() == 0) {
-                    one = matchNumStr;
-                    matchNumCountArr[1]++;
-                }
-                if (matchNumBean.getTwo() == 0) {
-                    two = matchNumStr;
-                    matchNumCountArr[2]++;
-                }
-                if (matchNumBean.getThree() == 0) {
-                    three = matchNumStr;
-                    matchNumCountArr[3]++;
-                }
-                if (matchNumBean.getFour() == 0) {
-                    four = matchNumStr;
-                    matchNumCountArr[4]++;
-                }
-                if (matchNumBean.getFive() == 0) {
-                    five = matchNumStr;
-                    matchNumCountArr[5]++;
-                }
-                if (matchNumBean.getSix() == 0) {
-                    six = matchNumStr;
-                    matchNumCountArr[6]++;
-                }
-                if (matchNumBean.getSeven() == 0) {
-                    seven = matchNumStr;
-                    matchNumCountArr[7]++;
-                }
-                if (matchNumBean.getOneThree() == 0) {
-                    oneThree = matchNumStr;
-                    matchNumCountArr[8]++;
-                }
-                if (matchNumBean.getTwoFour() == 0) {
-                    twoFour = matchNumStr;
-                    matchNumCountArr[9]++;
-                }
-                if (matchNumBean.getFive_() == 0) {
-                    five_ = matchNumStr;
-                    matchNumCountArr[10]++;
-                }
-                if (matchNumBean.getOneTwo() == 0) {
-                    oneTwo = matchNumStr;
-                    matchNumCountArr[11]++;
-                }
-                if (matchNumBean.getTwoThree() == 0) {
-                    twoThree = matchNumStr;
-                    matchNumCountArr[12]++;
-                }
-                if (matchNumBean.getThreeFour() == 0) {
-                    threeFour = matchNumStr;
-                    matchNumCountArr[13]++;
-                }
-                matchNumMaxArr[0] = Math.max(matchNumMaxArr[0], matchNumBean.getZero());
-                matchNumMaxArr[1] = Math.max(matchNumMaxArr[1], matchNumBean.getOne());
-                matchNumMaxArr[2] = Math.max(matchNumMaxArr[2], matchNumBean.getTwo());
-                matchNumMaxArr[3] = Math.max(matchNumMaxArr[3], matchNumBean.getThree());
-                matchNumMaxArr[4] = Math.max(matchNumMaxArr[4], matchNumBean.getFour());
-                matchNumMaxArr[5] = Math.max(matchNumMaxArr[5], matchNumBean.getFive());
-                matchNumMaxArr[6] = Math.max(matchNumMaxArr[6], matchNumBean.getSix());
-                matchNumMaxArr[7] = Math.max(matchNumMaxArr[7], matchNumBean.getSeven());
-                matchNumMaxArr[8] = Math.max(matchNumMaxArr[8], matchNumBean.getOneThree());
-                matchNumMaxArr[9] = Math.max(matchNumMaxArr[9], matchNumBean.getTwoFour());
-                matchNumMaxArr[10] = Math.max(matchNumMaxArr[10], matchNumBean.getFive_());
-                matchNumMaxArr[11] = Math.max(matchNumMaxArr[11], matchNumBean.getOneTwo());
-                matchNumMaxArr[12] = Math.max(matchNumMaxArr[12], matchNumBean.getTwoThree());
-                matchNumMaxArr[13] = Math.max(matchNumMaxArr[13], matchNumBean.getThreeFour());
-
-
-                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate()), zero, one,
-                        two, three, four, five, six, seven, zero, oneThree, twoFour, five_, oneTwo, twoThree, threeFour};
+                rowData[column] = new String[16];
+                rowData[column][0] = DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate());
+                System.arraycopy(missValues, 0, rowData[column], 1, missValues.length);
             }
             column++;
         }
         int total = column - 1;
-        rowData[column] = new String[]{"出现总次数", handleTableData(matchNumCountArr[0]),
-                handleTableData(matchNumCountArr[1]),
-                handleTableData(matchNumCountArr[2]), handleTableData(matchNumCountArr[3]), handleTableData(matchNumCountArr[4]),
-                handleTableData(matchNumCountArr[5]), handleTableData(matchNumCountArr[6]), handleTableData(matchNumCountArr[7]),
-                handleTableData(matchNumCountArr[0]), handleTableData(matchNumCountArr[8]), handleTableData(matchNumCountArr[9]),
-                handleTableData(matchNumCountArr[10]), handleTableData(matchNumCountArr[11]), handleTableData(matchNumCountArr[12]), handleTableData(matchNumCountArr[13])}
-        ;
-
-        rowData[++column] = new String[]{"平均遗漏值", handleTableData(total / matchNumCountArr[0]), handleTableData(total / matchNumCountArr[1]),
-                handleTableData(total / matchNumCountArr[2]), handleTableData(total / matchNumCountArr[3]), handleTableData(total / matchNumCountArr[4]),
-                handleTableData(total / matchNumCountArr[5]), handleTableData(total / matchNumCountArr[6]), handleTableData(total / matchNumCountArr[7]),
-                handleTableData(total / matchNumCountArr[0]), handleTableData(total / matchNumCountArr[8]), handleTableData(total / matchNumCountArr[9]),
-                handleTableData(total / matchNumCountArr[10]), handleTableData(total / matchNumCountArr[11]), handleTableData(total / matchNumCountArr[12]), handleTableData(total / matchNumCountArr[13])};
-
-        rowData[++column] = new String[]{"最大遗漏值", handleTableData(matchNumMaxArr[0]), handleTableData(matchNumMaxArr[1]),
-                handleTableData(matchNumMaxArr[2]), handleTableData(matchNumMaxArr[3]), handleTableData(matchNumMaxArr[4]),
-                handleTableData(matchNumMaxArr[5]), handleTableData(matchNumMaxArr[6]), handleTableData(matchNumMaxArr[7]),
-                handleTableData(matchNumMaxArr[0]), handleTableData(matchNumMaxArr[8]), handleTableData(matchNumMaxArr[9]),
-                handleTableData(matchNumMaxArr[10]), handleTableData(matchNumMaxArr[11]), handleTableData(matchNumMaxArr[12]), handleTableData(matchNumMaxArr[13])};
+        rowData[column] = new String[16];
+        rowData[column][0] = Constants.TOTAL_MISS;
+        for (int i = 0; i < matchNumCountArr.length; i++) {
+            rowData[column][i + 1] = handleTableData(matchNumCountArr[i]);
+        }
+        column++;
+        rowData[column] = new String[16];
+        rowData[column][0] = Constants.AVG_MISS;
+        for (int i = 0; i < matchNumCountArr.length; i++) {
+            rowData[column][i + 1] = handleTableData(total / matchNumCountArr[i]);
+        }
+        column++;
+        rowData[column] = new String[16];
+        rowData[column][0] = Constants.MAX_MISS;
+        for (int i = 0; i < matchNumMaxArr.length; i++) {
+            rowData[column][i + 1] = handleTableData(matchNumMaxArr[i]);
+        }
 
         String[][] newRowData = new String[++column][16];
         System.arraycopy(rowData, 0, newRowData, 0, column);
@@ -406,7 +347,7 @@ public class PaneFactory {
     }
 
     JScrollPane showMatchCascadePaneByNum(String matchCascadeNum) {
-        String[] columnNames = new String[]{"日期", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};// 定义表格列名数组
+        String[] columnNames = Constants.MATCH_CASCADE_COLUMNS_DATE;// 定义表格列名数组
         List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.getMatchCascadeDataByNum(matchCascadeNum);
         String[][] rowData = new String[matchCascadeBeans.size() + 3][10];
         String[] matchNums = matchCascadeNum.split("串");
@@ -425,8 +366,8 @@ public class PaneFactory {
             matchStatusMapByNum2.put(matchBean.getLiveDate(), matchBean.getStatus());
         }
         int column = 0;
-        int[] matchCascadeCountArr = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
-        int[] matchCascadeMaxArr = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] matchCascadeCountArr = new int[9];
+        int[] matchCascadeMaxArr = new int[9];
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
             //不显示已取消或者不存在的场次
             String date = DateUtil.getDateFormat().format(matchCascadeBean.getLiveDate());
@@ -439,16 +380,25 @@ public class PaneFactory {
             if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
                     (!matchStatusMapByNum1.get(date).equals("1") ||
                             !matchStatusMapByNum2.get(date).equals("1"))) {
-                rowData[column] = new String[]{DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate()), "", "", "", "", "", "", "", "", ""};
+                rowData[column] = new String[10];
+                rowData[column][0] = DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate());
             } else {
                 rowData[column] = new String[10];
                 rowData[column][0] = DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate());
-                for (int i = 0; i < matchCascadeBean.getMissValues().length; i++) {
-                    if (matchCascadeBean.getMissValues()[i] == 0) {
-                        matchCascadeCountArr[i]++;
+
+                for (int i = 0; i < Constants.MATCH_CASCADE_FIELD_ARR.length; i++) {
+                    try {
+                        Field field = MatchCascadeBean.class.getDeclaredField(Constants.MATCH_CASCADE_FIELD_ARR[i]);
+                        field.setAccessible(true);
+                        int value = Integer.parseInt(String.valueOf(field.get(matchCascadeBean)));
+                        if (value == 0) {
+                            matchCascadeCountArr[i]++;
+                        }
+                        matchCascadeMaxArr[i] = Math.max(matchCascadeMaxArr[i], value);
+                        rowData[column][i + 1] = String.valueOf(value);
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        e.printStackTrace();
                     }
-                    matchCascadeMaxArr[i] = Math.max(matchCascadeMaxArr[i], matchCascadeBean.getMissValues()[i]);
-                    rowData[column][i + 1] = String.valueOf(matchCascadeBean.getMissValues()[i]);
                 }
             }
             column++;
@@ -456,19 +406,19 @@ public class PaneFactory {
         int total = column - 1;
 
         rowData[column] = new String[10];
-        rowData[column][0] = "出现次数";
+        rowData[column][0] = Constants.TOTAL_MISS;
         for (int i = 0; i < matchCascadeCountArr.length; i++) {
             rowData[column][i + 1] = handleTableData(matchCascadeCountArr[i]);
         }
         column++;
         rowData[column] = new String[10];
-        rowData[column][0] = "平均遗漏值";
+        rowData[column][0] = Constants.AVG_MISS;
         for (int i = 0; i < matchCascadeCountArr.length; i++) {
             rowData[column][i + 1] = handleTableData(total / matchCascadeCountArr[i]);
         }
         column++;
         rowData[column] = new String[10];
-        rowData[column][0] = "最大遗漏值";
+        rowData[column][0] = Constants.MAX_MISS;
         for (int i = 0; i < matchCascadeMaxArr.length; i++) {
             rowData[column][i + 1] = handleTableData(matchCascadeMaxArr[i]);
         }
