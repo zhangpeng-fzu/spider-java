@@ -1,5 +1,8 @@
 package com.peng.frame;
 
+import com.peng.frame.panel.MatchCascadePanelFactory;
+import com.peng.frame.panel.MatchNumPanelFactory;
+import com.peng.frame.panel.PaneFactory;
 import com.peng.service.SyncTodayData;
 import com.peng.util.DateUtil;
 

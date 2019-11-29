@@ -73,12 +73,16 @@ public class MatchNumRepository {
         return calendar.getTime();
     }
 
-    public static MatchNumBean findByLiveDateAndNum(java.util.Date lastDate, String matchNum) {
+    public static MatchNumBean findByLiveDateAndNum(java.util.Date date, String matchNum) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, -1);
+        java.util.Date preDate = calendar.getTime();
         MatchNumBean matchNumBean = new MatchNumBean();
         try {
             PreparedStatement plsql;
             plsql = MysqlManager.getConnForNum().prepareStatement("select * from match_num where live_date = ? and match_num = ?");
-            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(lastDate)));
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(3).format(preDate)));
             plsql.setString(2, matchNum);
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {

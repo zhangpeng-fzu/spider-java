@@ -1,7 +1,8 @@
-package com.peng.frame;
+package com.peng.frame.panel;
 
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
+import com.peng.frame.MCellRenderer;
 import com.peng.repository.LiveDataRepository;
 import sun.swing.table.DefaultTableCellHeaderRenderer;
 
@@ -22,7 +23,7 @@ public class PaneFactory {
 
     private JFrame innerFrame = null;
 
-    static PaneFactory getInstance() {
+    public static PaneFactory getInstance() {
         return paneFactory;
     }
 
@@ -149,7 +150,7 @@ public class PaneFactory {
         return this;
     }
 
-    JScrollPane showMatchDataPane(Date date) {
+    public JScrollPane showMatchDataPane(Date date) {
 
         String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
         java.util.List<MatchBean> matchBeanList = LiveDataRepository.getMatchData(date);
