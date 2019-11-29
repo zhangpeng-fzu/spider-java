@@ -40,9 +40,9 @@ public class MatchCascadePanelFactory extends PaneFactory {
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
             String[] matchNums = matchCascadeBean.getMatchCascadeNum().split("串");
             //只显示有比赛的场次
-            if (!matchStatusMap.containsKey(matchNums[0]) || !matchStatusMap.containsKey(matchNums[1]) ||
-                    (DateUtil.isToday(date) && (!isPlaying(matchStatusMap.get(matchNums[0])) || !isPlaying(matchStatusMap.get(matchNums[1]))))
-                    || (!DateUtil.isToday(date) && (isUnFinished(matchStatusMap.get(matchNums[0])) || isUnFinished(matchStatusMap.get(matchNums[1])))
+            if (!Constants.MATCH_STATUS_MAP.containsKey(matchNums[0]) || !Constants.MATCH_STATUS_MAP.containsKey(matchNums[1]) ||
+                    (DateUtil.isToday(date) && (!isPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[0])) || !isPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[1]))))
+                    || (!DateUtil.isToday(date) && (isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNums[0])) || isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNums[1])))
             )) {
                 continue;
             }
@@ -74,7 +74,6 @@ public class MatchCascadePanelFactory extends PaneFactory {
             }
             column++;
         }
-
         String[][] newRowData = new String[column * 9][4];
         if (column * 9 >= 0) {
             System.arraycopy(rowData, 0, newRowData, 0, column * 9);
@@ -149,8 +148,8 @@ public class MatchCascadePanelFactory extends PaneFactory {
         }
         //增加统计数据
         addStatisticsData(column, 10, rowData, matchCascadeCountArr, matchCascadeMaxArr);
-
-        String[][] newRowData = new String[++column][10];
+        column = column + 3;
+        String[][] newRowData = new String[column][10];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, Constants.MATCH_CASCADE_COLUMNS_DATE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));

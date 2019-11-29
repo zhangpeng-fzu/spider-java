@@ -1,6 +1,7 @@
 package com.peng.constant;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class Constants {
 
@@ -15,7 +16,7 @@ public class Constants {
     public static final String AVG_MISS = "平均遗漏值";
     public static final String MAX_MISS = "最大遗漏值";
     // 基本数词表
-    public static final String[] EN_NUM = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
+    public static final String[] EN_NUM = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
 
 
     public static final HashMap<String, String> MATCH_RES_MAP = new HashMap<String, String>() {
@@ -31,5 +32,5 @@ public class Constants {
     public static final String FINISHED = "1";
     public static final String PLAYING = "0";
     public static final String CANCELLED = "2";
-
+    public static final Map<String, String> MATCH_STATUS_MAP = new HashMap<>();
 }

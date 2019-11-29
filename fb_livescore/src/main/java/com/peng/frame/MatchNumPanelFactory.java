@@ -22,7 +22,6 @@ public class MatchNumPanelFactory extends PaneFactory {
         matchNumPanelFactory = new MatchNumPanelFactory();
     }
 
-    Map<String, String> matchStatusMap = new HashMap<>();
     private JFrame innerFrame = null;
 
     static MatchNumPanelFactory getInstance() {
@@ -38,13 +37,14 @@ public class MatchNumPanelFactory extends PaneFactory {
     JScrollPane showMatchNumPaneByDate(Date date) {
         String[] columnNames = Constants.MATCH_NUM_COLUMNS;
         java.util.List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumData(date);
-        String[][] rowData = new String[matchNumBeans.size()][16];
+        String[][] rowData = new String[matchNumBeans.size() + 1][16];
         int column = 0;
+        int[] matchNumCountArr = new int[15];
         for (MatchNumBean matchNumBean : matchNumBeans) {
             //只显示未完成的场次
-            if (!matchStatusMap.containsKey(matchNumBean.getMatchNum()) ||
-                    (DateUtil.isToday(date) && !isPlaying(matchStatusMap.get(matchNumBean.getMatchNum())))
-                    || (!DateUtil.isToday(date) && isUnFinished(matchStatusMap.get(matchNumBean.getMatchNum())))) {
+            if (!Constants.MATCH_STATUS_MAP.containsKey(matchNumBean.getMatchNum()) ||
+                    (DateUtil.isToday(date) && !isPlaying(Constants.MATCH_STATUS_MAP.get(matchNumBean.getMatchNum())))
+                    || (!DateUtil.isToday(date) && isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNumBean.getMatchNum())))) {
                 continue;
             }
             rowData[column] = new String[16];
@@ -54,13 +54,21 @@ public class MatchNumPanelFactory extends PaneFactory {
                     Field field = MatchNumBean.class.getDeclaredField(Constants.MATCH_NUM_FIELD_ARR[i]);
                     field.setAccessible(true);
                     rowData[column][i + 1] = String.valueOf(field.get(matchNumBean));
-
+                    if (isHit(String.valueOf(field.get(matchNumBean)))) {
+                        matchNumCountArr[i]++;
+                    }
                 } catch (NoSuchFieldException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }
             column++;
         }
+        rowData[column] = new String[16];
+        rowData[column][0] = Constants.TOTAL_MISS;
+        for (int i = 0; i < matchNumCountArr.length; i++) {
+            rowData[column][i + 1] = handleTableData(matchNumCountArr[i]);
+        }
+        column = column + 1;
         String[][] newRowData = new String[column][16];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
@@ -125,8 +133,9 @@ public class MatchNumPanelFactory extends PaneFactory {
             column++;
         }
         addStatisticsData(column, 16, rowData, matchNumCountArr, matchNumMaxArr);
+        column = column + 3;
 
-        String[][] newRowData = new String[++column][16];
+        String[][] newRowData = new String[column][16];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));

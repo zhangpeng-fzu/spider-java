@@ -54,14 +54,14 @@ public class CalMatchNumMiss {
                     for (int i1 = 0; i1 < fields.length; i1++) {
                         String filedName = fields[i1];
                         //zero重复，第一个zero不处理
-                        if (i1 == 1) {
+                        if (i1 == 0) {
                             continue;
                         }
                         try {
                             Field field = MatchNumBean.class.getDeclaredField(filedName);
                             field.setAccessible(true);
                             field.set(matchNumBean, Integer.parseInt(String.valueOf(field.get(matchNumBean))) + 1);
-                            if (filedName.contains(Constants.EN_NUM[matchBean.getNum()])) {
+                            if (matchBean.getNum() <= 10 && filedName.contains(Constants.EN_NUM[matchBean.getNum()])) {
                                 field.set(matchNumBean, 0);
                             }
                         } catch (NoSuchFieldException | IllegalAccessException e) {

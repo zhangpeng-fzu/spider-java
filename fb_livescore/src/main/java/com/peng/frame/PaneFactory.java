@@ -11,8 +11,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class PaneFactory {
     private static PaneFactory paneFactory;
@@ -21,7 +19,7 @@ public class PaneFactory {
         paneFactory = new PaneFactory();
     }
 
-    Map<String, String> matchStatusMap = new HashMap<>();
+
     private JFrame innerFrame = null;
 
     static PaneFactory getInstance() {
@@ -53,20 +51,20 @@ public class PaneFactory {
             rowData[column][i + 1] = handleTableData(countArr[i]);
         }
         column++;
-        rowData[column] = new String[16];
+        rowData[column] = new String[size];
         rowData[column][0] = Constants.AVG_MISS;
         for (int i = 0; i < countArr.length; i++) {
             rowData[column][i + 1] = handleTableData(total / countArr[i]);
         }
         column++;
-        rowData[column] = new String[16];
+        rowData[column] = new String[size];
         rowData[column][0] = Constants.MAX_MISS;
         for (int i = 0; i < maxArr.length; i++) {
             rowData[column][i + 1] = handleTableData(maxArr[i]);
         }
     }
 
-    private static String handleTableData(int value) {
+    static String handleTableData(int value) {
         return value + " ";
     }
 
@@ -138,7 +136,7 @@ public class PaneFactory {
                 String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
 
                 innerFrame = new JFrame(clickValue + "详细数据");
-                innerFrame.setBounds(400, 50, 550, 900);
+                innerFrame.setBounds(400, 50, 650, 900);
                 if (clickValue.contains("串")) {
                     innerFrame.getContentPane().add(MatchCascadePanelFactory.getInstance().showMatchCascadePaneByNum(clickValue));
                 } else {
@@ -162,7 +160,7 @@ public class PaneFactory {
         for (int i = 0; i < matchBeanList.size(); i++) {
             MatchBean matchBean = matchBeanList.get(i);
             //缓存比赛状态
-            matchStatusMap.put(matchBean.getMatchNum().replaceAll("周[一|二|三|四|五|六|日]", ""), matchBean.getStatus());
+            Constants.MATCH_STATUS_MAP.put(matchBean.getMatchNum().replaceAll("周[一|二|三|四|五|六|日]", ""), matchBean.getStatus());
             String result = matchBean.getResult();
 
             String status = matchBean.getStatus();
