@@ -47,8 +47,8 @@ public class LiveScoreFrame extends JFrame {
         jTabbedPane = new JTabbedPane();
         Date selectDate = DateUtil.getDateFormat().parse(txt1.getText());
         jTabbedPane.add("当天赛事", PaneFactory.getInstance().showMatchDataPane(selectDate));
-        jTabbedPane.add("串关分析", PaneFactory.getInstance().showMatchCascadePane(selectDate));
-        jTabbedPane.add("进球分析", PaneFactory.getInstance().showMatchNumPaneByDate(selectDate));
+        jTabbedPane.add("串关分析", MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(selectDate));
+        jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchNumPaneByDate(selectDate));
 
         jTabbedPane.setSelectedIndex(0);
         getContentPane().add(jTabbedPane, BorderLayout.CENTER);
@@ -58,8 +58,8 @@ public class LiveScoreFrame extends JFrame {
 
             try {
                 jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(1, PaneFactory.getInstance().showMatchCascadePane(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(2, PaneFactory.getInstance().showMatchNumPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(1, MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchNumPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
             } catch (ParseException ex) {
                 ex.printStackTrace();
             }
