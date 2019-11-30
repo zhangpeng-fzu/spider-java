@@ -12,7 +12,7 @@ public class MCellRenderer extends DefaultTableCellRenderer {
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-
+        //命中的显示红色
         if ((String.valueOf(value).equals("0") || String.valueOf(value).contains(":")) && !table.getColumnName(column).equals("比分")) {
             component.setBackground(Color.RED);
         } else {
@@ -26,6 +26,7 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                 component.setBackground(Color.WHITE);
             }
         }
+        //统计数据加粗
         if (row >= table.getRowCount() - 3 && (String.valueOf(table.getValueAt(row, 0)).equals("出现总次数")
                 || String.valueOf(table.getValueAt(row, 0)).equals("平均遗漏值")
                 || String.valueOf(table.getValueAt(row, 0)).equals("最大遗漏值"))

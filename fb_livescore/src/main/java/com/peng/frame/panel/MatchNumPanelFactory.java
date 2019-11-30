@@ -34,10 +34,11 @@ public class MatchNumPanelFactory extends PaneFactory {
      */
     public JScrollPane showMatchNumPaneByDate(Date date) {
         String[] columnNames = Constants.MATCH_NUM_COLUMNS;
+        int size = columnNames.length;
         java.util.List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumData(date);
-        String[][] rowData = new String[matchNumBeans.size() + 1][16];
+        String[][] rowData = new String[matchNumBeans.size() + 1][size];
         int column = 0;
-        int[] matchNumCountArr = new int[15];
+        int[] matchNumCountArr = new int[size - 1];
         for (MatchNumBean matchNumBean : matchNumBeans) {
             //只显示未完成的场次
             if (!Constants.MATCH_STATUS_MAP.containsKey(matchNumBean.getMatchNum()) ||
@@ -45,7 +46,7 @@ public class MatchNumPanelFactory extends PaneFactory {
                     || (!DateUtil.isToday(date) && isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNumBean.getMatchNum())))) {
                 continue;
             }
-            rowData[column] = new String[16];
+            rowData[column] = new String[size];
             rowData[column][0] = matchNumBean.getMatchNum();
             for (int i = 0; i < Constants.MATCH_NUM_FIELD_ARR.length; i++) {
                 try {
@@ -61,13 +62,13 @@ public class MatchNumPanelFactory extends PaneFactory {
             }
             column++;
         }
-        rowData[column] = new String[16];
+        rowData[column] = new String[size];
         rowData[column][0] = Constants.TOTAL_MISS;
         for (int i = 0; i < matchNumCountArr.length; i++) {
             rowData[column][i + 1] = handleTableData(matchNumCountArr[i]);
         }
         column = column + 1;
-        String[][] newRowData = new String[column][16];
+        String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
@@ -83,8 +84,9 @@ public class MatchNumPanelFactory extends PaneFactory {
      */
     JScrollPane showMatchNumPaneByNum(String matchNum) {
         String[] columnNames = Constants.MATCH_NUM_COLUMNS_DATE;
+        int size = columnNames.length;
         java.util.List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumDataByNum(matchNum);
-        String[][] rowData = new String[matchNumBeans.size() + 3][16];
+        String[][] rowData = new String[matchNumBeans.size() + 3][size];
         int column = 0;
 
         List<MatchBean> matchBeans = LiveDataRepository.getMatchListByNum(matchNum);
@@ -92,8 +94,8 @@ public class MatchNumPanelFactory extends PaneFactory {
         for (MatchBean matchBean : matchBeans) {
             matchStatusMapByNum.put(matchBean.getLiveDate(), matchBean);
         }
-        int[] matchNumCountArr = new int[15];
-        int[] matchNumMaxArr = new int[15];
+        int[] matchNumCountArr = new int[size - 1];
+        int[] matchNumMaxArr = new int[size - 1];
 
         for (MatchNumBean matchNumBean : matchNumBeans) {
             String date = DateUtil.getDateFormat().format(matchNumBean.getLiveDate());
@@ -104,12 +106,12 @@ public class MatchNumPanelFactory extends PaneFactory {
             //当天未完成的场次 显示空行
             if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
                     isUnFinished(matchStatusMapByNum.get(date).getStatus())) {
-                rowData[column] = new String[16];
+                rowData[column] = new String[size];
                 rowData[column][0] = DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate());
                 column++;
                 continue;
             }
-            String[] missValues = new String[15];
+            String[] missValues = new String[size - 1];
             for (int i = 0; i < Constants.MATCH_NUM_FIELD_ARR.length; i++) {
                 String filedName = Constants.MATCH_NUM_FIELD_ARR[i];
                 try {
@@ -125,20 +127,19 @@ public class MatchNumPanelFactory extends PaneFactory {
                     e.printStackTrace();
                 }
             }
-            rowData[column] = new String[16];
+            rowData[column] = new String[size];
             rowData[column][0] = DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate());
             System.arraycopy(missValues, 0, rowData[column], 1, missValues.length);
             column++;
         }
-        addStatisticsData(column, 16, rowData, matchNumCountArr, matchNumMaxArr);
+        addStatisticsData(column, size, rowData, matchNumCountArr, matchNumMaxArr);
         column = column + 3;
 
-        String[][] newRowData = new String[column][16];
+        String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-
         return setPanelScroll(table);
     }
 }
