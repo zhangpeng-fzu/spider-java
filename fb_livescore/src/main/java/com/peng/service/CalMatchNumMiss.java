@@ -98,7 +98,7 @@ public class CalMatchNumMiss {
                 Field field = MatchNumBean.class.getDeclaredField(filedName);
                 field.setAccessible(true);
                 field.set(matchNumBean, Integer.parseInt(String.valueOf(field.get(matchNumBean))) + 1);
-                if (matchBean.getNum() <= 10 && filedName.contains(Constants.EN_NUM[matchBean.getNum()])) {
+                if (matchBean.getNum() <= 10 && filedName.toLowerCase().contains(Constants.EN_NUM[matchBean.getNum()])) {
                     field.set(matchNumBean, 0);
                 }
             } catch (NoSuchFieldException | IllegalAccessException e) {

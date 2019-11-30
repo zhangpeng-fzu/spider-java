@@ -55,7 +55,11 @@ public class PaneFactory {
         rowData[column] = new String[size];
         rowData[column][0] = Constants.AVG_MISS;
         for (int i = 0; i < countArr.length; i++) {
-            rowData[column][i + 1] = handleTableData(total / countArr[i]);
+            if (countArr[i] == 0) {
+                rowData[column][i + 1] = handleTableData(total);
+            } else {
+                rowData[column][i + 1] = handleTableData(total / countArr[i]);
+            }
         }
         column++;
         rowData[column] = new String[size];
@@ -105,10 +109,10 @@ public class PaneFactory {
                         return -1;
                     }
 
-                    if (String.valueOf(arg0).equals("")) {
+                    if (String.valueOf(arg0).equals("") || String.valueOf(arg0).equals("0.0") || arg0 == null) {
                         arg0 = "0";
                     }
-                    if (String.valueOf(arg1).equals("")) {
+                    if (String.valueOf(arg1).equals("") || String.valueOf(arg1).equals("0.0") || arg1 == null) {
                         arg1 = "0";
                     }
                     //有比分，设置成0
