@@ -88,7 +88,7 @@ public class LiveScoreFrame extends JFrame {
                 try {
                     SyncTodayData.getMatchData();
                     jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(new Date()));
-                } catch (ParseException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 try {
