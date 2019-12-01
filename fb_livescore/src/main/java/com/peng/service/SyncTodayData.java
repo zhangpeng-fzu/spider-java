@@ -14,7 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class ParseTodayData {
+public class SyncTodayData {
     static String queryToday() {
 
         return HttpClientUtil

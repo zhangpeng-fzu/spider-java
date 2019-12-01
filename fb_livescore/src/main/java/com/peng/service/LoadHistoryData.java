@@ -1,6 +1,7 @@
 package com.peng.service;
 
 import com.peng.bean.MatchBean;
+import com.peng.constant.Constants;
 import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
@@ -15,11 +16,48 @@ import java.util.regex.Pattern;
 
 public class LoadHistoryData {
 
+    public static final List<String> weekDays = Arrays.asList("周日", "周一", "周二", "周三", "周四", "周五", "周六");
+
+    /**
+     * 计算日期偏移量
+     *
+     * @param c 比赛数据中的WeekDay
+     * @param w 比赛数据中日期实际对应的WeekDay
+     * @return
+     */
+    private static int calculateDateOffset(int c, int w) {
+        int offset = c - w;
+        if (c == 6 && w == 0) {
+            offset = -1;
+        }
+        if (c == 0 && w == 6) {
+            offset = 1;
+        }
+        if (c == 6 && w == 1) {
+            offset = -2;
+        }
+        if (c == 1 && w == 6) {
+            offset = 2;
+        }
+        if (c == 0 && w == 2) {
+            offset = -2;
+        }
+        if (c == 2 && w == 0) {
+            offset = 2;
+        }
+        if (c == 5 && w == 0) {
+            offset = -2;
+        }
+        if (c == 0 && w == 5) {
+            offset = 2;
+        }
+        return offset;
+    }
+
     public static void loadHistoryData() {
         //删除今日数据，避免同步导致的日期错误
         LiveDataRepository.delete(new Date());
 
-        List<String> weekDays = Arrays.asList("周日", "周一", "周二", "周三", "周四", "周五", "周六");
         String lastDate = LiveDataRepository.clearLastThreeDayData();
         Calendar calendar = Calendar.getInstance();
         String response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
@@ -72,33 +110,7 @@ public class LoadHistoryData {
                     int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
                     //如果赛事编号的星期与实际日期的星期不一致，修改日期
                     if (!matchBean.getMatchNum().contains(weekDays.get(w))) {
-                        int c = weekDays.indexOf(matchBean.getMatchNum().substring(0, 2));
-                        int offset = c - w;
-                        if (c == 6 && w == 0) {
-                            offset = -1;
-                        }
-                        if (c == 0 && w == 6) {
-                            offset = 1;
-                        }
-                        if (c == 6 && w == 1) {
-                            offset = -2;
-                        }
-                        if (c == 1 && w == 6) {
-                            offset = 2;
-                        }
-                        if (c == 0 && w == 2) {
-                            offset = -2;
-                        }
-                        if (c == 2 && w == 0) {
-                            offset = 2;
-                        }
-                        if (c == 5 && w == 0) {
-                            offset = -2;
-                        }
-                        if (c == 0 && w == 5) {
-                            offset = 2;
-                        }
-                        calendar.add(Calendar.DAY_OF_WEEK, offset);
+                        calendar.add(Calendar.DAY_OF_WEEK, calculateDateOffset(weekDays.indexOf(matchBean.getMatchNum().substring(0, 2)), w));
                     }
                     liveDate = calendar.getTime();
                     matchBean.setLiveDate(DateUtil.getDateFormat().format(liveDate));
@@ -111,12 +123,11 @@ public class LoadHistoryData {
                 matchBean.setHostTeam(tdDataArr[3]);
                 matchBean.setGuestTeam(tdDataArr[4]);
 
-
                 Float[] odds = new Float[]{Float.valueOf(tdDataArr[7]), Float.valueOf(tdDataArr[8]), Float.valueOf(tdDataArr[9])};
                 matchBean.setOdds(odds);
-                String status = tdDataArr[10].equals("已完成") ? "1" : "0";
+                String status = tdDataArr[10].equals("已完成") ? Constants.FINISHED : Constants.PLAYING;
                 if (tdDataArr[10].equals("取消")) {
-                    status = "2";
+                    status = Constants.CANCELLED;
                     matchBean.setHostNum(0);
                     matchBean.setGuestNum(0);
                 } else {

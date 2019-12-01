@@ -1,6 +1,7 @@
 package com.peng.util;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class DateUtil {
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -23,5 +24,9 @@ public class DateUtil {
             default:
                 return dateFormat;
         }
+    }
+
+    public static boolean isToday(Date date) {
+        return DateUtil.getDateFormat().format(date).equals(DateUtil.getDateFormat().format(new Date()));
     }
 }

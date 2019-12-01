@@ -66,26 +66,20 @@ public class MatchCascadeRepository {
         return calendar.getTime();
     }
 
-    public static MatchCascadeBean findByLiveDateAndCascadeNum(java.util.Date lastDate, String matchCascadeNum) {
+    public static MatchCascadeBean findByLiveDateAndCascadeNum(java.util.Date date, String matchCascadeNum) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, -1);
+        java.util.Date preDate = calendar.getTime();
         MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
         try {
             PreparedStatement plsql;
             plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date = ? and match_cascade_num = ?");
-            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(lastDate)));
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(preDate)));
             plsql.setString(2, matchCascadeNum);
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
-                matchCascadeBean.setLiveDate(rs.getDate("live_date"));
-                matchCascadeBean.setMatchCascadeNum(rs.getString("match_cascade_num"));
-                matchCascadeBean.setSs(rs.getInt("ss"));
-                matchCascadeBean.setSp(rs.getInt("sp"));
-                matchCascadeBean.setSf(rs.getInt("sf"));
-                matchCascadeBean.setPs(rs.getInt("ps"));
-                matchCascadeBean.setPp(rs.getInt("pp"));
-                matchCascadeBean.setPf(rs.getInt("pf"));
-                matchCascadeBean.setFs(rs.getInt("fs"));
-                matchCascadeBean.setFp(rs.getInt("fp"));
-                matchCascadeBean.setFf(rs.getInt("ff"));
+                matchCascadeBean = new MatchCascadeBean(rs);
             }
 
             plsql.close();
@@ -104,20 +98,7 @@ public class MatchCascadeRepository {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(date)));
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
-                matchCascadeBean.setLiveDate(rs.getDate("live_date"));
-                matchCascadeBean.setMatchCascadeNum(rs.getString("match_cascade_num"));
-                matchCascadeBean.setSs(rs.getInt("ss"));
-                matchCascadeBean.setSp(rs.getInt("sp"));
-                matchCascadeBean.setSf(rs.getInt("sf"));
-                matchCascadeBean.setPs(rs.getInt("ps"));
-                matchCascadeBean.setPp(rs.getInt("pp"));
-                matchCascadeBean.setPf(rs.getInt("pf"));
-                matchCascadeBean.setFs(rs.getInt("fs"));
-                matchCascadeBean.setFp(rs.getInt("fp"));
-                matchCascadeBean.setFf(rs.getInt("ff"));
-                matchCascadeBean.setOdds(rs.getString("odds"));
-                matchCascadeBeans.add(matchCascadeBean);
+                matchCascadeBeans.add(new MatchCascadeBean(rs));
             }
 
             plsql.close();
@@ -135,20 +116,7 @@ public class MatchCascadeRepository {
             plsql.setString(1, matchCascadeNum);
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
-                matchCascadeBean.setLiveDate(rs.getDate("live_date"));
-                matchCascadeBean.setMatchCascadeNum(rs.getString("match_cascade_num"));
-                matchCascadeBean.setSs(rs.getInt("ss"));
-                matchCascadeBean.setSp(rs.getInt("sp"));
-                matchCascadeBean.setSf(rs.getInt("sf"));
-                matchCascadeBean.setPs(rs.getInt("ps"));
-                matchCascadeBean.setPp(rs.getInt("pp"));
-                matchCascadeBean.setPf(rs.getInt("pf"));
-                matchCascadeBean.setFs(rs.getInt("fs"));
-                matchCascadeBean.setFp(rs.getInt("fp"));
-                matchCascadeBean.setFf(rs.getInt("ff"));
-                matchCascadeBean.setOdds(rs.getString("odds"));
-                matchCascadeBeans.add(matchCascadeBean);
+                matchCascadeBeans.add(new MatchCascadeBean(rs));
             }
             plsql.close();
 
