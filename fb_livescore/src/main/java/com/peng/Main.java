@@ -37,8 +37,8 @@ public class Main {
     private static boolean checkLicense(Frame frame) {
         String expireMessage = "激活码已过期，请重新激活，软件授权联系QQ：470360567";
         String noActiveCodeMessage = "请输入激活码，软件授权联系QQ：470360567";
-        String licencePath = "/Users/zhangpeng/._licence";
-        //            String licencePath = "C:/._licence";
+//        String licencePath = "/Users/zhangpeng/._licence";
+        String licencePath = "D:/._licence";
 
         try {
             String licence;

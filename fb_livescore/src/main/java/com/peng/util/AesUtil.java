@@ -1,5 +1,6 @@
 package com.peng.util;
 
+import lombok.extern.java.Log;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
@@ -15,6 +16,7 @@ import java.util.logging.Logger;
  * @version V1.0
  * @desc AES 加密工具类
  */
+@Log
 public class AesUtil {
 
     public static final String KEY = "live_score_20191102";
@@ -98,8 +100,8 @@ public class AesUtil {
     }
 
     public static void main(String[] args) {
-        System.out.println(AesUtil.encrypt(String.valueOf(System.currentTimeMillis() + 86400L * 30 * 1000), KEY));
-        System.out.println(AesUtil.decrypt("2d4XS8MDsuuBmGajRbDnIg==", KEY));
+        log.info(AesUtil.encrypt(String.valueOf(System.currentTimeMillis() + 86400L * 30 * 1000), KEY));
+        log.info(AesUtil.decrypt("2d4XS8MDsuuBmGajRbDnIg==", KEY));
 
     }
 }

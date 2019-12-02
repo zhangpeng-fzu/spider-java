@@ -5,12 +5,14 @@ import com.peng.frame.panel.MatchNumPanelFactory;
 import com.peng.frame.panel.PaneFactory;
 import com.peng.service.SyncTodayData;
 import com.peng.util.DateUtil;
+import lombok.extern.java.Log;
 
 import javax.swing.*;
 import java.awt.*;
 import java.text.ParseException;
 import java.util.Date;
 
+@Log
 public class LiveScoreFrame extends JFrame {
 
 
@@ -83,7 +85,7 @@ public class LiveScoreFrame extends JFrame {
         new Thread(() -> {
             //当前不是今天，停止同步
             while (isToday) {
-                System.out.println(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
+                log.info(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
 
                 try {
                     SyncTodayData.getMatchData();

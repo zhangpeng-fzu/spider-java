@@ -7,12 +7,14 @@ import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchCascadeRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.MyUtil;
+import lombok.extern.java.Log;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
 
+@Log
 public class CalMatchCascadeMiss {
 
     /**
@@ -34,7 +36,7 @@ public class CalMatchCascadeMiss {
             calendar.add(Calendar.DATE, 1);
             lastDate = calendar.getTime();
         }
-        System.out.println("计算串关场次数据已完成");
+        log.info("计算串关场次数据已完成");
     }
 
     private static void calculateByDate(Date date, Date maxDate) {
@@ -45,7 +47,7 @@ public class CalMatchCascadeMiss {
         if (matchBeanMap.size() == 0 && maxDate.before(date)) {
             return;
         }
-        System.out.println(String.format("正在计算%s的串关数据", DateUtil.getDateFormat().format(date)));
+        log.info(String.format("正在计算%s的串关数据", DateUtil.getDateFormat().format(date)));
         List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
         for (int i = 2; i <= 300; i++) {
             calculateByDateAndNum(date, i, matchBeanMap, matchCascadeBeans);

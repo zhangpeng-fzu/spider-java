@@ -7,12 +7,14 @@ import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchNumRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.MyUtil;
+import lombok.extern.java.Log;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
 
+@Log
 public class CalMatchNumMiss {
 
     /**
@@ -34,7 +36,7 @@ public class CalMatchNumMiss {
             calendar.add(Calendar.DATE, 1);
             lastDate = calendar.getTime();
         }
-        System.out.println("计算赛事场次数据已完成");
+        log.info("计算赛事场次数据已完成");
     }
 
     /**
@@ -53,7 +55,7 @@ public class CalMatchNumMiss {
         if (matchBeans.size() == 0 && maxDate.before(date)) {
             return;
         }
-        System.out.println(String.format("正在计算%s的进球数据", DateUtil.getDateFormat().format(date)));
+        log.info(String.format("正在计算%s的进球数据", DateUtil.getDateFormat().format(date)));
 
         matchNumBeans = new ArrayList<>();
         for (int i = 1; i <= 300; i++) {

@@ -5,6 +5,7 @@ import com.peng.constant.Constants;
 import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
+import lombok.extern.java.Log;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Log
 public class LoadHistoryData {
 
     public static final List<String> weekDays = Arrays.asList("周日", "周一", "周二", "周三", "周四", "周五", "周六");
@@ -145,7 +147,7 @@ public class LoadHistoryData {
 
             }
 
-            System.out.println("正在抓取第" + page + "页");
+            log.info("正在抓取第" + page + "页");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
