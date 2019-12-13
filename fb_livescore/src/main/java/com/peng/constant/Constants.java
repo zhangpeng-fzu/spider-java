@@ -1,6 +1,8 @@
 package com.peng.constant;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Constants {
@@ -17,6 +19,7 @@ public class Constants {
     public static final String MAX_MISS = "最大遗漏值";
     // 基本数词表
     public static final String[] EN_NUM = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
+    public static final List<String> WEEK_DAYS = Arrays.asList("周日", "周一", "周二", "周三", "周四", "周五", "周六");
 
 
     public static final HashMap<String, String> MATCH_RES_MAP = new HashMap<String, String>() {

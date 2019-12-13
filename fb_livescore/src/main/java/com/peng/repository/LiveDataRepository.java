@@ -12,12 +12,18 @@ import java.text.ParseException;
 import java.util.*;
 
 public class LiveDataRepository {
+    private static final String INSERT_SQL = "insert into live_data (live_date,match_num,match_group,host_team,guest_team,host_num,guest_num,odds_s,odds_p,odds_f,status) " +
+            "values(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE match_num=?,host_num=?,guest_num=?,odds_s=?,odds_p=?,odds_f=?,status=?";
+
+    private static final String SELECT_MAX_DATE = "select distinct live_date from live_data order by live_date desc limit 1";
+    private static final String DELETE_SQL = "delete from live_data where live_date >= ?";
+
+    private static final String SELECT_ONE = "select distinct live_date from live_data order by live_date desc limit 1";
+    private static final String SELECT_LIST = "select * from live_data where live_date = ? and status != 2 order by live_date asc";
+    private static final String SELECT_ALL_LIST = "select * from live_data where live_date = ? order by live_date asc ";
 
     public static void insert(MatchBean matchBean) {
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("insert into live_data (live_date,match_num,match_group,host_team,guest_team,host_num,guest_num,odds_s,odds_p,odds_f,status) "
-                    + "values(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE match_num=?,host_num=?,guest_num=?,odds_s=?,odds_p=?,odds_f=?,status=?");
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(INSERT_SQL)) {
             plsql.setDate(1, Date.valueOf(matchBean.getLiveDate()));              //设置参数1，创建id为3212的数据
             plsql.setString(2, matchBean.getMatchNum());      //设置参数2，name 为王刚
             plsql.setString(3, matchBean.getGroupName());
@@ -37,7 +43,6 @@ public class LiveDataRepository {
             plsql.setFloat(17, matchBean.getOdds()[2] != null ? matchBean.getOdds()[2] : 0);
             plsql.setString(18, matchBean.getStatus());
             plsql.executeUpdate();
-            plsql.close();
         } catch (Exception se) {
             // 处理 JDBC 错误
             se.printStackTrace();
@@ -46,39 +51,40 @@ public class LiveDataRepository {
 
     public static String clearLastThreeDayData() {
         Date lastDate = Date.valueOf("2019-01-01");
-        Calendar calendar = Calendar.getInstance();
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select distinct live_date from live_data order by live_date desc limit 1");
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(SELECT_MAX_DATE)) {
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
                 lastDate = rs.getDate("live_date");
-                calendar.setTime(lastDate);
-                //需删除签两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
-                calendar.add(Calendar.DATE, -2);
-                plsql = MysqlManager.getConn().prepareStatement("delete from live_data where live_date >= ?");
-                plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(calendar.getTime())));
-                plsql.execute();
-                return DateUtil.getDateFormat().format(calendar.getTime());
+                return DateUtil.getDateFormat().format(deleteLatestTwoDays(lastDate));
             }
-            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
-
         return lastDate.toString();
+    }
+
+
+    public static java.util.Date deleteLatestTwoDays(Date lastDate) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(lastDate);
+        //需删除签两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
+        calendar.add(Calendar.DATE, -2);
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(DELETE_SQL)) {
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(calendar.getTime())));
+            plsql.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return calendar.getTime();
     }
 
     public static java.util.Date getMaxLiveDate() throws ParseException {
         Date maxDate = Date.valueOf("2019-01-01");
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select distinct live_date from live_data order by live_date desc limit 1");
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(SELECT_ONE)) {
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
                 maxDate = rs.getDate("live_date");
             }
-            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -87,27 +93,14 @@ public class LiveDataRepository {
 
     public static Map<String, MatchBean> getMatchList(java.util.Date date) {
         Map<String, MatchBean> matchBeans = new HashMap<>();
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select * from live_data where live_date = ? and status != 2 order by live_date asc ");
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(SELECT_LIST)) {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(date)));
-
-
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchBean matchBean = new MatchBean();
+                MatchBean matchBean = new MatchBean(rs);
                 matchBean.setMatchNum(rs.getString("match_num").replaceAll("周[一|二|三|四|五|六|日]", ""));
-                matchBean.setHostNum(rs.getInt("host_num"));
-                matchBean.setGuestNum(rs.getInt("guest_num"));
-                matchBean.setLiveDate(rs.getDate("live_date").toString());
-                matchBean.setGroupName(rs.getString("match_group"));
-                matchBean.setHostTeam(rs.getString("host_team"));
-                matchBean.setGuestTeam(rs.getString("guest_team"));
-                matchBean.setOdds(new Float[]{rs.getFloat("odds_s"), rs.getFloat("odds_p"), rs.getFloat("odds_f")});
-                matchBean.setStatus(rs.getString("status"));
                 matchBeans.put(matchBean.getMatchNum(), matchBean);
             }
-            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -117,27 +110,12 @@ public class LiveDataRepository {
 
     public static List<MatchBean> getMatchData(java.util.Date date) {
         List<MatchBean> matchBeans = new ArrayList<>();
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select * from live_data where live_date = ? order by live_date asc ");
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(SELECT_ALL_LIST)) {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(date)));
-
-
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchBean matchBean = new MatchBean();
-                matchBean.setMatchNum(rs.getString("match_num"));
-                matchBean.setHostNum(rs.getInt("host_num"));
-                matchBean.setGuestNum(rs.getInt("guest_num"));
-                matchBean.setLiveDate(rs.getDate("live_date").toString());
-                matchBean.setGroupName(rs.getString("match_group"));
-                matchBean.setHostTeam(rs.getString("host_team"));
-                matchBean.setGuestTeam(rs.getString("guest_team"));
-                matchBean.setOdds(new Float[]{rs.getFloat("odds_s"), rs.getFloat("odds_p"), rs.getFloat("odds_f")});
-                matchBean.setStatus(rs.getString("status"));
-                matchBeans.add(matchBean);
+                matchBeans.add(new MatchBean(rs));
             }
-            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -145,41 +123,22 @@ public class LiveDataRepository {
     }
 
     public static void delete(java.util.Date date) {
-        PreparedStatement plsql;
-        try {
-            plsql = MysqlManager.getConn().prepareStatement("delete from live_data where live_date = ? and (status != '1' and status != '2')");
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement("delete from live_data where live_date = ? and (status != '1' and status != '2')")) {
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat().format(date)));
             plsql.execute();
-            plsql.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 
     public static List<MatchBean> getMatchListByNum(String matchNum) {
         List<MatchBean> matchBeans = new ArrayList<>();
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConn().prepareStatement("select * from live_data where match_num like ?");
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement("select * from live_data where match_num like ?")) {
             plsql.setString(1, "%" + matchNum);
-
-
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
-                MatchBean matchBean = new MatchBean();
-                matchBean.setMatchNum(rs.getString("match_num"));
-                matchBean.setHostNum(rs.getInt("host_num"));
-                matchBean.setGuestNum(rs.getInt("guest_num"));
-                matchBean.setLiveDate(rs.getDate("live_date").toString());
-                matchBean.setGroupName(rs.getString("match_group"));
-                matchBean.setHostTeam(rs.getString("host_team"));
-                matchBean.setGuestTeam(rs.getString("guest_team"));
-                matchBean.setOdds(new Float[]{rs.getFloat("odds_s"), rs.getFloat("odds_p"), rs.getFloat("odds_f")});
-                matchBean.setStatus(rs.getString("status"));
-                matchBeans.add(matchBean);
+                matchBeans.add(new MatchBean(rs));
             }
-            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }

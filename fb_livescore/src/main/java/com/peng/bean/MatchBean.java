@@ -9,6 +9,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @Data
 @AllArgsConstructor
@@ -34,6 +36,18 @@ public class MatchBean {
     private int num;
 
 
+    public MatchBean(ResultSet rs) throws SQLException {
+        this.setMatchNum(rs.getString("match_num"));
+        this.setHostNum(rs.getInt("host_num"));
+        this.setGuestNum(rs.getInt("guest_num"));
+        this.setLiveDate(rs.getDate("live_date").toString());
+        this.setGroupName(rs.getString("match_group"));
+        this.setHostTeam(rs.getString("host_team"));
+        this.setGuestTeam(rs.getString("guest_team"));
+        this.setOdds(new Float[]{rs.getFloat("odds_s"), rs.getFloat("odds_p"), rs.getFloat("odds_f")});
+        this.setStatus(rs.getString("status"));
+    }
+
     public String getResult() {
         if (this.hostNum > this.guestNum) {
             this.result = "s";
@@ -44,7 +58,6 @@ public class MatchBean {
         }
         return this.result;
     }
-
 
     public int getNum() {
         return this.hostNum + this.guestNum;

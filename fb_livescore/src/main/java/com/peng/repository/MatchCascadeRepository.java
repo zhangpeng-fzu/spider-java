@@ -39,30 +39,34 @@ public class MatchCascadeRepository {
     }
 
     public static java.util.Date clearLastThreeDayData() {
-        Calendar calendar = Calendar.getInstance();
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade order by live_date desc limit 1");
-
+        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade order by live_date desc limit 1")) {
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
                 Date lastDate = rs.getDate("live_date");
-                calendar.setTime(lastDate);
                 //需删除签两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
-                calendar.add(Calendar.DATE, -2);
 
-                plsql = MysqlManager.getConnForCascade().prepareStatement("delete from match_cascade where live_date >= ?");
-                plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(calendar.getTime())));
-                plsql.execute();
-            } else {
-                return null;
+                return deleteLatestTwoDays(lastDate);
             }
-            plsql.close();
+            return null;
         } catch (Exception se) {
             se.printStackTrace();
             return null;
         }
+    }
 
+
+    public static java.util.Date deleteLatestTwoDays(Date lastDate) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(lastDate);
+        //需删除签两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
+        calendar.add(Calendar.DATE, -2);
+        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("delete from match_cascade where live_date >= ?")) {
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(calendar.getTime())));
+            plsql.execute();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return calendar.getTime();
     }
 
@@ -72,9 +76,8 @@ public class MatchCascadeRepository {
         calendar.add(Calendar.DATE, -1);
         java.util.Date preDate = calendar.getTime();
         MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date = ? and match_cascade_num = ?");
+        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date = ? and match_cascade_num = ?")) {
+
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(preDate)));
             plsql.setString(2, matchCascadeNum);
             ResultSet rs = plsql.executeQuery();
@@ -82,7 +85,6 @@ public class MatchCascadeRepository {
                 matchCascadeBean = new MatchCascadeBean(rs);
             }
 
-            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -92,16 +94,13 @@ public class MatchCascadeRepository {
 
     public static List<MatchCascadeBean> getMatchCascadeData(java.util.Date date) {
         List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date = ? ");
+        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date = ? ")) {
+
             plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(date)));
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
                 matchCascadeBeans.add(new MatchCascadeBean(rs));
             }
-
-            plsql.close();
         } catch (Exception se) {
             se.printStackTrace();
         }
@@ -110,16 +109,13 @@ public class MatchCascadeRepository {
 
     public static List<MatchCascadeBean> getMatchCascadeDataByNum(String matchCascadeNum) {
         List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
-        try {
-            PreparedStatement plsql;
-            plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where match_cascade_num = ? ");
+        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where match_cascade_num = ? ")) {
+
             plsql.setString(1, matchCascadeNum);
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
                 matchCascadeBeans.add(new MatchCascadeBean(rs));
             }
-            plsql.close();
-
         } catch (Exception se) {
             se.printStackTrace();
         }
