@@ -110,6 +110,9 @@ public class CalMatchNumMiss {
         if (matchBean.getNum() >= 5) {
             matchNumBean.setFive_(0);
         }
+        if (matchBean.getNum() >= 7) {
+            matchNumBean.setSeven(0);
+        }
         matchNumBeans.add(matchNumBean);
     }
 
