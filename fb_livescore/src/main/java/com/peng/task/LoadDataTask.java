@@ -13,6 +13,12 @@ public class LoadDataTask extends Thread implements Runnable {
         LoadHistoryData.loadHistoryData();
         LiveScoreFrame.syncMatchData(true);
 
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         new CalMatchNumMissTask().start();
         new CalMatchCascadeMissTask().start();
     }

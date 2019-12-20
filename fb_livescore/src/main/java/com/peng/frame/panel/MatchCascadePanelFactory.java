@@ -66,6 +66,9 @@ public class MatchCascadePanelFactory extends PaneFactory {
                 try {
                     Field field = MatchCascadeBean.class.getDeclaredField(Constants.MATCH_CASCADE_FIELD_ARR[i]);
                     field.setAccessible(true);
+                    if (odds[i] == null) {
+                        odds[i] = "";
+                    }
                     rowData[j + i] = new String[]{matchCascadeBean.getMatchCascadeNum(), columns[i], String.valueOf(field.get(matchCascadeBean)), odds[i].trim()};
 
                 } catch (NoSuchFieldException | IllegalAccessException e) {
