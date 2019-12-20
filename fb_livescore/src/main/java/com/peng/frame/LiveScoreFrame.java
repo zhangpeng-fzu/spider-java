@@ -85,7 +85,7 @@ public class LiveScoreFrame extends JFrame {
         new Thread(() -> {
             //当前不是今天，停止同步
             while (isToday) {
-                log.info(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
+                System.out.println(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
 
                 try {
                     SyncTodayData.getMatchData();

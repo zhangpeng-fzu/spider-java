@@ -68,7 +68,7 @@ public class LoadHistoryData {
                 LiveDataRepository.insert(transMatchBean(tdData.toString()));
             }
 
-            log.info("正在抓取第" + page + "页");
+            System.out.println("正在抓取第" + page + "页");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

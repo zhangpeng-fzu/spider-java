@@ -9,7 +9,7 @@ import java.text.ParseException;
 public class CalMatchNumMissTask extends Thread implements Runnable {
     @Override
     public void run() {
-        log.info("正在计算进球数据");
+        System.out.println("正在计算进球数据");
         try {
             CalMatchNumMiss.calculate();
         } catch (ParseException e) {

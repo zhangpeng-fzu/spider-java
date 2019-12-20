@@ -36,7 +36,7 @@ public class CalMatchCascadeMiss {
             calendar.add(Calendar.DATE, 1);
             lastDate = calendar.getTime();
         }
-        log.info("计算串关场次数据已完成");
+        System.out.println("计算串关场次数据已完成");
     }
 
     private static void calculateByDate(Date date, Date maxDate) {
@@ -47,7 +47,7 @@ public class CalMatchCascadeMiss {
         if (matchBeanMap.size() == 0 && maxDate.before(date)) {
             return;
         }
-        log.info(String.format("正在计算%s的串关数据", DateUtil.getDateFormat().format(date)));
+        System.out.println(String.format("正在计算%s的串关数据", DateUtil.getDateFormat().format(date)));
         List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
         for (int i = 2; i <= 300; i++) {
             calculateByDateAndNum(date, i, matchBeanMap, matchCascadeBeans);

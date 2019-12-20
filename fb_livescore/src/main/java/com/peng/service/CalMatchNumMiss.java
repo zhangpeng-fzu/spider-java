@@ -36,7 +36,7 @@ public class CalMatchNumMiss {
             calendar.add(Calendar.DATE, 1);
             lastDate = calendar.getTime();
         }
-        log.info("计算赛事场次数据已完成");
+        System.out.println("计算赛事场次数据已完成");
     }
 
     /**
@@ -55,7 +55,7 @@ public class CalMatchNumMiss {
         if (matchBeans.size() == 0 && maxDate.before(date)) {
             return;
         }
-        log.info(String.format("正在计算%s的进球数据", DateUtil.getDateFormat().format(date)));
+        System.out.println(String.format("正在计算%s的进球数据", DateUtil.getDateFormat().format(date)));
 
         matchNumBeans = new ArrayList<>();
         for (int i = 1; i <= 300; i++) {

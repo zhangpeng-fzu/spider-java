@@ -23,7 +23,7 @@ public class SyncTodayData {
      */
     static String queryToday() {
         return HttpClientUtil
-                .doGet("https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=hhad&poolcode[]=had&_" + "1573876793274",
+                .doGet("https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=hhad&poolcode[]=had&_" + System.currentTimeMillis(),
                         StandardCharsets.UTF_8.displayName()).replace("getData(", "").replace(");", "");
 
     }
@@ -41,11 +41,11 @@ public class SyncTodayData {
         JSONObject matchList = JSON.parseObject(queryData).getJSONObject("data");
         for (String key : matchList.keySet()) {
             JSONObject match = (JSONObject) matchList.get(key);
-            //超过今天的数据
-            if (DateUtil.getDateFormat().parse(String.valueOf(match.get("date"))).after(DateUtil.getTomorrow())) {
+            MatchBean matchBean = transMatchBean(match);
+            if (matchBean == null) {
                 continue;
             }
-            LiveDataRepository.insert(transMatchBean(match));
+            LiveDataRepository.insert(matchBean);
         }
     }
 
@@ -60,7 +60,7 @@ public class SyncTodayData {
         Calendar calendar = Calendar.getInstance();
         MatchBean matchBean = new MatchBean();
         matchBean.setMatchNum(match.getString("num"));
-        matchBean.setLiveDate(match.getString("date"));
+        matchBean.setLiveDate(match.getString("b_date"));
         matchBean.setGroupName(match.getString("l_cn_abbr"));
         matchBean.setStatus(match.getString("status"));
         matchBean.setHostTeam(match.getString("h_cn"));
@@ -98,7 +98,12 @@ public class SyncTodayData {
             calendar.add(Calendar.DAY_OF_WEEK, offset);
         }
         liveDate = calendar.getTime();
+        //超过今天的数据
+        if (liveDate.after(DateUtil.getTomorrow())) {
+            return null;
+        }
         matchBean.setLiveDate(DateUtil.getDateFormat().format(liveDate));
+
         return matchBean;
     }
 }
