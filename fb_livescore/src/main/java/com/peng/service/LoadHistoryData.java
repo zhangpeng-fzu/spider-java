@@ -112,18 +112,25 @@ public class LoadHistoryData {
         Float[] odds = new Float[]{Float.valueOf(tdDataArr[7]), Float.valueOf(tdDataArr[8]), Float.valueOf(tdDataArr[9])};
         matchBean.setOdds(odds);
         String status = tdDataArr[10].equals("已完成") ? Constants.FINISHED : Constants.PLAYING;
-        if (tdDataArr[10].equals("取消")) {
+
+        try {
+            if (tdDataArr[10].equals("取消")) {
+                status = Constants.CANCELLED;
+                matchBean.setHostNum(0);
+                matchBean.setGuestNum(0);
+            } else {
+                if (tdDataArr[6].length() > 0) {
+                    matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
+                    matchBean.setGuestNum(Integer.parseInt(tdDataArr[6].split(":")[1]));
+                } else {
+                    matchBean.setHostNum(0);
+                    matchBean.setGuestNum(0);
+                }
+            }
+        } catch (NumberFormatException e) {
             status = Constants.CANCELLED;
             matchBean.setHostNum(0);
             matchBean.setGuestNum(0);
-        } else {
-            if (tdDataArr[6].length() > 0) {
-                matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
-                matchBean.setGuestNum(Integer.parseInt(tdDataArr[6].split(":")[1]));
-            } else {
-                matchBean.setHostNum(0);
-                matchBean.setGuestNum(0);
-            }
         }
 
         matchBean.setStatus(status);
