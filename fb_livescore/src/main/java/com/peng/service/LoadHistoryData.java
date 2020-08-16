@@ -114,7 +114,7 @@ public class LoadHistoryData {
         String status = tdDataArr[10].equals("已完成") ? Constants.FINISHED : Constants.PLAYING;
 
         try {
-            if (tdDataArr[10].equals("取消")) {
+            if (tdDataArr[10].equals("取消") || tdDataArr[6].equals("无效场次") || tdDataArr[6].equals("取消")) {
                 status = Constants.CANCELLED;
                 matchBean.setHostNum(0);
                 matchBean.setGuestNum(0);

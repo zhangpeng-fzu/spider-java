@@ -1,6 +1,7 @@
 package com.peng.frame;
 
 import com.peng.frame.panel.MatchCascadePanelFactory;
+import com.peng.frame.panel.MatchComparePanelFactory;
 import com.peng.frame.panel.MatchNumPanelFactory;
 import com.peng.frame.panel.PaneFactory;
 import com.peng.service.SyncTodayData;
@@ -54,6 +55,7 @@ public class LiveScoreFrame extends JFrame {
         jTabbedPane.add("当天赛事", PaneFactory.getInstance().showMatchDataPane(selectDate));
         jTabbedPane.add("串关分析", MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(selectDate));
         jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchNumPaneByDate(selectDate));
+        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchComparePaneByDate(selectDate));
 
         jTabbedPane.setSelectedIndex(0);
         getContentPane().add(jTabbedPane, BorderLayout.CENTER);
@@ -65,6 +67,7 @@ public class LiveScoreFrame extends JFrame {
                 jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(DateUtil.getDateFormat().parse(txt1.getText())));
                 jTabbedPane.setComponentAt(1, MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
                 jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchNumPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchComparePaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
             } catch (ParseException ex) {
                 ex.printStackTrace();
             }

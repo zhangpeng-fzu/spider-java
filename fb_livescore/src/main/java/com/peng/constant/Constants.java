@@ -14,6 +14,9 @@ public class Constants {
     public static final String[] MATCH_CASCADE_COLUMNS_DATE = new String[]{"日期", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};
     public static final String[] MATCH_NUM_COLUMNS = new String[]{"赛事编号", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球"};
     public static final String[] MATCH_NUM_COLUMNS_DATE = new String[]{"日期", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球"};
+    public static final String[] MATCH_COMPARE_COLUMNS = new String[]{"赛事编号", "1路对比", "2路对比", "3路对比", "4路对比", "5路对比", "6路对比", "7路对比", "8路对比", "9路对比", "10路对比", "11路对比", "12路对比", "13路对比", "14路对比", "15路对比"};
+    public static final String[] MATCH_COMPARE_COLUMNS_DATE = new String[]{"赛事编号", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球"};
+
     public static final String TOTAL_MISS = "出现总次数";
     public static final String AVG_MISS = "平均遗漏值";
     public static final String MAX_MISS = "最大遗漏值";
@@ -36,4 +39,17 @@ public class Constants {
     public static final String PLAYING = "0";
     public static final String CANCELLED = "2";
     public static final Map<String, String> MATCH_STATUS_MAP = new HashMap<>();
+
+    public static final String[][] INIT_COMPARE_DATA = {
+            {"双", "双", "双", "双", "双", "单", "单", "单", "单", "单"},
+            {"双", "双", "单", "单", "双", "双", "双", "单", "单", "单"},
+            {"单", "双", "双", "双", "单", "双", "双", "单", "双", "双"},
+            {"双", "双", "单", "单", "单", "双", "双", "双", "双", "双"},
+            {"双", "单", "双", "单", "单", "单", "单", "双", "双", "单"},
+            {"单", "单", "单", "双", "单", "单", "单", "单", "单", "双"},
+            {"单", "单", "双", "双", "双", "单", "双", "双", "单", "双"},
+            {"双", "单", "单", "单", "双", "双", "双", "双", "单", "单"},
+            {"单", "双", "单", "单", "双", "单", "单", "双", "双", "双"},
+            {"单", "单", "双", "双", "单", "双", "单", "单", "双", "单"}
+    };
 }
