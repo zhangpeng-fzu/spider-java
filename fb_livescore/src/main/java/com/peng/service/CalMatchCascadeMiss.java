@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Log
 public class CalMatchCascadeMiss {
@@ -23,11 +24,10 @@ public class CalMatchCascadeMiss {
      * @throws ParseException
      */
     public static void calculate() throws ParseException {
-        //清除最近三天的数据，避免脏数据营销
+        //清除最近三天的数据，避免脏数据影响
         Date lastDate = MatchCascadeRepository.clearLastThreeDayData();
         lastDate = lastDate == null ? DateUtil.getDateFormat(2).parse("2019-01-01") : lastDate;
         Date maxDate = LiveDataRepository.getMaxLiveDate();
-
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(lastDate);
 
@@ -49,8 +49,10 @@ public class CalMatchCascadeMiss {
         }
         System.out.println(String.format("正在计算%s的串关数据", DateUtil.getDateFormat().format(date)));
         List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
+        Map<String, MatchCascadeBean> cascadeBeanMap = MatchCascadeRepository.findLatestCascadeData().stream().collect(Collectors.toMap(MatchCascadeBean::getMatchCascadeNum, matchCascadeBean -> matchCascadeBean));
+
         for (int i = 2; i <= 300; i++) {
-            calculateByDateAndNum(date, i, matchBeanMap, matchCascadeBeans);
+            calculateByDateAndNum(date, i, matchBeanMap, cascadeBeanMap, matchCascadeBeans);
         }
         try {
             MatchCascadeRepository.insert(matchCascadeBeans);
@@ -59,53 +61,55 @@ public class CalMatchCascadeMiss {
         }
     }
 
-    private static void calculateByDateAndNum(Date date, int num, Map<String, MatchBean> matchBeans, List<MatchCascadeBean> matchCascadeBeans) {
+    private static void calculateByDateAndNum(Date date, int num, Map<String, MatchBean> matchBeans, Map<String, MatchCascadeBean> cascadeBeanMap, List<MatchCascadeBean> matchCascadeBeans) {
         String preNum = MyUtil.formatMatchNum(num - 1);
-        String curNum = MyUtil.formatMatchNum(num);
 
-        //获取昨天的记录
-        String matchCascadeNum = preNum + "串" + curNum;
-        MatchCascadeBean matchCascadeBean = MatchCascadeRepository.findByLiveDateAndCascadeNum(date, matchCascadeNum);
-        matchCascadeBean.setLiveDate(date);
-        matchCascadeBean.setMatchCascadeNum(matchCascadeNum);
+        for (int i = num; i <= 300; i++) {
 
-        //只有i和i-1有一个场次不存在，直接使用昨天的
-        if (!matchBeans.containsKey(preNum) || !matchBeans.containsKey(curNum)) {
-            matchCascadeBeans.add(matchCascadeBean);
-            return;
-        }
+            String curNum = MyUtil.formatMatchNum(i);
 
-        MatchBean pre = matchBeans.get(preNum);
-        MatchBean cur = matchBeans.get(curNum);
+            //获取昨天的记录
+            String matchCascadeNum = preNum + "串" + curNum;
+            MatchCascadeBean matchCascadeBean = cascadeBeanMap.getOrDefault(matchCascadeNum, new MatchCascadeBean());
+            matchCascadeBean.setLiveDate(date);
+            matchCascadeBean.setMatchCascadeNum(matchCascadeNum);
 
-        //计算赔率
-        List<Float> odds = new ArrayList<>();
-        for (int j = 0; j < pre.getOdds().length; j++) {
-            for (int k = 0; k < cur.getOdds().length; k++) {
-                odds.add(pre.getOdds()[j] * cur.getOdds()[k]);
+            //只有i和i-1有一个场次不存在，直接使用昨天的
+            if (!matchBeans.containsKey(preNum) || !matchBeans.containsKey(curNum)) {
+                continue;
             }
-        }
-        matchCascadeBean.setOdds(Arrays.toString(new List[]{odds}));
-        //如果i和i-1有一场未完成，使用昨天的数据
-        if (!matchBeans.get(preNum).getStatus().equals(Constants.FINISHED) ||
-                !matchBeans.get(curNum).getStatus().equals(Constants.FINISHED)) {
-            matchCascadeBeans.add(matchCascadeBean);
-            return;
-        }
-        for (int j = 0; j < Constants.MATCH_CASCADE_FIELD_ARR.length; j++) {
-            try {
-                String fieldName = Constants.MATCH_CASCADE_FIELD_ARR[j];
-                Field field = MatchCascadeBean.class.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                field.set(matchCascadeBean, Integer.parseInt(String.valueOf(field.get(matchCascadeBean))) + 1);
-                if ((pre.getResult() + cur.getResult()).equals(fieldName)) {
-                    field.set(matchCascadeBean, 0);
+
+            MatchBean pre = matchBeans.get(preNum);
+            MatchBean cur = matchBeans.get(curNum);
+
+            //计算赔率
+            List<Float> odds = new ArrayList<>();
+            for (int j = 0; j < pre.getOdds().length; j++) {
+                for (int k = 0; k < cur.getOdds().length; k++) {
+                    odds.add(pre.getOdds()[j] * cur.getOdds()[k]);
                 }
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
             }
+            matchCascadeBean.setOdds(Arrays.toString(new List[]{odds}));
+            //如果i和i-1有一场未完成，使用昨天的数据
+            if (!matchBeans.get(preNum).getStatus().equals(Constants.FINISHED) ||
+                    !matchBeans.get(curNum).getStatus().equals(Constants.FINISHED)) {
+                continue;
+            }
+            for (int j = 0; j < Constants.MATCH_CASCADE_FIELD_ARR.length; j++) {
+                try {
+                    String fieldName = Constants.MATCH_CASCADE_FIELD_ARR[j];
+                    Field field = MatchCascadeBean.class.getDeclaredField(fieldName);
+                    field.setAccessible(true);
+                    field.set(matchCascadeBean, Integer.parseInt(String.valueOf(field.get(matchCascadeBean))) + 1);
+                    if ((pre.getResult() + cur.getResult()).equals(fieldName)) {
+                        field.set(matchCascadeBean, 0);
+                    }
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+            matchCascadeBeans.add(matchCascadeBean);
         }
-        matchCascadeBeans.add(matchCascadeBean);
     }
 
 

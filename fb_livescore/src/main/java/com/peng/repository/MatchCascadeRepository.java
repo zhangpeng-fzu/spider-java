@@ -70,29 +70,21 @@ public class MatchCascadeRepository {
         return calendar.getTime();
     }
 
-    public static MatchCascadeBean findByLiveDateAndCascadeNum(java.util.Date date, String matchCascadeNum) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.add(Calendar.DATE, -1);
-        java.util.Date preDate = calendar.getTime();
-        MatchCascadeBean matchCascadeBean = new MatchCascadeBean();
-        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date = ? and match_cascade_num = ?")) {
-
-            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(preDate)));
-            plsql.setString(2, matchCascadeNum);
+    public static List<MatchCascadeBean> findLatestCascadeData() {
+        List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
+        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("SELECT * FROM match_cascade WHERE id IN(SELECT MAX(id) FROM match_cascade GROUP BY match_cascade_num) ")) {
             ResultSet rs = plsql.executeQuery();
-            if (rs.next()) {
-                matchCascadeBean = new MatchCascadeBean(rs);
+            while (rs.next()) {
+                matchCascadeBeans.add(new MatchCascadeBean(rs));
             }
-
         } catch (Exception se) {
             se.printStackTrace();
         }
-        return matchCascadeBean;
+        return matchCascadeBeans;
     }
 
 
-    public static List<MatchCascadeBean> getMatchCascadeData(java.util.Date date) {
+    public static List<MatchCascadeBean> findByLiveDate(java.util.Date date) {
         List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
         try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("select * from match_cascade where live_date = ? ")) {
 

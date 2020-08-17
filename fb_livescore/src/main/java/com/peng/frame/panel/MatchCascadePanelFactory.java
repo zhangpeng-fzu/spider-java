@@ -36,7 +36,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         String[] columns = Constants.MATCH_CASCADE_COLUMNS;
         String[] columnNames = new String[]{"串关场次", "胜平负组合", "当前遗漏值", "赔率"};// 定义表格列名数组
         int size = columns.length;
-        java.util.List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.getMatchCascadeData(date);
+        java.util.List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.findByLiveDate(date);
         String[][] rowData = new String[matchCascadeBeans.size() * size][columnNames.length];
         int column = 0;
         for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
@@ -83,6 +83,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         }
 
         JTable table = new JTable(newRowData, columnNames);
+        table.setName(Constants.CASCADE_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{2, 3});
         return new JScrollPane(table);

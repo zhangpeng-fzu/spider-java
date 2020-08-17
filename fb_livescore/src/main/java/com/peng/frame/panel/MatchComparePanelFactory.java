@@ -9,11 +9,10 @@ import com.peng.util.DateUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MatchComparePanelFactory extends PaneFactory {
     private static MatchComparePanelFactory matchNumPanelFactory;
@@ -56,8 +55,9 @@ public class MatchComparePanelFactory extends PaneFactory {
         String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
+        table.setName(Constants.COMPARE_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+        this.setTableHeader(table).setTableCell(table).setTableClick(table);
         return new JScrollPane(table);
     }
 
@@ -67,59 +67,56 @@ public class MatchComparePanelFactory extends PaneFactory {
      * @param matchNum 比赛场次
      * @return
      */
-    JScrollPane showMatchNumPaneByNum(String matchNum) {
-        String[] columnNames = Constants.MATCH_NUM_COLUMNS_DATE;
+    JScrollPane showMatchComparePaneByNum(String matchNum, String[] compareData) throws ParseException {
+        String[] columnNames = Constants.MATCH_COMPARE_COLUMNS_DATE;
         int size = columnNames.length;
-        List<MatchNumBean> matchNumBeans = MatchNumRepository.getMatchNumDataByNum(matchNum);
-        String[][] rowData = new String[matchNumBeans.size() + 3][size];
+        List<MatchBean> matchList = LiveDataRepository.getMatchListByNum(matchNum);
+        String[][] rowData = new String[matchList.size()][size];
         int column = 0;
-
-        List<MatchBean> matchBeans = LiveDataRepository.getMatchListByNum(matchNum);
-        Map<String, MatchBean> matchStatusMapByNum = new HashMap<>();
-        for (MatchBean matchBean : matchBeans) {
-            matchStatusMapByNum.put(matchBean.getLiveDate(), matchBean);
-        }
-        int[] matchNumCountArr = new int[size - 1];
-        int[] matchNumMaxArr = new int[size - 1];
-
-        for (MatchNumBean matchNumBean : matchNumBeans) {
-            String date = DateUtil.getDateFormat().format(matchNumBean.getLiveDate());
-            //不显示已取消或者不存在的场次
-            if (!matchStatusMapByNum.containsKey(date) || isCancelled(matchStatusMapByNum.get(date).getStatus())) {
-                continue;
-            }
+        String[] lastMissValues = new String[compareData.length];
+        Arrays.fill(lastMissValues, "0");
+        for (MatchBean matchBean : matchList) {
             //当天未完成的场次 显示空行
-            if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
-                    isUnFinished(matchStatusMapByNum.get(date).getStatus())) {
+            if (matchBean.getLiveDate().equals(DateUtil.getDateFormat().format(new Date())) &&
+                    isUnFinished(matchBean.getStatus())) {
                 rowData[column] = new String[size];
-                rowData[column][0] = DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate());
+                rowData[column][0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
                 column++;
                 continue;
             }
-            String[] missValues = new String[size - 1];
-            for (int i = 0; i < Constants.MATCH_NUM_FIELD_ARR.length; i++) {
-                String filedName = Constants.MATCH_NUM_FIELD_ARR[i];
-                try {
-                    Field field = MatchNumBean.class.getDeclaredField(filedName);
-                    field.setAccessible(true);
-                    missValues[i] = String.valueOf(field.get(matchNumBean));
-                    if (isHit(String.valueOf(field.get(matchNumBean)))) {
-                        missValues[i] = matchStatusMapByNum.get(date).getHostNum() + ":" + matchStatusMapByNum.get(date).getGuestNum();
-                        matchNumCountArr[i]++;
-                    }
-                    matchNumMaxArr[i] = Math.max(matchNumMaxArr[i], Integer.parseInt(String.valueOf(field.get(matchNumBean))));
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+            String[] missValues = new String[compareData.length];
+            String matchStatus;
+            switch (matchBean.getNum()) {
+                case 1:
+                case 3:
+                    matchStatus = "单";
+                    break;
+                case 2:
+                case 4:
+                    matchStatus = "双";
+                    break;
+                default:
+                    matchStatus = "爆";
+                    break;
             }
+            for (int i = 0; i < compareData.length; i++) {
+                if (compareData[i].equals("null")) {
+                    missValues[i] = "";
+                    continue;
+                }
+                missValues[i] = matchStatus.equals(compareData[i]) ? "中" : String.valueOf(Integer.parseInt(lastMissValues[i].equals("中") ? "0" : lastMissValues[i]) + 1);
+            }
+            lastMissValues = missValues;
+
             rowData[column] = new String[size];
-            rowData[column][0] = DateUtil.getDateFormat(1).format(matchNumBean.getLiveDate());
-            System.arraycopy(missValues, 0, rowData[column], 1, missValues.length);
+            rowData[column][0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
+            rowData[column][1] = String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum());
+            rowData[column][2] = String.valueOf(matchBean.getNum());
+            rowData[column][3] = matchStatus;
+
+            System.arraycopy(missValues, 0, rowData[column], 4, missValues.length);
             column++;
         }
-        addStatisticsData(column, size, rowData, matchNumCountArr, matchNumMaxArr);
-        column = column + 3;
-
         String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);

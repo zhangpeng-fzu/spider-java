@@ -11,6 +11,7 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.ParseException;
 import java.util.Date;
 
 public class PaneFactory {
@@ -141,15 +142,32 @@ public class PaneFactory {
                 String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
 
                 innerFrame = new JFrame(clickValue + "详细数据");
-                innerFrame.setBounds(400, 50, 650, 900);
-                if (clickValue.contains("串")) {
-                    innerFrame.getContentPane().add(MatchCascadePanelFactory.getInstance().showMatchCascadePaneByNum(clickValue));
-                } else {
-                    innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchNumPaneByNum(clickValue));
+                switch (table.getName()) {
+                    case Constants.NUM_TABLE:
+                        innerFrame.setBounds(400, 50, 650, 900);
+                        innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchNumPaneByNum(clickValue));
+
+                        break;
+                    case Constants.CASCADE_TABLE:
+                        innerFrame.setBounds(400, 50, 650, 900);
+                        innerFrame.getContentPane().add(MatchCascadePanelFactory.getInstance().showMatchCascadePaneByNum(clickValue));
+
+                        break;
+                    case Constants.COMPARE_TABLE:
+                        innerFrame.setBounds(400, 50, 800, 900);
+                        String[] compareData = new String[15];
+                        for (int i = 1; i <= 15; i++) {
+                            compareData[i - 1] = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), i));
+                        }
+                        try {
+                            innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchComparePaneByNum(clickValue, compareData));
+                        } catch (ParseException parseException) {
+                            parseException.printStackTrace();
+                        }
+
                 }
                 innerFrame.setVisible(true);
             }
-
         });
         return this;
     }
