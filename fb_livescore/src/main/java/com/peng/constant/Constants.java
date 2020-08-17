@@ -55,6 +55,9 @@ public class Constants {
 
 
     public static final String NUM_TABLE = "num";
+    public static final String NUM_DETAIL_TABLE = "num_detail";
     public static final String CASCADE_TABLE = "cascade";
+    public static final String CASCADE_DETAIL_TABLE = "cascade_detail";
     public static final String COMPARE_TABLE = "compare";
+    public static final String COMPARE_DETAIL_TABLE = "compare_detail";
 }

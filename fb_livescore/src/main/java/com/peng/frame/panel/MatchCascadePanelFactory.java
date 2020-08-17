@@ -157,6 +157,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, Constants.MATCH_CASCADE_COLUMNS_DATE);
+        table.setName(Constants.CASCADE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9});
         return setPanelScroll(table);

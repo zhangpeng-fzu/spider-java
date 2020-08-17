@@ -1,5 +1,7 @@
 package com.peng.frame;
 
+import com.peng.constant.Constants;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
@@ -13,7 +15,9 @@ public class MCellRenderer extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         //命中的显示红色
-        if ((String.valueOf(value).equals("0") || String.valueOf(value).contains(":") || String.valueOf(value).equals("中")) && !table.getColumnName(column).equals("比分")) {
+        if (((String.valueOf(value).equals("0") && !table.getName().equals(Constants.COMPARE_DETAIL_TABLE))
+                || String.valueOf(value).contains(":") || String.valueOf(value).equals("中"))
+                && !table.getColumnName(column).equals("比分")) {
             component.setBackground(Color.RED);
         } else {
             String columnName = String.valueOf(table.getColumnModel().getColumn(column).getHeaderValue());
