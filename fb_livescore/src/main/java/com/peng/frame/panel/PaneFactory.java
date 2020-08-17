@@ -137,39 +137,85 @@ public class PaneFactory {
 
     PaneFactory setTableClick(JTable table) {
         table.addMouseListener(new MouseAdapter() {
+            boolean flag = false;//用来判断是否已经执行双击事件
+            int clickNum = 0;//用来判断是否该执行双击事件
+
             @Override
             public void mouseClicked(MouseEvent e) {
-                String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
-
-                innerFrame = new JFrame(clickValue + "详细数据");
-                switch (table.getName()) {
-                    case Constants.NUM_TABLE:
-                        innerFrame.setBounds(400, 50, 650, 900);
-                        innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchNumPaneByNum(clickValue));
-
-                        break;
-                    case Constants.CASCADE_TABLE:
-                        innerFrame.setBounds(400, 50, 650, 900);
-                        innerFrame.getContentPane().add(MatchCascadePanelFactory.getInstance().showMatchCascadePaneByNum(clickValue));
-
-                        break;
-                    case Constants.COMPARE_TABLE:
-                        innerFrame.setBounds(400, 50, 800, 900);
-                        String[] compareData = new String[15];
-                        for (int i = 1; i <= 15; i++) {
-                            compareData[i - 1] = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), i));
-                        }
-                        try {
-                            innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchComparePaneByNum(clickValue, compareData));
-                        } catch (ParseException parseException) {
-                            parseException.printStackTrace();
-                        }
-
+                this.flag = false;//每次点击鼠标初始化双击事件执行标志为false
+                System.out.println("1=" + clickNum);
+                if (clickNum == 1) {//当clickNum==1时执行双击事件
+                    clickNum = 0;//初始化双击事件执行标志为0
+                    flag = true;//双击事件已执行,事件标志为true
+                    return;
                 }
-                innerFrame.setVisible(true);
+
+                //定义定时器
+                java.util.Timer timer = new java.util.Timer();
+
+                //定时器开始执行,延时0.2秒后确定是否执行单击事件
+                timer.schedule(new java.util.TimerTask() {
+                    private int n = 0;//记录定时器执行次数
+
+                    @Override
+                    public void run() {
+                        if (flag) {//如果双击事件已经执行,那么直接取消单击执行
+                            n = 0;
+                            clickNum = 0;
+                            this.cancel();
+                            return;
+                        }
+                        if (n == 1) {//定时器等待0.2秒后,双击事件仍未发生,执行单击事件
+                            mouseSingleClicked(table, e);//执行单击事件
+                            flag = true;
+                            clickNum = 0;
+                            n = 0;
+                            this.cancel();
+                            return;
+                        }
+                        clickNum++;
+                        n++;
+                        System.out.println(clickNum);
+                    }
+                }, new java.util.Date(), 5000);
             }
         });
         return this;
+    }
+
+    private void mouseSingleClicked(JTable table, MouseEvent e) {
+        System.out.println(e.getClickCount());
+        String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
+
+        switch (table.getName()) {
+            case Constants.NUM_TABLE:
+                innerFrame = new JFrame(clickValue + "详细数据");
+                innerFrame.setBounds(400, 50, 650, 900);
+                innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchNumPaneByNum(clickValue));
+                innerFrame.setVisible(true);
+
+                break;
+            case Constants.CASCADE_TABLE:
+                innerFrame = new JFrame(clickValue + "详细数据");
+                innerFrame.setBounds(400, 50, 650, 900);
+                innerFrame.getContentPane().add(MatchCascadePanelFactory.getInstance().showMatchCascadePaneByNum(clickValue));
+                innerFrame.setVisible(true);
+
+                break;
+            case Constants.COMPARE_TABLE:
+                innerFrame = new JFrame(clickValue + "详细数据");
+                innerFrame.setBounds(400, 50, 800, 900);
+                String[] compareData = new String[15];
+                for (int i = 1; i <= 15; i++) {
+                    compareData[i - 1] = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), i));
+                }
+                try {
+                    innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchComparePaneByNum(clickValue, compareData));
+                } catch (ParseException parseException) {
+                    parseException.printStackTrace();
+                }
+                innerFrame.setVisible(true);
+        }
     }
 
     public JScrollPane showMatchDataPane(Date date) {
