@@ -49,6 +49,12 @@ public class MatchComparePanelFactory extends PaneFactory {
             String[][] matchNumRowData = this.getRowData(matchNumBean.getMatchNum());
 
             String[] row = matchNumRowData[matchNumRowData.length - 4];
+            String[] missRow = matchNumRowData[matchNumRowData.length - 5];
+            for (int i = 4; i < row.length; i++) {
+                if (i % 2 == 0) {
+                    row[i] = missRow[i];
+                }
+            }
             if (row.length - 4 >= 0) {
                 System.arraycopy(row, 4, rowData[column], 1, row.length - 4);
             }
