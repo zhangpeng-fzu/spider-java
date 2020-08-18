@@ -47,9 +47,21 @@ public class MatchComparePanelFactory extends PaneFactory {
             }
             rowData[column] = new String[size];
             rowData[column][0] = matchNumBean.getMatchNum();
-            String[] initCompareData = Constants.INIT_COMPARE_DATA[i % 10];
-            System.arraycopy(initCompareData, 0, rowData[column], 1, initCompareData.length);
+            if (i < 10) {
+                String[] initCompareData = Constants.INIT_COMPARE_DATA[i % 10];
+                System.arraycopy(initCompareData, 0, rowData[column], 1, initCompareData.length);
+            }
             column++;
+        }
+        //补足10条
+        if (column < 10) {
+            for (int i = column; i < 10; i++) {
+                rowData[column] = new String[size];
+                rowData[column][0] = "--";
+                String[] initCompareData = Constants.INIT_COMPARE_DATA[i % 10];
+                System.arraycopy(initCompareData, 0, rowData[column], 1, initCompareData.length);
+                column++;
+            }
         }
 
         String[][] newRowData = new String[column][size];
@@ -67,15 +79,18 @@ public class MatchComparePanelFactory extends PaneFactory {
      * @param matchNum 比赛场次
      * @return
      */
-    JScrollPane showMatchComparePaneByNum(String matchNum, String[] compareData) throws ParseException {
+    JScrollPane showMatchComparePaneByNum(String matchNum, String[][] compareData) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_COLUMNS_DATE;
         int size = columnNames.length;
         List<MatchBean> matchList = LiveDataRepository.getMatchListByNum(matchNum);
         String[][] rowData = new String[matchList.size()][size];
         int column = 0;
-        String[] lastMissValues = new String[compareData.length];
+        String[] lastMissValues = new String[30];
         Arrays.fill(lastMissValues, "0");
-        for (MatchBean matchBean : matchList) {
+        for (int index = 0; index < matchList.size(); index++) {
+            MatchBean matchBean = matchList.get(index);
+            String[] curCompareData = compareData[index % 10];
+
             //当天未完成的场次 显示空行
             if (matchBean.getLiveDate().equals(DateUtil.getDateFormat().format(new Date())) &&
                     isUnFinished(matchBean.getStatus())) {
@@ -84,7 +99,7 @@ public class MatchComparePanelFactory extends PaneFactory {
                 column++;
                 continue;
             }
-            String[] missValues = new String[compareData.length];
+            String[] missValues = new String[30];
             String matchStatus;
             switch (matchBean.getNum()) {
                 case 1:
@@ -100,11 +115,12 @@ public class MatchComparePanelFactory extends PaneFactory {
                     break;
             }
             for (int i = 0; i < compareData.length; i++) {
-                if (compareData[i].equals("null")) {
+                if (curCompareData[i].equals("null")) {
                     missValues[i] = "";
                     continue;
                 }
-                missValues[i] = matchStatus.equals(compareData[i]) ? "中" : String.valueOf(Integer.parseInt(lastMissValues[i].equals("中") ? "0" : lastMissValues[i]) + 1);
+                missValues[2 * i] = curCompareData[i];
+                missValues[2 * i + 1] = matchStatus.equals(curCompareData[i]) ? "中" : (String.valueOf(Integer.parseInt(lastMissValues[i * 2 + 1].equals("中") ? "0" : lastMissValues[i * 2 + 1]) + 1));
             }
             lastMissValues = missValues;
 

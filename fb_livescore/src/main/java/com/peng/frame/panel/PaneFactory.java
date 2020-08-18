@@ -168,10 +168,12 @@ public class PaneFactory {
                 int mods = e.getModifiers();
                 if ((mods & InputEvent.BUTTON3_MASK) != 0) {
                     innerFrame = new JFrame(clickValue + "详细数据");
-                    innerFrame.setBounds(400, 50, 800, 900);
-                    String[] compareData = new String[15];
-                    for (int i = 1; i <= 15; i++) {
-                        compareData[i - 1] = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), i));
+                    innerFrame.setBounds(400, 50, 1200, 900);
+                    String[][] compareData = new String[10][15];
+                    for (int i = 0; i < 10; i++) {
+                        for (int j = 0; j < 15; j++) {
+                            compareData[i][j] = String.valueOf(table.getValueAt(i, j));
+                        }
                     }
                     try {
                         innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchComparePaneByNum(clickValue, compareData));
