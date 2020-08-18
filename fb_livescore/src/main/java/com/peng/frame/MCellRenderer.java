@@ -29,6 +29,10 @@ public class MCellRenderer extends DefaultTableCellRenderer {
             } else {
                 component.setBackground(Color.WHITE);
             }
+
+            if (table.getName() != null && table.getName().equals(Constants.COMPARE_DETAIL_TABLE) && columnName.contains("路")) {
+                component.setBackground(Color.LIGHT_GRAY);
+            }
         }
         //统计数据加粗
         if (row >= table.getRowCount() - 3 && (String.valueOf(table.getValueAt(row, 0)).equals("出现总次数")

@@ -9,7 +9,6 @@ import sun.swing.table.DefaultTableCellHeaderRenderer;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
@@ -45,29 +44,29 @@ public class PaneFactory {
         return "0".equals(missValue);
     }
 
-    static void addStatisticsData(int column, int size, String[][] rowData, int[] countArr, int[] maxArr) {
+    static void addStatisticsData(int column, int size, String[][] rowData, int[] countArr, int[] maxArr, int step, int offset) {
         int total = column - 1;
 
         rowData[column] = new String[size];
         rowData[column][0] = Constants.TOTAL_MISS;
         for (int i = 0; i < countArr.length; i++) {
-            rowData[column][i + 1] = handleTableData(countArr[i]);
+            rowData[column][i * step + offset] = handleTableData(countArr[i]);
         }
         column++;
         rowData[column] = new String[size];
         rowData[column][0] = Constants.AVG_MISS;
         for (int i = 0; i < countArr.length; i++) {
             if (countArr[i] == 0) {
-                rowData[column][i + 1] = handleTableData(total);
+                rowData[column][i * step + offset] = handleTableData(total);
             } else {
-                rowData[column][i + 1] = handleTableData(total / countArr[i]);
+                rowData[column][i * step + offset] = handleTableData(total / countArr[i]);
             }
         }
         column++;
         rowData[column] = new String[size];
         rowData[column][0] = Constants.MAX_MISS;
         for (int i = 0; i < maxArr.length; i++) {
-            rowData[column][i + 1] = handleTableData(maxArr[i]);
+            rowData[column][i * step + offset] = handleTableData(maxArr[i]);
         }
     }
 
@@ -124,10 +123,19 @@ public class PaneFactory {
                     if (String.valueOf(arg1).contains(":")) {
                         arg1 = "0";
                     }
+                    if (String.valueOf(arg0).contains("中")) {
+                        arg0 = "0";
+                    }
+                    if (String.valueOf(arg1).contains("中")) {
+                        arg1 = "0";
+                    }
                     float a = Float.parseFloat(arg0.toString());
                     float b = Float.parseFloat(arg1.toString());
                     return a >= b ? 1 : -1;
                 } catch (NumberFormatException e) {
+                    return 0;
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
                     return 0;
                 }
             });
@@ -165,23 +173,14 @@ public class PaneFactory {
 
                 break;
             case Constants.COMPARE_TABLE:
-                int mods = e.getModifiers();
-                if ((mods & InputEvent.BUTTON3_MASK) != 0) {
-                    innerFrame = new JFrame(clickValue + "详细数据");
-                    innerFrame.setBounds(400, 50, 1200, 900);
-                    String[][] compareData = new String[10][15];
-                    for (int i = 0; i < 10; i++) {
-                        for (int j = 0; j < 15; j++) {
-                            compareData[i][j] = String.valueOf(table.getValueAt(i, j));
-                        }
-                    }
-                    try {
-                        innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchComparePaneByNum(clickValue, compareData));
-                    } catch (ParseException parseException) {
-                        parseException.printStackTrace();
-                    }
-                    innerFrame.setVisible(true);
+                innerFrame = new JFrame(clickValue + "详细数据");
+                innerFrame.setBounds(400, 50, 1000, 900);
+                try {
+                    innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchComparePaneByNum(clickValue));
+                } catch (ParseException parseException) {
+                    parseException.printStackTrace();
                 }
+                innerFrame.setVisible(true);
         }
     }
 

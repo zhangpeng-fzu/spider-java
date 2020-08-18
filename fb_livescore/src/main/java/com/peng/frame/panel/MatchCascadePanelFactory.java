@@ -152,7 +152,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
             column++;
         }
         //增加统计数据
-        addStatisticsData(column, size, rowData, matchCascadeCountArr, matchCascadeMaxArr);
+        addStatisticsData(column, size, rowData, matchCascadeCountArr, matchCascadeMaxArr, 1, 1);
         column = column + 3;
         String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
