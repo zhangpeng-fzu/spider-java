@@ -64,6 +64,9 @@ public class MatchCascadePanelFactory extends PaneFactory {
                 continue;
             }
             MatchCascadeBean matchCascadeBean = matchCascadeBeanMap.get(matchCascadeNum);
+            if (matchCascadeBean == null) {
+                continue;
+            }
             //获取赔率
             String[] odds = new String[size];
             if (matchCascadeBean.getOdds() != null && matchCascadeBean.getOdds().length() > 0) {

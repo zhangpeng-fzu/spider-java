@@ -65,7 +65,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         JTable table = new JTable(newRowData, columnNames);
         table.setName(Constants.COMPARE_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table);
+        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20});
         return new JScrollPane(table);
     }
 
@@ -176,7 +176,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         JTable table = new JTable(newRowData, columnNames);
         table.setName(Constants.COMPARE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+        this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 21, 22, 23});
         return setPanelScroll(table);
     }
 }
