@@ -25,6 +25,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         return matchNumPanelFactory;
     }
 
+
     /**
      * 按照日期获取进球数据
      *
@@ -39,25 +40,23 @@ public class MatchComparePanelFactory extends PaneFactory {
         int column = 0;
         for (MatchNumBean matchNumBean : matchNumBeans) {
             //只显示未完成的场次
-            if (!Constants.MATCH_STATUS_MAP.containsKey(matchNumBean.getMatchNum()) ||
-                    (DateUtil.isToday(date) && !isPlaying(Constants.MATCH_STATUS_MAP.get(matchNumBean.getMatchNum())))
-                    || (!DateUtil.isToday(date) && isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNumBean.getMatchNum())))) {
+            if (MatchNumPanelFactory.skipMatchNum(date, matchNumBean.getMatchNum())) {
                 continue;
             }
-            rowData[column] = new String[size];
             rowData[column][0] = matchNumBean.getMatchNum();
-            String[][] matchNumRowData = this.getRowData(matchNumBean.getMatchNum());
 
-            String[] row = matchNumRowData[matchNumRowData.length - 4];
-            String[] missRow = matchNumRowData[matchNumRowData.length - 5];
-            for (int i = 4; i < row.length; i++) {
-                if (i % 2 == 0) {
-                    row[i] = missRow[i];
+
+            String[][] missValueData = this.getMissValueData(matchNumBean.getMatchNum());
+
+            //使用今天的预设数据和昨天的遗漏数据拼出概览数据
+            String[] todayMiss = missValueData[missValueData.length - 1];
+            String[] yesterdayMiss = missValueData[missValueData.length - 2];
+            for (int i = 0; i < todayMiss.length; i++) {
+                if (i % 2 != 0) {
+                    todayMiss[i] = yesterdayMiss[i];
                 }
             }
-            if (row.length - 4 >= 0) {
-                System.arraycopy(row, 4, rowData[column], 1, row.length - 4);
-            }
+            System.arraycopy(todayMiss, 0, rowData[column], 1, todayMiss.length);
             column++;
         }
 
@@ -70,67 +69,61 @@ public class MatchComparePanelFactory extends PaneFactory {
         return new JScrollPane(table);
     }
 
-    private String[][] getRowData(String matchNum) throws ParseException {
+    private String[][] getMissValueData(String matchNum) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_COLUMNS_DATE;
-        int size = columnNames.length;
+        int size = columnNames.length - 4;
         List<MatchBean> matchList = LiveDataRepository.getMatchListByNum(matchNum);
-        String[][] rowData = new String[matchList.size() + 3][size];
+        String[][] rowData = new String[matchList.size()][size];
         int column = 0;
-        String[] lastMissValues = new String[20];
+        String[] lastMissValues = new String[size];
         Arrays.fill(lastMissValues, "0");
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
             String[] curCompareData = Constants.INIT_COMPARE_DATA[index % 10];
 
-            //当天未完成的场次 显示空行
+            //当天的场次 显示预设数据
             if (matchBean.getLiveDate().equals(DateUtil.getDateFormat().format(new Date()))) {
                 rowData[column] = new String[size];
-                rowData[column][0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
                 for (int i = 0; i < curCompareData.length; i++) {
-                    rowData[column][4 + i * 2] = curCompareData[i];
+                    rowData[column][i * 2] = curCompareData[i];
                 }
                 column++;
                 continue;
             }
-            String[] missValues = new String[20];
-            String matchStatus;
-            switch (matchBean.getNum()) {
-                case 1:
-                case 3:
-                    matchStatus = "单";
-                    break;
-                case 2:
-                case 4:
-                    matchStatus = "双";
-                    break;
-                default:
-                    matchStatus = "爆";
-                    break;
-            }
-            for (int i = 0; i < Constants.INIT_COMPARE_DATA.length; i++) {
-                if (curCompareData[i].equals("null")) {
-                    missValues[i] = "";
-                    continue;
-                }
-                missValues[2 * i] = curCompareData[i];
-                if (matchStatus.equals(curCompareData[i])) {
-                    missValues[2 * i + 1] = "中";
-                } else {
-                    missValues[2 * i + 1] = String.valueOf(Integer.parseInt(lastMissValues[i * 2 + 1].equals("中") ? "0" : lastMissValues[i * 2 + 1]) + 1);
-                }
-            }
+            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, null, null);
             lastMissValues = missValues;
 
             rowData[column] = new String[size];
             rowData[column][0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
-            rowData[column][1] = String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum());
-            rowData[column][2] = String.valueOf(matchBean.getNum());
-            rowData[column][3] = matchStatus;
-
-            System.arraycopy(missValues, 0, rowData[column], 4, missValues.length);
+            System.arraycopy(missValues, 0, rowData[column], 0, missValues.length);
             column++;
         }
         return rowData;
+    }
+
+    private String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr) {
+
+        String[] missValues = new String[lastMissValues.length];
+        String matchStatus = matchBean.getMatchStatus();
+        for (int i = 0; i < Constants.INIT_COMPARE_DATA.length; i++) {
+            if (curCompareData[i].equals("null")) {
+                missValues[i] = "";
+                continue;
+            }
+            missValues[2 * i] = curCompareData[i];
+            if (matchStatus.equals(curCompareData[i])) {
+                missValues[2 * i + 1] = "中";
+                if (matchCompareCountArr != null) {
+                    matchCompareCountArr[i]++;
+                }
+            } else {
+                missValues[2 * i + 1] = String.valueOf(Integer.parseInt(lastMissValues[i * 2 + 1].equals("中") ? "0" : lastMissValues[i * 2 + 1]) + 1);
+                if (matchCompareMaxArr != null) {
+                    matchCompareMaxArr[i] = Math.max(matchCompareMaxArr[i], Integer.parseInt(missValues[2 * i + 1]));
+                }
+            }
+        }
+        return missValues;
     }
 
     /**
@@ -163,42 +156,14 @@ public class MatchComparePanelFactory extends PaneFactory {
                 column++;
                 continue;
             }
-            String[] missValues = new String[20];
-            String matchStatus;
-            switch (matchBean.getNum()) {
-                case 1:
-                case 3:
-                    matchStatus = "单";
-                    break;
-                case 2:
-                case 4:
-                    matchStatus = "双";
-                    break;
-                default:
-                    matchStatus = "爆";
-                    break;
-            }
-            for (int i = 0; i < Constants.INIT_COMPARE_DATA.length; i++) {
-                if (curCompareData[i].equals("null")) {
-                    missValues[i] = "";
-                    continue;
-                }
-                missValues[2 * i] = curCompareData[i];
-                if (matchStatus.equals(curCompareData[i])) {
-                    missValues[2 * i + 1] = "中";
-                    matchCompareCountArr[i]++;
-                } else {
-                    missValues[2 * i + 1] = String.valueOf(Integer.parseInt(lastMissValues[i * 2 + 1].equals("中") ? "0" : lastMissValues[i * 2 + 1]) + 1);
-                    matchCompareMaxArr[i] = Math.max(matchCompareMaxArr[i], Integer.parseInt(missValues[2 * i + 1]));
-                }
-            }
+            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, matchCompareCountArr, matchCompareMaxArr);
             lastMissValues = missValues;
 
             rowData[column] = new String[size];
             rowData[column][0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
             rowData[column][1] = String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum());
             rowData[column][2] = String.valueOf(matchBean.getNum());
-            rowData[column][3] = matchStatus;
+            rowData[column][3] = matchBean.getMatchStatus();
 
             System.arraycopy(missValues, 0, rowData[column], 4, missValues.length);
             column++;

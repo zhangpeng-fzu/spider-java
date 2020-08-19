@@ -63,4 +63,17 @@ public class MatchBean {
         return this.hostNum + this.guestNum;
     }
 
+    public String getMatchStatus() {
+        switch (this.getNum()) {
+            case 1:
+            case 3:
+                return "单";
+            case 2:
+            case 4:
+                return "双";
+            default:
+                return "爆";
+        }
+    }
+
 }

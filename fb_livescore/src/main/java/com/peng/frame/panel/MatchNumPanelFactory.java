@@ -26,6 +26,12 @@ public class MatchNumPanelFactory extends PaneFactory {
         return matchNumPanelFactory;
     }
 
+    static boolean skipMatchNum(Date date, String matchNum) {
+        return !Constants.MATCH_STATUS_MAP.containsKey(matchNum) ||
+                (DateUtil.isToday(date) && !isPlaying(Constants.MATCH_STATUS_MAP.get(matchNum)))
+                || (!DateUtil.isToday(date) && isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNum)));
+    }
+
     /**
      * 按照日期获取进球数据
      *
@@ -41,13 +47,11 @@ public class MatchNumPanelFactory extends PaneFactory {
         int[] matchNumCountArr = new int[size - 1];
         for (MatchNumBean matchNumBean : matchNumBeans) {
             //只显示未完成的场次
-            if (!Constants.MATCH_STATUS_MAP.containsKey(matchNumBean.getMatchNum()) ||
-                    (DateUtil.isToday(date) && !isPlaying(Constants.MATCH_STATUS_MAP.get(matchNumBean.getMatchNum())))
-                    || (!DateUtil.isToday(date) && isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNumBean.getMatchNum())))) {
+            if (skipMatchNum(date, matchNumBean.getMatchNum())) {
                 continue;
             }
-            rowData[column] = new String[size];
             rowData[column][0] = matchNumBean.getMatchNum();
+
             for (int i = 0; i < Constants.MATCH_NUM_FIELD_ARR.length; i++) {
                 try {
                     Field field = MatchNumBean.class.getDeclaredField(Constants.MATCH_NUM_FIELD_ARR[i]);

@@ -30,7 +30,7 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                 component.setBackground(Color.WHITE);
             }
 
-            if (table.getName() != null && table.getName().equals(Constants.COMPARE_DETAIL_TABLE) && columnName.contains("路")) {
+            if (table.getName() != null && (table.getName().equals(Constants.COMPARE_DETAIL_TABLE) || table.getName().equals(Constants.COMPARE_TABLE)) && columnName.contains("路")) {
                 component.setBackground(Color.LIGHT_GRAY);
             }
         }

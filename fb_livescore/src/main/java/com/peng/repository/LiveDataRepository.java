@@ -133,7 +133,7 @@ public class LiveDataRepository {
 
     public static List<MatchBean> getMatchListByNum(String matchNum) {
         List<MatchBean> matchBeans = new ArrayList<>();
-        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement("select * from live_data where match_num like ?")) {
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement("select * from live_data where match_num like ? order by live_date")) {
             plsql.setString(1, "%" + matchNum);
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
