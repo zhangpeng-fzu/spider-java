@@ -14,7 +14,7 @@ public class MCellRenderer extends DefaultTableCellRenderer {
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-        //命中的显示红色
+//        命中的显示红色
         if (((String.valueOf(value).equals("0") && !table.getName().equals(Constants.COMPARE_DETAIL_TABLE))
                 || String.valueOf(value).contains(":") || String.valueOf(value).equals("中"))
                 && !table.getColumnName(column).equals("比分")) {

@@ -10,10 +10,9 @@ import com.peng.util.DateUtil;
 import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.Field;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MatchCascadePanelFactory extends PaneFactory {
     private static MatchCascadePanelFactory matchCascadePanelFactory;
@@ -36,11 +35,27 @@ public class MatchCascadePanelFactory extends PaneFactory {
         String[] columns = Constants.MATCH_CASCADE_COLUMNS;
         String[] columnNames = new String[]{"串关场次", "胜平负组合", "当前遗漏值", "赔率"};// 定义表格列名数组
         int size = columns.length;
-        java.util.List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.findByLiveDate(date);
+
+        Set<String> matchNumSet = new TreeSet<>(Comparator.naturalOrder());
+        matchNumSet.addAll(Constants.MATCH_STATUS_MAP.keySet());
+        List<String> matchNumList = new ArrayList<>(matchNumSet);
+
+
+        List<String> cascadeMatchNums = new ArrayList<>();
+        for (int i = 0; i < matchNumList.size(); i++) {
+            for (int j = i + 1; j < matchNumList.size(); j++) {
+                cascadeMatchNums.add(String.format("%s串%s", matchNumList.get(i), matchNumList.get(j)));
+            }
+        }
+
+        List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.findLatestCascadeData(date);
+        Map<String, MatchCascadeBean> matchCascadeBeanMap = matchCascadeBeans.stream().collect(Collectors.toMap(MatchCascadeBean::getMatchCascadeNum, matchCascadeBean -> matchCascadeBean));
+
         String[][] rowData = new String[matchCascadeBeans.size() * size][columnNames.length];
         int column = 0;
-        for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
-            String[] matchNums = matchCascadeBean.getMatchCascadeNum().split("串");
+
+        for (String matchCascadeNum : cascadeMatchNums) {
+            String[] matchNums = matchCascadeNum.split("串");
             //只显示有比赛的场次
             if (!Constants.MATCH_STATUS_MAP.containsKey(matchNums[0]) || !Constants.MATCH_STATUS_MAP.containsKey(matchNums[1]) ||
                     (DateUtil.isToday(date) && (!isPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[0])) || !isPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[1]))))
@@ -48,6 +63,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
             )) {
                 continue;
             }
+            MatchCascadeBean matchCascadeBean = matchCascadeBeanMap.get(matchCascadeNum);
             //获取赔率
             String[] odds = new String[size];
             if (matchCascadeBean.getOdds() != null && matchCascadeBean.getOdds().length() > 0) {

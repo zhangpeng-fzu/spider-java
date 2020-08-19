@@ -70,9 +70,10 @@ public class MatchCascadeRepository {
         return calendar.getTime();
     }
 
-    public static List<MatchCascadeBean> findLatestCascadeData() {
+    public static List<MatchCascadeBean> findLatestCascadeData(java.util.Date date) {
         List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
-        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("SELECT * FROM match_cascade WHERE id IN(SELECT MAX(id) FROM match_cascade GROUP BY match_cascade_num) ")) {
+        try (PreparedStatement plsql = MysqlManager.getConnForCascade().prepareStatement("SELECT * FROM match_cascade WHERE id IN(SELECT MAX(id) FROM match_cascade WHERE live_date <= ? GROUP BY match_cascade_num) ")) {
+            plsql.setDate(1, Date.valueOf(DateUtil.getDateFormat(2).format(date.getTime())));
             ResultSet rs = plsql.executeQuery();
             while (rs.next()) {
                 matchCascadeBeans.add(new MatchCascadeBean(rs));

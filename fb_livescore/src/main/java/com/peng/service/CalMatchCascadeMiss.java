@@ -49,7 +49,7 @@ public class CalMatchCascadeMiss {
         }
         System.out.println(String.format("正在计算%s的串关数据", DateUtil.getDateFormat().format(date)));
         List<MatchCascadeBean> matchCascadeBeans = new ArrayList<>();
-        Map<String, MatchCascadeBean> cascadeBeanMap = MatchCascadeRepository.findLatestCascadeData().stream().collect(Collectors.toMap(MatchCascadeBean::getMatchCascadeNum, matchCascadeBean -> matchCascadeBean));
+        Map<String, MatchCascadeBean> cascadeBeanMap = MatchCascadeRepository.findLatestCascadeData(date).stream().collect(Collectors.toMap(MatchCascadeBean::getMatchCascadeNum, matchCascadeBean -> matchCascadeBean));
 
         for (int i = 2; i <= 300; i++) {
             calculateByDateAndNum(date, i, matchBeanMap, cascadeBeanMap, matchCascadeBeans);

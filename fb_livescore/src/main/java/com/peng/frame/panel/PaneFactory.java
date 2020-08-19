@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
+import java.util.Comparator;
 import java.util.Date;
 
 public class PaneFactory {
@@ -101,7 +102,7 @@ public class PaneFactory {
                 table.getModel());
 
         for (Integer column : columns) {
-            sorter.setComparator(column, (arg0, arg1) -> {
+            sorter.setComparator(column, (Comparator<String>) (arg0, arg1) -> {
                 try {
                     if (String.valueOf(arg0).contains(" ")) {
                         return 1;
@@ -110,28 +111,17 @@ public class PaneFactory {
                         return -1;
                     }
 
-                    if (String.valueOf(arg0).equals("") || String.valueOf(arg0).equals("0.0") || arg0 == null) {
+                    if (String.valueOf(arg0).equals("") || String.valueOf(arg0).equals("0.0") || arg0 == null || arg0.contains(":") || arg0.equals("中")) {
                         arg0 = "0";
                     }
-                    if (String.valueOf(arg1).equals("") || String.valueOf(arg1).equals("0.0") || arg1 == null) {
+                    if (String.valueOf(arg1).equals("") || String.valueOf(arg1).equals("0.0") || arg1 == null || arg1.contains(":") || arg1.equals("中")) {
                         arg1 = "0";
                     }
-                    //有比分，设置成0
-                    if (String.valueOf(arg0).contains(":")) {
-                        arg0 = "0";
-                    }
-                    if (String.valueOf(arg1).contains(":")) {
-                        arg1 = "0";
-                    }
-                    if (String.valueOf(arg0).contains("中")) {
-                        arg0 = "0";
-                    }
-                    if (String.valueOf(arg1).contains("中")) {
-                        arg1 = "0";
-                    }
-                    float a = Float.parseFloat(arg0.toString());
-                    float b = Float.parseFloat(arg1.toString());
-                    return a >= b ? 1 : -1;
+
+                    Float a = Float.parseFloat(arg0);
+                    Float b = Float.parseFloat(arg1);
+
+                    return a.compareTo(b);
                 } catch (NumberFormatException e) {
                     return 0;
                 } catch (Exception ex) {
