@@ -24,7 +24,7 @@ public class CalMatchNumMiss {
      */
     public static void calculate() throws ParseException {
         Date lastDate = MatchNumRepository.clearLastThreeDayData();
-        lastDate = lastDate == null ? DateUtil.getDateFormat(3).parse("2019-01-01") : lastDate;
+        lastDate = lastDate == null ? DateUtil.getDateFormat(3).parse("2010-01-01") : lastDate;
 
         Date maxDate = LiveDataRepository.getMaxLiveDate();
 

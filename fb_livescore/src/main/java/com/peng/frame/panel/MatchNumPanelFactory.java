@@ -28,8 +28,8 @@ public class MatchNumPanelFactory extends PaneFactory {
 
     static boolean skipMatchNum(Date date, String matchNum) {
         return !Constants.MATCH_STATUS_MAP.containsKey(matchNum) ||
-                (DateUtil.isToday(date) && !isPlaying(Constants.MATCH_STATUS_MAP.get(matchNum)))
-                || (!DateUtil.isToday(date) && isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNum)));
+                (DateUtil.isToday(date) && (!isPlaying(Constants.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(Constants.MATCH_STATUS_MAP.get(matchNum))))
+                || (!DateUtil.isToday(date) && (isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(Constants.MATCH_STATUS_MAP.get(matchNum))));
     }
 
     /**

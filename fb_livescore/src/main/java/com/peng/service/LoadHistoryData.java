@@ -70,7 +70,7 @@ public class LoadHistoryData {
 
             System.out.println("正在抓取第" + page + "页");
             try {
-                Thread.sleep(1000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

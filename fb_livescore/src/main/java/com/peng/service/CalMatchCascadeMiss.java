@@ -26,7 +26,7 @@ public class CalMatchCascadeMiss {
     public static void calculate() throws ParseException {
         //清除最近三天的数据，避免脏数据影响
         Date lastDate = MatchCascadeRepository.clearLastThreeDayData();
-        lastDate = lastDate == null ? DateUtil.getDateFormat(2).parse("2019-01-01") : lastDate;
+        lastDate = lastDate == null ? DateUtil.getDateFormat(2).parse("2010-01-01") : lastDate;
         Date maxDate = LiveDataRepository.getMaxLiveDate();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(lastDate);

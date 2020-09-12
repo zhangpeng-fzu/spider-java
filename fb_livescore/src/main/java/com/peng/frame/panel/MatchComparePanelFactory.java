@@ -77,12 +77,19 @@ public class MatchComparePanelFactory extends PaneFactory {
         int column = 0;
         String[] lastMissValues = new String[size];
         Arrays.fill(lastMissValues, "0");
+        String today = DateUtil.getDateFormat().format(new Date());
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
             String[] curCompareData = Constants.INIT_COMPARE_DATA[index % 10];
 
+            //以往，未完成或者已取消的场次
+            if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
+                column++;
+                continue;
+            }
+
             //当天的场次 显示预设数据
-            if (matchBean.getLiveDate().equals(DateUtil.getDateFormat().format(new Date()))) {
+            if (matchBean.getLiveDate().equals(today)) {
                 rowData[column] = new String[size];
                 for (int i = 0; i < curCompareData.length; i++) {
                     rowData[column][i * 2] = curCompareData[i];
@@ -142,12 +149,19 @@ public class MatchComparePanelFactory extends PaneFactory {
         Arrays.fill(lastMissValues, "0");
         int[] matchCompareCountArr = new int[10];
         int[] matchCompareMaxArr = new int[10];
+
+        String today = DateUtil.getDateFormat().format(new Date());
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
             String[] curCompareData = Constants.INIT_COMPARE_DATA[index % 10];
 
+            //以往，未完成或者已取消的场次
+            if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
+                continue;
+            }
+
             //当天未完成的场次 显示空行
-            if (matchBean.getLiveDate().equals(DateUtil.getDateFormat().format(new Date()))) {
+            if (matchBean.getLiveDate().equals(today)) {
                 rowData[column] = new String[size];
                 rowData[column][0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
                 for (int i = 0; i < curCompareData.length; i++) {

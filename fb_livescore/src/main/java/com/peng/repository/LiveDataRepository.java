@@ -50,7 +50,7 @@ public class LiveDataRepository {
     }
 
     public static String clearLastThreeDayData() {
-        Date lastDate = Date.valueOf("2019-01-01");
+        Date lastDate = Date.valueOf("2010-01-01");
         try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(SELECT_MAX_DATE)) {
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
@@ -79,7 +79,7 @@ public class LiveDataRepository {
     }
 
     public static java.util.Date getMaxLiveDate() throws ParseException {
-        Date maxDate = Date.valueOf("2019-01-01");
+        Date maxDate = Date.valueOf("2010-01-01");
         try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(SELECT_ONE)) {
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
