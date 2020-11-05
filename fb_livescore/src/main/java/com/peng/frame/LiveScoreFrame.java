@@ -1,9 +1,6 @@
 package com.peng.frame;
 
-import com.peng.frame.panel.MatchCascadePanelFactory;
-import com.peng.frame.panel.MatchComparePanelFactory;
-import com.peng.frame.panel.MatchNumPanelFactory;
-import com.peng.frame.panel.PaneFactory;
+import com.peng.frame.panel.*;
 import com.peng.service.SyncTodayData;
 import com.peng.util.DateUtil;
 import lombok.extern.java.Log;
@@ -52,10 +49,11 @@ public class LiveScoreFrame extends JFrame {
 
         jTabbedPane = new JTabbedPane();
         Date selectDate = DateUtil.getDateFormat().parse(txt1.getText());
-        jTabbedPane.add("当天赛事", PaneFactory.getInstance().showMatchDataPane(selectDate));
+        jTabbedPane.add("当天赛事", MatchDataPanelFactory.getInstance().showMatchDataPane(selectDate));
         jTabbedPane.add("串关分析", MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(selectDate));
         jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchNumPaneByDate(selectDate));
         jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchComparePaneByDate(selectDate));
+        jTabbedPane.add("半全场分析", MatchHalfPanelFactory.getInstance().showMatchPaneByDate(selectDate));
 
         jTabbedPane.setSelectedIndex(0);
         getContentPane().add(jTabbedPane, BorderLayout.CENTER);
@@ -64,10 +62,11 @@ public class LiveScoreFrame extends JFrame {
             isToday = txt1.getText().equals(DateUtil.getDateFormat().format(new Date()));
 
             try {
-                jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(DateUtil.getDateFormat().parse(txt1.getText())));
                 jTabbedPane.setComponentAt(1, MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
                 jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchNumPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
                 jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchComparePaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(4, MatchHalfPanelFactory.getInstance().showMatchPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
             } catch (ParseException ex) {
                 ex.printStackTrace();
             }
@@ -82,7 +81,7 @@ public class LiveScoreFrame extends JFrame {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-            jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(new Date()));
+            jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(new Date()));
         }
 
         new Thread(() -> {
@@ -92,7 +91,7 @@ public class LiveScoreFrame extends JFrame {
 
                 try {
                     SyncTodayData.getMatchData();
-                    jTabbedPane.setComponentAt(0, PaneFactory.getInstance().showMatchDataPane(new Date()));
+                    jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(new Date()));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

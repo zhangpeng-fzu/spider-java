@@ -1,19 +1,19 @@
 package com.peng.frame.panel;
 
-import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.frame.MCellRenderer;
-import com.peng.repository.LiveDataRepository;
 import sun.swing.table.DefaultTableCellHeaderRenderer;
 
 import javax.swing.*;
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
 import java.util.Comparator;
-import java.util.Date;
 
 public class PaneFactory {
     private static PaneFactory paneFactory;
@@ -24,10 +24,6 @@ public class PaneFactory {
 
 
     private JFrame innerFrame = null;
-
-    public static PaneFactory getInstance() {
-        return paneFactory;
-    }
 
     static boolean isPlaying(String status) {
         return Constants.PLAYING.equals(status);
@@ -45,7 +41,7 @@ public class PaneFactory {
         return "0".equals(missValue);
     }
 
-    static void addStatisticsData(int column, int size, String[][] rowData, int[] countArr, int[] maxArr, int step, int offset) {
+    static void addStatisticsData(int column, int size, String[][] rowData, int[] countArr, int[] maxArr, int[] max300Arr, int step, int offset) {
         int total = column - 1;
 
         rowData[column] = new String[size];
@@ -55,20 +51,32 @@ public class PaneFactory {
         }
         column++;
         rowData[column] = new String[size];
-        rowData[column][0] = Constants.AVG_MISS;
-        for (int i = 0; i < countArr.length; i++) {
-            if (countArr[i] == 0) {
-                rowData[column][i * step + offset] = handleTableData(total);
-            } else {
-                rowData[column][i * step + offset] = handleTableData(total / countArr[i]);
+        if (max300Arr == null) {
+            rowData[column][0] = Constants.AVG_MISS;
+            for (int i = 0; i < countArr.length; i++) {
+                if (countArr[i] == 0) {
+                    rowData[column][i * step + offset] = handleTableData(total);
+                } else {
+                    rowData[column][i * step + offset] = handleTableData(total / countArr[i]);
+                }
+            }
+        } else {
+            rowData[column][0] = Constants.MAX_300_MISS;
+            for (int i = 0; i < max300Arr.length; i++) {
+                rowData[column][i * step + offset] = handleTableData(max300Arr[i]);
             }
         }
+
         column++;
         rowData[column] = new String[size];
         rowData[column][0] = Constants.MAX_MISS;
         for (int i = 0; i < maxArr.length; i++) {
             rowData[column][i * step + offset] = handleTableData(maxArr[i]);
         }
+
+        //记录最大遗漏值，遗漏值达到最大遗漏值的80%，底色改为黄色
+        Constants.MAX_MISS_VALUE_ARR = rowData[column];
+
     }
 
     static String handleTableData(int value) {
@@ -77,11 +85,17 @@ public class PaneFactory {
 
     PaneFactory setTableHeader(JTable table) {
         table.setAutoCreateRowSorter(true);
-        JTableHeader tableHeader = table.getTableHeader();
-        tableHeader.setPreferredSize(new Dimension(tableHeader.getWidth(), 30));
         table.setRowHeight(25);
+
         TableColumn column = table.getColumnModel().getColumn(0);
         column.setMinWidth(110);
+
+        if (table.getAutoResizeMode() == JTable.AUTO_RESIZE_OFF) {
+            for (int i = 1; i < table.getColumnCount(); i++) {
+                table.getColumnModel().getColumn(i).setPreferredWidth(50);
+            }
+        }
+
 
         DefaultTableCellHeaderRenderer hr = new DefaultTableCellHeaderRenderer();
         hr.setHorizontalAlignment(JLabel.CENTER);
@@ -171,49 +185,17 @@ public class PaneFactory {
                     parseException.printStackTrace();
                 }
                 innerFrame.setVisible(true);
+                break;
+            case Constants.HALF_TABLE:
+                innerFrame = new JFrame(clickValue + "详细数据");
+                innerFrame.setBounds(400, 50, 1000, 900);
+                try {
+                    innerFrame.getContentPane().add(MatchHalfPanelFactory.getInstance().showMatchPaneByNum(clickValue));
+                } catch (ParseException parseException) {
+                    parseException.printStackTrace();
+                }
+                innerFrame.setVisible(true);
         }
-    }
-
-    public JScrollPane showMatchDataPane(Date date) {
-
-        String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
-        java.util.List<MatchBean> matchBeanList = LiveDataRepository.getMatchData(date);
-
-        String[][] rowData = new String[matchBeanList.size()][11];
-
-
-        for (int i = 0; i < matchBeanList.size(); i++) {
-            MatchBean matchBean = matchBeanList.get(i);
-            //缓存比赛状态
-            Constants.MATCH_STATUS_MAP.put(matchBean.getMatchNum().replaceAll("周[一|二|三|四|五|六|日]", ""), matchBean.getStatus());
-            String result = matchBean.getResult();
-
-            String status = matchBean.getStatus();
-            switch (matchBean.getStatus()) {
-                case Constants.CANCELLED:
-                    status = "取消";
-                    break;
-                case Constants.PLAYING:
-                    status = "未";
-                    result = "";
-                    break;
-                case Constants.FINISHED:
-                    status = "完";
-                    break;
-                default:
-                    result = "";
-                    break;
-            }
-            rowData[i] = new String[]{matchBean.getMatchNum(), matchBean.getLiveDate(), matchBean.getGroupName(), status, matchBean.getHostTeam(),
-                    matchBean.getGuestTeam(), String.valueOf(matchBean.getOdds()[0]), String.valueOf(matchBean.getOdds()[1]), String.valueOf(matchBean.getOdds()[2]),
-                    status.equals("完") ? String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()) : "", Constants.MATCH_RES_MAP.get(result)};
-        }
-
-
-        JTable table = new JTable(rowData, columnNames);
-        table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table);
-        return new JScrollPane(table);
     }
 
 

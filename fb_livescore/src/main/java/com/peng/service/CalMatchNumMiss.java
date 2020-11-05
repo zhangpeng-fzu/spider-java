@@ -49,7 +49,7 @@ public class CalMatchNumMiss {
         Map<String, MatchBean> matchBeans;
         List<MatchNumBean> matchNumBeans;
         //获取当天所有的赛事
-        matchBeans = LiveDataRepository.getMatchList(date);
+        matchBeans = LiveDataRepository.getMatchMap(date);
 
         //如果没有一场赛事，可能没有抓取数据 并且数据库最大数据日期小于当前日期时
         if (matchBeans.size() == 0 && maxDate.before(date)) {

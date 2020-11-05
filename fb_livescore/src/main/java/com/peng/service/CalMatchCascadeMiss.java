@@ -41,7 +41,7 @@ public class CalMatchCascadeMiss {
 
     private static void calculateByDate(Date date, Date maxDate) {
         //获取当天所有的赛事
-        Map<String, MatchBean> matchBeanMap = LiveDataRepository.getMatchList(date);
+        Map<String, MatchBean> matchBeanMap = LiveDataRepository.getMatchMap(date);
 
         //如果没有一场赛事，可能没有抓取数据 并且数据库最大数据日期小于当前日期时
         if (matchBeanMap.size() == 0 && maxDate.before(date)) {

@@ -65,6 +65,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         JTable table = new JTable(newRowData, columnNames);
         table.setName(Constants.COMPARE_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20});
         return new JScrollPane(table);
     }
@@ -80,7 +81,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         String today = DateUtil.getDateFormat().format(new Date());
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
-            String[] curCompareData = Constants.INIT_COMPARE_DATA[index % 10];
+            String[] curCompareData = Constants.INIT_COMPARE_DATA[index % Constants.INIT_COMPARE_DATA.length];
 
             //以往，未完成或者已取消的场次
             if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
@@ -97,7 +98,7 @@ public class MatchComparePanelFactory extends PaneFactory {
                 column++;
                 continue;
             }
-            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, null, null);
+            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, null, null, null);
             lastMissValues = missValues;
 
             rowData[column] = new String[size];
@@ -108,11 +109,11 @@ public class MatchComparePanelFactory extends PaneFactory {
         return rowData;
     }
 
-    private String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr) {
+    private String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) {
 
         String[] missValues = new String[lastMissValues.length];
         String matchStatus = matchBean.getMatchStatus();
-        for (int i = 0; i < Constants.INIT_COMPARE_DATA.length; i++) {
+        for (int i = 0; i < curCompareData.length; i++) {
             if (curCompareData[i].equals("null")) {
                 missValues[i] = "";
                 continue;
@@ -128,6 +129,9 @@ public class MatchComparePanelFactory extends PaneFactory {
                 if (matchCompareMaxArr != null) {
                     matchCompareMaxArr[i] = Math.max(matchCompareMaxArr[i], Integer.parseInt(missValues[2 * i + 1]));
                 }
+                if (matchCompareMax300Arr != null) {
+                    matchCompareMax300Arr[i] = Math.max(matchCompareMax300Arr[i], Integer.parseInt(missValues[2 * i + 1]));
+                }
             }
         }
         return missValues;
@@ -142,18 +146,22 @@ public class MatchComparePanelFactory extends PaneFactory {
     JScrollPane showMatchComparePaneByNum(String matchNum) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_COLUMNS_DATE;
         int size = columnNames.length;
+
+        int compareNum = (columnNames.length - 4) / 2;
+
         List<MatchBean> matchList = LiveDataRepository.getMatchListByNum(matchNum);
         String[][] rowData = new String[matchList.size() + 3][size];
         int column = 0;
-        String[] lastMissValues = new String[20];
+        String[] lastMissValues = new String[compareNum * 2];
         Arrays.fill(lastMissValues, "0");
-        int[] matchCompareCountArr = new int[10];
-        int[] matchCompareMaxArr = new int[10];
+        int[] matchCompareCountArr = new int[compareNum];
+        int[] matchCompareMaxArr = new int[compareNum];
+        int[] matchCompareMax300Arr = null;
 
         String today = DateUtil.getDateFormat().format(new Date());
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
-            String[] curCompareData = Constants.INIT_COMPARE_DATA[index % 10];
+            String[] curCompareData = Constants.INIT_COMPARE_DATA[index % Constants.INIT_COMPARE_DATA.length];
 
             //以往，未完成或者已取消的场次
             if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
@@ -170,7 +178,12 @@ public class MatchComparePanelFactory extends PaneFactory {
                 column++;
                 continue;
             }
-            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, matchCompareCountArr, matchCompareMaxArr);
+
+            if (matchCompareMax300Arr == null && matchList.size() - index <= 5) {
+                matchCompareMax300Arr = new int[compareNum];
+            }
+
+            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, matchCompareCountArr, matchCompareMaxArr, matchCompareMax300Arr);
             lastMissValues = missValues;
 
             rowData[column] = new String[size];
@@ -183,14 +196,21 @@ public class MatchComparePanelFactory extends PaneFactory {
             column++;
         }
         //增加统计数据
-        addStatisticsData(column, size, rowData, matchCompareCountArr, matchCompareMaxArr, 2, 5);
+        addStatisticsData(column, size, rowData, matchCompareCountArr, matchCompareMaxArr, matchCompareMax300Arr, 2, 5);
         column = column + 3;
         String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
         table.setName(Constants.COMPARE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 21, 22, 23});
-        return setPanelScroll(table);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        Integer[] sortColumn = new Integer[size];
+        for (int i = 0; i < size; i++) {
+            sortColumn[i] = i;
+        }
+
+        this.setTableHeader(table).setTableCell(table).setTableSorter(table, sortColumn);
+        return new JScrollPane(table);
     }
 }

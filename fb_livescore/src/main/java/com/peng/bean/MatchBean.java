@@ -32,14 +32,19 @@ public class MatchBean {
     private Float[] odds;
     private int hostNum;
     private int guestNum;
+    private int halfHostNum;
+    private int halfGuestNum;
     private String result;
+    private String halfResult;
     private int num;
 
 
     public MatchBean(ResultSet rs) throws SQLException {
         this.setMatchNum(rs.getString("match_num"));
         this.setHostNum(rs.getInt("host_num"));
+        this.setHalfHostNum(rs.getInt("half_host_num"));
         this.setGuestNum(rs.getInt("guest_num"));
+        this.setHalfGuestNum(rs.getInt("half_guest_num"));
         this.setLiveDate(rs.getDate("live_date").toString());
         this.setGroupName(rs.getString("match_group"));
         this.setHostTeam(rs.getString("host_team"));
@@ -57,6 +62,26 @@ public class MatchBean {
             this.result = "f";
         }
         return this.result;
+    }
+
+    public String getCNResult() {
+        if (this.hostNum > this.guestNum) {
+            return "胜";
+        } else if (this.hostNum == this.guestNum) {
+            return "平";
+        } else {
+            return "负";
+        }
+    }
+
+    public String getCNHalfResult() {
+        if (this.halfHostNum > this.halfGuestNum) {
+            return "胜";
+        } else if (this.halfHostNum == this.halfGuestNum) {
+            return "平";
+        } else {
+            return "负";
+        }
     }
 
     public int getNum() {

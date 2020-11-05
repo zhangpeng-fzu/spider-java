@@ -33,11 +33,18 @@ public class MCellRenderer extends DefaultTableCellRenderer {
             if (table.getName() != null && (table.getName().equals(Constants.COMPARE_DETAIL_TABLE) || table.getName().equals(Constants.COMPARE_TABLE)) && columnName.contains("路")) {
                 component.setBackground(Color.LIGHT_GRAY);
             }
+            //遗漏值达到最大遗漏值的80%，底色改为黄色
+            if (table.getName() != null && table.getName().equals(Constants.COMPARE_DETAIL_TABLE) && value != null && row < table.getRowCount() - 4) {
+                if (column > 4 && column % 2 == 1 && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(Constants.MAX_MISS_VALUE_ARR[column].trim()) >= 0.8) {
+                    component.setBackground(Color.ORANGE);
+                }
+            }
+
         }
         //统计数据加粗
         if (row >= table.getRowCount() - 3 && (String.valueOf(table.getValueAt(row, 0)).equals("出现总次数")
                 || String.valueOf(table.getValueAt(row, 0)).equals("平均遗漏值")
-                || String.valueOf(table.getValueAt(row, 0)).equals("最大遗漏值"))
+                || String.valueOf(table.getValueAt(row, 0)).contains("最大遗漏值"))
         ) {
             component.setFont(new Font("宋体", Font.BOLD, 12));
         }

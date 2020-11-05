@@ -42,24 +42,26 @@ public class LoadHistoryData {
                     if (td.contains("class=\"u-detal\"")) {
                         break;
                     }
-                    if (td.contains("<td") || td.contains("</td>")) {
-                        Pattern pattern = Pattern.compile(">.*?</");
-                        Matcher matcher = pattern.matcher(td);
-                        if (matcher.find()) {
-                            String text = matcher.group(0).replace(">", " ").replace("</", "");
-                            if (text.contains(" ")) {
-                                text = text.substring(text.lastIndexOf(" ")).replaceAll("title=\"|class=\"blue\"|font-size:13px;\"|class=", "")
-                                        .split("\"")[0];
-                                if (text.length() == 0) {
-                                    continue;
-                                }
-                                if (text.trim().equals("--")) {
-                                    text = "0";
-                                }
-                            }
-                            tdData.append(text.trim()).append(",");
+                    if (!td.contains("<td") && !td.contains("</td>")) {
+                        continue;
+                    }
+                    Pattern pattern = Pattern.compile(">.*?</");
+                    Matcher matcher = pattern.matcher(td);
+                    if (!matcher.find()) {
+                        continue;
+                    }
+                    String text = matcher.group(0).replace(">", " ").replace("</", "");
+                    if (text.contains(" ")) {
+                        text = text.substring(text.lastIndexOf(" ")).replaceAll("title=\"|class=\"blue\"|font-size:13px;\"|class=", "")
+                                .split("\"")[0];
+                        if (text.length() == 0) {
+                            continue;
+                        }
+                        if (text.trim().equals("--")) {
+                            text = "0";
                         }
                     }
+                    tdData.append(text.trim()).append(",");
                 }
                 if (tdData.length() < 10) {
                     continue;
@@ -116,15 +118,15 @@ public class LoadHistoryData {
         try {
             if (tdDataArr[10].equals("取消") || tdDataArr[6].equals("无效场次") || tdDataArr[6].equals("取消")) {
                 status = Constants.CANCELLED;
-                matchBean.setHostNum(0);
-                matchBean.setGuestNum(0);
             } else {
                 if (tdDataArr[6].length() > 0) {
                     matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
                     matchBean.setGuestNum(Integer.parseInt(tdDataArr[6].split(":")[1]));
-                } else {
-                    matchBean.setHostNum(0);
-                    matchBean.setGuestNum(0);
+                }
+
+                if (tdDataArr[5].length() > 0) {
+                    matchBean.setHalfHostNum(Integer.parseInt(tdDataArr[5].split(":")[0]));
+                    matchBean.setHalfGuestNum(Integer.parseInt(tdDataArr[5].split(":")[1]));
                 }
             }
         } catch (NumberFormatException e) {

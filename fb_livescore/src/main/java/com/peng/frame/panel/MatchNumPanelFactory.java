@@ -137,7 +137,7 @@ public class MatchNumPanelFactory extends PaneFactory {
             System.arraycopy(missValues, 0, rowData[column], 1, missValues.length);
             column++;
         }
-        addStatisticsData(column, size, rowData, matchNumCountArr, matchNumMaxArr, 1, 1);
+        addStatisticsData(column, size, rowData, matchNumCountArr, matchNumMaxArr, null, 1, 1);
         column = column + 3;
 
         String[][] newRowData = new String[column][size];
