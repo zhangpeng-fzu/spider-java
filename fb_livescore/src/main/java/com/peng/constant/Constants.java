@@ -57,6 +57,7 @@ public class Constants {
     public static final String HALF_DETAIL_TABLE = "half_detail";
 
     public static String[] MAX_MISS_VALUE_ARR = null;
+    public static Map<String, String[][]> TABLE_NAME_MAP = new HashMap<>();
     public static String[] MATCH_COMPARE_COLUMNS;
     public static String[] MATCH_COMPARE_COLUMNS_DATE;
 
@@ -78,5 +79,10 @@ public class Constants {
             MATCH_COMPARE_COLUMNS[4 + 2 * i] = (i + 1) + "路";
             MATCH_COMPARE_COLUMNS[5 + 2 * i] = "对比";
         }
+
+        TABLE_NAME_MAP.put(NUM_TABLE, new String[][]{MATCH_NUM_COLUMNS, MATCH_NUM_COLUMNS_DATE});
+        TABLE_NAME_MAP.put(COMPARE_TABLE, new String[][]{MATCH_COMPARE_COLUMNS, MATCH_COMPARE_COLUMNS_DATE});
+        TABLE_NAME_MAP.put(HALF_TABLE, new String[][]{MATCH_HALF_COLUMNS, MATCH_HALF_COLUMNS_DATE});
+
     }
 }

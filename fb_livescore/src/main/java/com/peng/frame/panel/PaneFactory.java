@@ -1,7 +1,10 @@
 package com.peng.frame.panel;
 
+import com.peng.bean.MatchBean;
+import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
 import com.peng.frame.MCellRenderer;
+import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import sun.swing.table.DefaultTableCellHeaderRenderer;
 
@@ -14,10 +17,12 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
-public class PaneFactory {
+public abstract class PaneFactory {
 
 
     static boolean isUnPlaying(String status) {
@@ -31,7 +36,6 @@ public class PaneFactory {
     static boolean isCancelled(String status) {
         return Constants.CANCELLED.equals(status);
     }
-
 
     static void addStatisticsData(int column, int size, String[][] rowData, int[] countArr, int[] maxArr, int[] max300Arr, int step, int offset) {
         int total = column - 1;
@@ -75,6 +79,76 @@ public class PaneFactory {
     static String handleTableData(int value) {
         return value + " ";
     }
+
+    public MissValueDataBean getMissValueData(String matchNum, boolean statistics, String type, int step, int offset) throws ParseException {
+        String[] columnNames = Constants.TABLE_NAME_MAP.get(type)[0];
+        int size = columnNames.length;
+        int row = 0;
+
+
+        int statisticsSize = (size - offset) / step;
+        String today = DateUtil.getDateFormat().format(new Date());
+
+
+        List<MatchBean> matchList = LiveDataRepository.getMatchListByNum(matchNum);
+
+        if (matchList.stream().noneMatch(matchBean -> today.equals(matchBean.getLiveDate()))) {
+            matchList.add(MatchBean.builder().liveDate(today).build());
+        }
+        int maxRow = statistics ? matchList.size() + 3 : matchList.size();
+
+        String[][] tableData = new String[maxRow][size];
+        String[] lastMissValues = new String[size - offset];
+        Arrays.fill(lastMissValues, "0");
+
+        //统计数据
+        int[] matchCompareCountArr = new int[statisticsSize];
+        int[] matchCompareMaxArr = new int[statisticsSize];
+        int[] matchCompareMax300Arr = null;
+
+        for (int index = 0; index < matchList.size(); index++) {
+            MatchBean matchBean = matchList.get(index);
+            String[] curCompareData = getColumns(index, columnNames, offset);
+            //当天未完成的场次 显示空行
+            if (matchBean.getLiveDate().equals(today)) {
+                tableData[row] = new String[size];
+                fillTodayData(tableData[row], columnNames, curCompareData, step, offset);
+                row++;
+                continue;
+            }
+            //以往，未完成或者已取消的场次
+            if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
+                continue;
+            }
+
+            if (matchCompareMax300Arr == null && matchList.size() - index <= 300) {
+                matchCompareMax300Arr = new int[statisticsSize];
+            }
+
+            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, matchCompareCountArr, matchCompareMaxArr, matchCompareMax300Arr);
+            lastMissValues = missValues;
+            tableData[row] = new String[size];
+            fillTableData(tableData[row], missValues, matchBean);
+            row++;
+        }
+
+        if (statistics) {
+            //增加统计数据
+            addStatisticsData(row, size, tableData, matchCompareCountArr, matchCompareMaxArr, matchCompareMax300Arr, step, offset + step - 1);
+            row = row + 3;
+        }
+        String[][] newTableData = new String[row][size];
+        System.arraycopy(tableData, 0, newTableData, 0, row);
+        return MissValueDataBean.builder().missValueData(newTableData).build();
+    }
+
+    protected abstract String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException;
+
+    protected abstract void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException;
+
+    protected abstract void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException;
+
+    public abstract String[] getColumns(int index, String[] columnNames, int offset);
 
     Integer[] getSortColumn(int size) {
         Integer[] sortColumn = new Integer[size];

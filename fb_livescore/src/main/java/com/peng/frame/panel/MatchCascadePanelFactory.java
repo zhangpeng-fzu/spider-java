@@ -10,6 +10,7 @@ import com.peng.util.DateUtil;
 import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.Field;
+import java.text.ParseException;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -182,4 +183,23 @@ public class MatchCascadePanelFactory extends PaneFactory {
         return setPanelScroll(table);
     }
 
+    @Override
+    protected String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) {
+        return new String[0];
+    }
+
+    @Override
+    protected void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException {
+
+    }
+
+    @Override
+    protected void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
+
+    }
+
+    @Override
+    public String[] getColumns(int index, String[] columnNames, int offset) {
+        return new String[0];
+    }
 }

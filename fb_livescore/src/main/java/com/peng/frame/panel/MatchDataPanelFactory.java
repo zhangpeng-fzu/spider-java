@@ -6,14 +6,11 @@ import com.peng.repository.LiveDataRepository;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.ParseException;
 import java.util.Date;
 
 public class MatchDataPanelFactory extends PaneFactory {
-    private final static MatchDataPanelFactory matchDataPanelFactory;
-
-    static {
-        matchDataPanelFactory = new MatchDataPanelFactory();
-    }
+    private final static MatchDataPanelFactory matchDataPanelFactory = new MatchDataPanelFactory();
 
     public static MatchDataPanelFactory getInstance() {
         return matchDataPanelFactory;
@@ -60,5 +57,25 @@ public class MatchDataPanelFactory extends PaneFactory {
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.setTableHeader(table).setTableCell(table);
         return new JScrollPane(table);
+    }
+
+    @Override
+    protected String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException {
+        return new String[0];
+    }
+
+    @Override
+    protected void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException {
+
+    }
+
+    @Override
+    protected void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
+
+    }
+
+    @Override
+    public String[] getColumns(int index, String[] columnNames, int offset) {
+        return new String[0];
     }
 }

@@ -21,7 +21,8 @@ public class MatchHalfPanelFactory extends PaneFactory {
     }
 
 
-    public MissValueDataBean getMissValueData(String matchNum, boolean statistics) throws ParseException {
+    @Override
+    public MissValueDataBean getMissValueData(String matchNum, boolean statistics, String type, int step, int offset) throws ParseException {
         String[] columnNames = Constants.MATCH_HALF_COLUMNS_DATE;
         int size = columnNames.length;
         int row = 0;
@@ -87,7 +88,8 @@ public class MatchHalfPanelFactory extends PaneFactory {
         return MissValueDataBean.builder().missValueData(newTableData).hasToday(hasToday).build();
     }
 
-    private String[] calcMissValue(MatchBean matchBean, String[] columns, String[] lastMissValues, int[] matchCountArr, int[] matchMaxArr, int[] matchMax300Arr) throws ParseException {
+    @Override
+    public String[] calcMissValue(MatchBean matchBean, String[] columns, String[] lastMissValues, int[] matchCountArr, int[] matchMaxArr, int[] matchMax300Arr) throws ParseException {
 
         String[] missValues = new String[lastMissValues.length];
         System.arraycopy(lastMissValues, 0, missValues, 0, lastMissValues.length);
@@ -116,6 +118,21 @@ public class MatchHalfPanelFactory extends PaneFactory {
         return missValues;
     }
 
+    @Override
+    protected void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException {
+
+    }
+
+    @Override
+    protected void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
+
+    }
+
+    @Override
+    public String[] getColumns(int index, String[] columnNames, int offset) {
+        return new String[0];
+    }
+
 
     /**
      * 按照日期获取进球数据
@@ -137,7 +154,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
             }
 
             rowData[column][0] = matchNum;
-            String[][] missValueData = this.getMissValueData(matchNum, false).getMissValueData();
+            String[][] missValueData = this.getMissValueData(matchNum, false, Constants.HALF_TABLE, 1, 1).getMissValueData();
             //使用今天的预设数据和昨天的遗漏数据拼出概览数据
             String[] yesterdayMiss = missValueData[missValueData.length - 2];
             System.arraycopy(yesterdayMiss, 1, rowData[column], 1, yesterdayMiss.length - 1);
@@ -162,7 +179,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
      */
     JScrollPane showMatchPaneByNum(String matchNum) throws ParseException {
         String[] columnNames = Constants.MATCH_HALF_COLUMNS;
-        MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true);
+        MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.HALF_TABLE, 1, 1);
         String[][] tableData = missValueDataBean.getMissValueData();
 
         int size = columnNames.length;
