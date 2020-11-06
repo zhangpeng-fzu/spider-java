@@ -15,8 +15,8 @@ public class Constants {
     public static final String[] MATCH_NUM_COLUMNS = new String[]{"赛事编号", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球"};
     public static final String[] MATCH_NUM_COLUMNS_DATE = new String[]{"日期", "0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球"};
 
-    public static final String[] MATCH_HALF_COLUMNS = new String[]{"赛事编号", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};
-    public static final String[] MATCH_HALF_COLUMNS_DATE = new String[]{"日期", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};
+    public static final String[] MATCH_HALF_COLUMNS = new String[]{"赛事编号", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负", "胜胜/负负", "胜负/负胜"};
+    public static final String[] MATCH_HALF_COLUMNS_DATE = new String[]{"日期", "胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负", "胜胜/负负", "胜负/负胜"};
 
     public static final String TOTAL_MISS = "出现总次数";
     public static final String AVG_MISS = "平均遗漏值";
@@ -62,21 +62,21 @@ public class Constants {
 
     static {
 
-        MATCH_COMPARE_COLUMNS = new String[INIT_COMPARE_DATA[0].length * 2 + 1];
-        MATCH_COMPARE_COLUMNS_DATE = new String[INIT_COMPARE_DATA[0].length * 2 + 4];
+        MATCH_COMPARE_COLUMNS = new String[INIT_COMPARE_DATA[0].length * 2 + 4];
+        MATCH_COMPARE_COLUMNS_DATE = new String[INIT_COMPARE_DATA[0].length * 2 + 1];
 
-        MATCH_COMPARE_COLUMNS[0] = "赛事编号";
-        MATCH_COMPARE_COLUMNS_DATE[0] = "日期";
-        MATCH_COMPARE_COLUMNS_DATE[1] = "比分";
-        MATCH_COMPARE_COLUMNS_DATE[2] = "进球数";
-        MATCH_COMPARE_COLUMNS_DATE[3] = "单双爆";
+        MATCH_COMPARE_COLUMNS_DATE[0] = "赛事编号";
+        MATCH_COMPARE_COLUMNS[0] = "日期";
+        MATCH_COMPARE_COLUMNS[1] = "比分";
+        MATCH_COMPARE_COLUMNS[2] = "进球数";
+        MATCH_COMPARE_COLUMNS[3] = "单双爆";
 
         for (int i = 0; i < INIT_COMPARE_DATA[0].length; i++) {
-            MATCH_COMPARE_COLUMNS[1 + 2 * i] = (i + 1) + "路";
-            MATCH_COMPARE_COLUMNS[2 + 2 * i] = "对比";
+            MATCH_COMPARE_COLUMNS_DATE[1 + 2 * i] = (i + 1) + "路";
+            MATCH_COMPARE_COLUMNS_DATE[2 + 2 * i] = "对比";
 
-            MATCH_COMPARE_COLUMNS_DATE[4 + 2 * i] = (i + 1) + "路";
-            MATCH_COMPARE_COLUMNS_DATE[5 + 2 * i] = "对比";
+            MATCH_COMPARE_COLUMNS[4 + 2 * i] = (i + 1) + "路";
+            MATCH_COMPARE_COLUMNS[5 + 2 * i] = "对比";
         }
     }
 }

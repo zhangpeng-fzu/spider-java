@@ -2,6 +2,7 @@ package com.peng.frame.panel;
 
 import com.peng.constant.Constants;
 import com.peng.frame.MCellRenderer;
+import com.peng.util.DateUtil;
 import sun.swing.table.DefaultTableCellHeaderRenderer;
 
 import javax.swing.*;
@@ -14,19 +15,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
 import java.util.Comparator;
+import java.util.Date;
 
 public class PaneFactory {
-    private static PaneFactory paneFactory;
-
-    static {
-        paneFactory = new PaneFactory();
-    }
 
 
-    private JFrame innerFrame = null;
-
-    static boolean isPlaying(String status) {
-        return Constants.PLAYING.equals(status);
+    static boolean isUnPlaying(String status) {
+        return !Constants.PLAYING.equals(status);
     }
 
     static boolean isUnFinished(String status) {
@@ -37,9 +32,6 @@ public class PaneFactory {
         return Constants.CANCELLED.equals(status);
     }
 
-    static boolean isHit(String missValue) {
-        return "0".equals(missValue);
-    }
 
     static void addStatisticsData(int column, int size, String[][] rowData, int[] countArr, int[] maxArr, int[] max300Arr, int step, int offset) {
         int total = column - 1;
@@ -83,6 +75,20 @@ public class PaneFactory {
         return value + " ";
     }
 
+    Integer[] getSortColumn(int size) {
+        Integer[] sortColumn = new Integer[size];
+        for (int i = 0; i < size; i++) {
+            sortColumn[i] = i;
+        }
+        return sortColumn;
+    }
+
+    boolean skipMatchNum(Date date, String matchNum) {
+        return !Constants.MATCH_STATUS_MAP.containsKey(matchNum) ||
+                (DateUtil.isToday(date) && (isUnPlaying(Constants.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(Constants.MATCH_STATUS_MAP.get(matchNum))))
+                || (!DateUtil.isToday(date) && isCancelled(Constants.MATCH_STATUS_MAP.get(matchNum)));
+    }
+
     PaneFactory setTableHeader(JTable table) {
         table.setAutoCreateRowSorter(true);
         table.setRowHeight(25);
@@ -111,7 +117,7 @@ public class PaneFactory {
         return this;
     }
 
-    PaneFactory setTableSorter(JTable table, Integer[] columns) {
+    void setTableSorter(JTable table, Integer[] columns) {
         final TableRowSorter<TableModel> sorter = new TableRowSorter<>(
                 table.getModel());
 
@@ -145,27 +151,30 @@ public class PaneFactory {
             });
         }
         table.setRowSorter(sorter);
-        return this;
     }
 
     PaneFactory setTableClick(JTable table) {
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                mouseSingleClicked(table, e);//执行单击事件
+                try {
+                    mouseSingleClicked(table, e);//执行单击事件
+                } catch (ParseException parseException) {
+                    parseException.printStackTrace();
+                }
             }
         });
         return this;
     }
 
-    private void mouseSingleClicked(JTable table, MouseEvent e) {
+    private void mouseSingleClicked(JTable table, MouseEvent e) throws ParseException {
         String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
 
         switch (table.getName()) {
             case Constants.NUM_TABLE:
-                innerFrame = new JFrame(clickValue + "详细数据");
+                JFrame innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 650, 900);
-                innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchNumPaneByNum(clickValue));
+                innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchPaneByNum(clickValue));
                 innerFrame.setVisible(true);
 
                 break;
@@ -179,21 +188,15 @@ public class PaneFactory {
             case Constants.COMPARE_TABLE:
                 innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 1000, 900);
-                try {
-                    innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchComparePaneByNum(clickValue));
-                } catch (ParseException parseException) {
-                    parseException.printStackTrace();
-                }
+                innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue));
+
                 innerFrame.setVisible(true);
                 break;
             case Constants.HALF_TABLE:
                 innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 1000, 900);
-                try {
-                    innerFrame.getContentPane().add(MatchHalfPanelFactory.getInstance().showMatchPaneByNum(clickValue));
-                } catch (ParseException parseException) {
-                    parseException.printStackTrace();
-                }
+                innerFrame.getContentPane().add(MatchHalfPanelFactory.getInstance().showMatchPaneByNum(clickValue));
+
                 innerFrame.setVisible(true);
         }
     }
@@ -211,6 +214,4 @@ public class PaneFactory {
         table.scrollRectToVisible(rect);
         return sPane;
     }
-
-
 }

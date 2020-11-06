@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class MissValueDataBean {
     String[][] missValueData;
-    int row;
+    boolean hasToday;
 }

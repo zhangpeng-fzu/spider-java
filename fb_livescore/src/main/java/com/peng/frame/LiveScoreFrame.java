@@ -51,8 +51,8 @@ public class LiveScoreFrame extends JFrame {
         Date selectDate = DateUtil.getDateFormat().parse(txt1.getText());
         jTabbedPane.add("当天赛事", MatchDataPanelFactory.getInstance().showMatchDataPane(selectDate));
         jTabbedPane.add("串关分析", MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(selectDate));
-        jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchNumPaneByDate(selectDate));
-        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchComparePaneByDate(selectDate));
+        jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchPaneByDate(selectDate));
+        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchPaneByDate(selectDate));
         jTabbedPane.add("半全场分析", MatchHalfPanelFactory.getInstance().showMatchPaneByDate(selectDate));
 
         jTabbedPane.setSelectedIndex(0);
@@ -64,8 +64,8 @@ public class LiveScoreFrame extends JFrame {
             try {
                 jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(DateUtil.getDateFormat().parse(txt1.getText())));
                 jTabbedPane.setComponentAt(1, MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchNumPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchComparePaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
+                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
                 jTabbedPane.setComponentAt(4, MatchHalfPanelFactory.getInstance().showMatchPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
             } catch (ParseException ex) {
                 ex.printStackTrace();

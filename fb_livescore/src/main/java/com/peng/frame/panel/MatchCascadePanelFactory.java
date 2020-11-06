@@ -58,7 +58,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
             String[] matchNums = matchCascadeNum.split("串");
             //只显示有比赛的场次
             if (!Constants.MATCH_STATUS_MAP.containsKey(matchNums[0]) || !Constants.MATCH_STATUS_MAP.containsKey(matchNums[1]) ||
-                    (DateUtil.isToday(date) && (!isPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[0])) || !isPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[1]))))
+                    (DateUtil.isToday(date) && (isUnPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[0])) || isUnPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[1]))))
                     || (!DateUtil.isToday(date) && (isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNums[0])) || isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNums[1])))
             )) {
                 continue;

@@ -20,16 +20,12 @@ public class MatchHalfPanelFactory extends PaneFactory {
         return matchHalfPanelFactory;
     }
 
-    static boolean skipMatchNum(Date date, String matchNum) {
-        return !Constants.MATCH_STATUS_MAP.containsKey(matchNum) ||
-                (DateUtil.isToday(date) && (!isPlaying(Constants.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(Constants.MATCH_STATUS_MAP.get(matchNum))))
-                || (!DateUtil.isToday(date) && (isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(Constants.MATCH_STATUS_MAP.get(matchNum))));
-    }
 
     public MissValueDataBean getMissValueData(String matchNum, boolean statistics) throws ParseException {
         String[] columnNames = Constants.MATCH_HALF_COLUMNS_DATE;
         int size = columnNames.length;
         int row = 0;
+        boolean hasToday = false;
 
         List<MatchBean> matchList = LiveDataRepository.getMatchListByNum(matchNum);
 
@@ -50,14 +46,12 @@ public class MatchHalfPanelFactory extends PaneFactory {
 
             //以往，未完成或者已取消的场次
             if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
-                if (!statistics) {
-                    row++;
-                }
                 continue;
             }
 
             //当天未完成的场次 显示空行
             if (matchBean.getLiveDate().equals(today)) {
+                hasToday = true;
                 tableData[row] = new String[size];
                 tableData[row][0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
                 for (int i = 1; i < columnNames.length; i++) {
@@ -85,10 +79,12 @@ public class MatchHalfPanelFactory extends PaneFactory {
         }
         if (statistics) {
             //增加统计数据
-            addStatisticsData(row, size, tableData, matchCompareCountArr, matchCompareMaxArr, matchCompareMax300Arr, 1, 1);
+            addStatisticsData(row, size, tableData, matchCompareCountArr, matchCompareMaxArr, null, 1, 1);
             row = row + 3;
         }
-        return MissValueDataBean.builder().missValueData(tableData).row(row).build();
+        String[][] newTableData = new String[row][size];
+        System.arraycopy(tableData, 0, newTableData, 0, row);
+        return MissValueDataBean.builder().missValueData(newTableData).hasToday(hasToday).build();
     }
 
     private String[] calcMissValue(MatchBean matchBean, String[] columns, String[] lastMissValues, int[] matchCountArr, int[] matchMaxArr, int[] matchMax300Arr) throws ParseException {
@@ -101,7 +97,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
 
         for (int i = 0; i < columns.length; i++) {
 
-            if (result.equals(columns[i])) {
+            if (columns[i].contains(result)) {
                 missValues[i] = "中";
                 if (matchCountArr != null) {
                     matchCountArr[i]++;
@@ -134,6 +130,11 @@ public class MatchHalfPanelFactory extends PaneFactory {
         int column = 0;
 
         for (String matchNum : matchBeans.keySet().stream().sorted(Comparator.comparing(String::trim)).collect(Collectors.toCollection(LinkedHashSet::new))) {
+
+            if (this.skipMatchNum(date, matchNum)) {
+                continue;
+            }
+
             rowData[column][0] = matchNum;
             String[][] missValueData = this.getMissValueData(matchNum, false).getMissValueData();
             //使用今天的预设数据和昨天的遗漏数据拼出概览数据
@@ -147,7 +148,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
         JTable table = new JTable(newRowData, columnNames);
         table.setName(Constants.HALF_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, getSortColumn(size));
         return new JScrollPane(table);
     }
 
@@ -163,21 +164,14 @@ public class MatchHalfPanelFactory extends PaneFactory {
         MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true);
         String[][] tableData = missValueDataBean.getMissValueData();
 
-        int row = missValueDataBean.getRow();
         int size = columnNames.length;
 
-        String[][] newTableData = new String[row][size];
-        System.arraycopy(tableData, 0, newTableData, 0, row);
-        JTable table = new JTable(newTableData, columnNames);
+        JTable table = new JTable(tableData, columnNames);
         table.setName(Constants.HALF_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-        Integer[] sortColumn = new Integer[size];
-        for (int i = 0; i < size; i++) {
-            sortColumn[i] = i;
-        }
 
-        this.setTableHeader(table).setTableCell(table).setTableSorter(table, sortColumn);
+        this.setTableHeader(table).setTableCell(table).setTableSorter(table, getSortColumn(size));
         return new JScrollPane(table);
     }
 }
