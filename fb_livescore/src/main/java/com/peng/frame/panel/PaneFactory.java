@@ -66,9 +66,10 @@ public class PaneFactory {
             rowData[column][i * step + offset] = handleTableData(maxArr[i]);
         }
 
-        //记录最大遗漏值，遗漏值达到最大遗漏值的80%，底色改为黄色
-        Constants.MAX_MISS_VALUE_ARR = rowData[column];
-
+        if (max300Arr != null) {
+            //记录最大遗漏值，遗漏值达到最大遗漏值的80%，底色改为黄色
+            Constants.MAX_MISS_VALUE_ARR = rowData[column];
+        }
     }
 
     static String handleTableData(int value) {
@@ -173,7 +174,7 @@ public class PaneFactory {
         switch (table.getName()) {
             case Constants.NUM_TABLE:
                 JFrame innerFrame = new JFrame(clickValue + "详细数据");
-                innerFrame.setBounds(400, 50, 650, 900);
+                innerFrame.setBounds(400, 50, 800, 900);
                 innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchPaneByNum(clickValue));
                 innerFrame.setVisible(true);
 

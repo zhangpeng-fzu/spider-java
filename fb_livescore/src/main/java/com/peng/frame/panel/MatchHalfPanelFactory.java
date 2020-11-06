@@ -90,6 +90,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
     private String[] calcMissValue(MatchBean matchBean, String[] columns, String[] lastMissValues, int[] matchCountArr, int[] matchMaxArr, int[] matchMax300Arr) throws ParseException {
 
         String[] missValues = new String[lastMissValues.length];
+        System.arraycopy(lastMissValues, 0, missValues, 0, lastMissValues.length);
         String matchHalfResult = matchBean.getCNHalfResult();
         String matchResult = matchBean.getCNResult();
 
@@ -103,7 +104,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
                     matchCountArr[i]++;
                 }
             } else {
-                missValues[i] = String.valueOf(Integer.parseInt(lastMissValues[i].equals("中") ? "0" : lastMissValues[i]) + 1);
+                missValues[i] = String.valueOf(Integer.parseInt(missValues[i].equals("中") ? "0" : missValues[i]) + 1);
                 if (matchMaxArr != null) {
                     matchMaxArr[i] = Math.max(matchMaxArr[i], Integer.parseInt(missValues[i]));
                 }
@@ -172,6 +173,6 @@ public class MatchHalfPanelFactory extends PaneFactory {
 
 
         this.setTableHeader(table).setTableCell(table).setTableSorter(table, getSortColumn(size));
-        return new JScrollPane(table);
+        return setPanelScroll(table);
     }
 }

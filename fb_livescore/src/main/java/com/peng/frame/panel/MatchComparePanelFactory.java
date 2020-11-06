@@ -20,9 +20,6 @@ public class MatchComparePanelFactory extends PaneFactory {
         return matchNumPanelFactory;
     }
 
-    public static void main(String[] args) throws ParseException {
-        getInstance().showMatchPaneByNum("001");
-    }
 
     private MissValueDataBean getMissValueData(String matchNum, boolean statistics) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_COLUMNS;
@@ -103,6 +100,8 @@ public class MatchComparePanelFactory extends PaneFactory {
     private String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) {
 
         String[] missValues = new String[lastMissValues.length];
+        System.arraycopy(lastMissValues, 0, missValues, 0, lastMissValues.length);
+
         String matchStatus = matchBean.getMatchStatus();
         for (int i = 0; i < curCompareData.length; i++) {
             if (curCompareData[i].equals("null")) {
@@ -116,7 +115,7 @@ public class MatchComparePanelFactory extends PaneFactory {
                     matchCompareCountArr[i]++;
                 }
             } else {
-                missValues[2 * i + 1] = String.valueOf(Integer.parseInt(lastMissValues[i * 2 + 1].equals("中") ? "0" : lastMissValues[i * 2 + 1]) + 1);
+                missValues[2 * i + 1] = String.valueOf(Integer.parseInt(missValues[i * 2 + 1].equals("中") ? "0" : missValues[i * 2 + 1]) + 1);
                 if (matchCompareMaxArr != null) {
                     matchCompareMaxArr[i] = Math.max(matchCompareMaxArr[i], Integer.parseInt(missValues[2 * i + 1]));
                 }
@@ -147,12 +146,12 @@ public class MatchComparePanelFactory extends PaneFactory {
             }
             rowData[column][0] = matchNum;
 
-            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, false);
+            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true);
             String[][] missValueData = missValueDataBean.getMissValueData();
 
             //合并今天和昨天的数据
-            String[] todayMiss = missValueData[missValueData.length - 1];
-            String[] yesterdayMiss = missValueData[missValueData.length - 2];
+            String[] todayMiss = missValueData[missValueData.length - 4];
+            String[] yesterdayMiss = missValueData[missValueData.length - 5];
             for (int i = 0; i < todayMiss.length; i++) {
                 if (i % 2 != 0) {
                     todayMiss[i] = yesterdayMiss[i];
@@ -184,6 +183,6 @@ public class MatchComparePanelFactory extends PaneFactory {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         this.setTableHeader(table).setTableCell(table).setTableSorter(table, getSortColumn(size));
-        return new JScrollPane(table);
+        return setPanelScroll(table);
     }
 }
