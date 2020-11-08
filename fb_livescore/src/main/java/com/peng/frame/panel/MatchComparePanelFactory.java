@@ -22,18 +22,17 @@ public class MatchComparePanelFactory extends PaneFactory {
         return matchNumPanelFactory;
     }
 
-
     @Override
     public String[] getColumns(int index, String[] columnNames, int offset) {
         return Constants.INIT_COMPARE_DATA[index % Constants.INIT_COMPARE_DATA.length];
     }
 
     @Override
-    public void fillTodayData(String[] tableRow, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
+    public void fillTodayData(String[] tableRow, String[] columnNames, String[] compareData, int step, int offset) throws ParseException {
         tableRow[0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(DateUtil.getDateFormat().format(new Date())));
         for (int i = 1; i < columnNames.length; i++) {
             if (i >= offset && i % step == 0) {
-                tableRow[i] = curCompareData[(i - offset) / step];
+                tableRow[i] = compareData[(i - offset) / step];
             } else {
                 tableRow[i] = "";
             }
@@ -52,31 +51,34 @@ public class MatchComparePanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) {
+    public String[] calcMissValue(MatchBean matchBean, String[] compareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) {
 
         String[] missValues = new String[lastMissValues.length];
         System.arraycopy(lastMissValues, 0, missValues, 0, lastMissValues.length);
 
         String matchStatus = matchBean.getMatchStatus();
-        for (int i = 0; i < curCompareData.length; i++) {
-            if (curCompareData[i].equals("null")) {
+        for (int i = 0; i < compareData.length; i++) {
+            if (compareData[i].equals("null")) {
                 missValues[i] = "";
                 continue;
             }
-            missValues[2 * i] = curCompareData[i];
-            if (matchStatus.equals(curCompareData[i])) {
+            missValues[2 * i] = compareData[i];
+            //对比相等
+            if (matchStatus.equals(compareData[i])) {
                 missValues[2 * i + 1] = "中";
                 if (matchCompareCountArr != null) {
                     matchCompareCountArr[i]++;
                 }
-            } else {
-                missValues[2 * i + 1] = String.valueOf(Integer.parseInt(missValues[i * 2 + 1].equals("中") ? "0" : missValues[i * 2 + 1]) + 1);
-                if (matchCompareMaxArr != null) {
-                    matchCompareMaxArr[i] = Math.max(matchCompareMaxArr[i], Integer.parseInt(missValues[2 * i + 1]));
-                }
-                if (matchCompareMax300Arr != null) {
-                    matchCompareMax300Arr[i] = Math.max(matchCompareMax300Arr[i], Integer.parseInt(missValues[2 * i + 1]));
-                }
+                continue;
+            }
+            //不相等，遗漏值加1
+            int newMissValue = Integer.parseInt(missValues[i * 2 + 1].equals("中") ? "0" : missValues[i * 2 + 1]) + 1;
+            missValues[2 * i + 1] = String.valueOf(newMissValue);
+            if (matchCompareMaxArr != null) {
+                matchCompareMaxArr[i] = Math.max(matchCompareMaxArr[i], newMissValue);
+            }
+            if (matchCompareMax300Arr != null) {
+                matchCompareMax300Arr[i] = Math.max(matchCompareMax300Arr[i], newMissValue);
             }
         }
         return missValues;
@@ -89,10 +91,10 @@ public class MatchComparePanelFactory extends PaneFactory {
      * @return
      */
     public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
-        String[] columnNames = Constants.MATCH_COMPARE_COLUMNS_DATE;
+        String[] columnNames = Constants.MATCH_COMPARE_OVERVIEW_COLUMNS;
         int size = columnNames.length;
         Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchMap(date);
-        String[][] rowData = new String[Math.max(matchBeans.size(), 10)][size];
+        String[][] rowData = new String[matchBeans.size()][size];
         int column = 0;
         int step = 2;
         int offset = 4;
@@ -130,7 +132,7 @@ public class MatchComparePanelFactory extends PaneFactory {
     }
 
     JScrollPane showMatchPaneByNum(String matchNum) throws ParseException {
-        String[] columnNames = Constants.MATCH_COMPARE_COLUMNS;
+        String[] columnNames = Constants.MATCH_COMPARE_DETAIL_COLUMNS;
         MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 2, 4);
         String[][] tableData = missValueDataBean.getMissValueData();
         int size = columnNames.length;
@@ -140,6 +142,6 @@ public class MatchComparePanelFactory extends PaneFactory {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         this.setTableHeader(table).setTableCell(table).setTableSorter(table, getSortColumn(size));
-        return setPanelScroll(table);
+        return scrollToBottom(table);
     }
 }

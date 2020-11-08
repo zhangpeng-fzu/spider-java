@@ -3,6 +3,7 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
+import com.peng.constant.MatchStatus;
 import com.peng.frame.MCellRenderer;
 import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
@@ -22,96 +23,122 @@ import java.util.*;
 
 public abstract class PaneFactory {
 
-
     static boolean isUnPlaying(String status) {
-        return !Constants.PLAYING.equals(status);
+        return !MatchStatus.PLAYING.equals(status);
     }
 
     static boolean isUnFinished(String status) {
-        return !Constants.FINISHED.equals(status);
+        return !MatchStatus.FINISHED.equals(status);
     }
 
     static boolean isCancelled(String status) {
-        return Constants.CANCELLED.equals(status);
+        return MatchStatus.CANCELLED.equals(status);
     }
 
-    static void addStatisticsData(int column, int size, String[][] rowData, int[] countArr, int[] maxArr, int[] max300Arr, int step, int offset) {
-        int total = column - 1;
+    protected abstract String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException;
 
-        rowData[column] = new String[size];
-        rowData[column][0] = Constants.TOTAL_MISS;
+    protected abstract void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException;
+
+    protected abstract void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException;
+
+    public abstract String[] getColumns(int index, String[] columnNames, int offset);
+
+    /**
+     * 计算统计数据
+     *
+     * @param row       当前行数
+     * @param tableData 表格数据
+     * @param countArr  命中次数
+     * @param maxArr    最大遗漏值
+     * @param max300Arr 最近300最大遗漏值
+     * @param step      步长
+     * @param offset    偏移量
+     */
+    public void addStatisticsData(int row, String[][] tableData, int[] countArr, int[] maxArr, int[] max300Arr, int step, int offset) {
+        int total = row - 1;
+        int size = tableData[0].length;
+
+        tableData[row] = new String[size];
+        tableData[row][0] = Constants.TOTAL_MISS;
         for (int i = 0; i < countArr.length; i++) {
-            rowData[column][i * step + offset] = handleTableData(countArr[i]);
+            tableData[row][i * step + offset] = String.valueOf(countArr[i]);
         }
-        column++;
-        rowData[column] = new String[size];
+        row++;
+        tableData[row] = new String[size];
 
-        rowData[column][0] = Constants.AVG_MISS;
+        tableData[row][0] = Constants.AVG_MISS;
         for (int i = 0; i < countArr.length; i++) {
             if (countArr[i] == 0) {
-                rowData[column][i * step + offset] = handleTableData(total);
+                tableData[row][i * step + offset] = String.valueOf(total);
             } else {
-                rowData[column][i * step + offset] = handleTableData(total / countArr[i]);
+                tableData[row][i * step + offset] = String.valueOf(total / countArr[i]);
             }
         }
-        column++;
-        rowData[column] = new String[size];
-        rowData[column][0] = Constants.MAX_300_MISS;
+        row++;
+        tableData[row] = new String[size];
+        tableData[row][0] = Constants.MAX_300_MISS;
         if (max300Arr != null) {
             for (int i = 0; i < max300Arr.length; i++) {
-                rowData[column][i * step + offset] = handleTableData(max300Arr[i]);
+                tableData[row][i * step + offset] = String.valueOf(max300Arr[i]);
             }
         }
 
-        column++;
-        rowData[column] = new String[size];
-        rowData[column][0] = Constants.MAX_MISS;
+        row++;
+        tableData[row] = new String[size];
+        tableData[row][0] = Constants.MAX_MISS;
         for (int i = 0; i < maxArr.length; i++) {
-            rowData[column][i * step + offset] = handleTableData(maxArr[i]);
+            tableData[row][i * step + offset] = String.valueOf(maxArr[i]);
         }
     }
 
-    static String handleTableData(int value) {
-        return value + " ";
-    }
-
+    /**
+     * 计算遗漏值
+     *
+     * @param matchNum   赛事编号
+     * @param statistics 是否需要统计数据
+     * @param type       统计表格类型
+     * @param step       步长
+     * @param offset     偏移量
+     * @return 遗漏值数据
+     * @throws ParseException e
+     */
     public MissValueDataBean getMissValueData(String matchNum, boolean statistics, String type, int step, int offset) throws ParseException {
-        String[] columnNames = Constants.TABLE_NAME_MAP.get(type)[0];
-        int size = columnNames.length;
-        int row = 0;
-
-
-        int statisticsSize = (size - offset) / step;
+        String[] columnNames = Constants.TABLE_NAME_MAP.get(type)[1];
         String today = DateUtil.getDateFormat().format(new Date());
 
+        int size = columnNames.length;
+        int row = 0;
+        int statisticsSize = (size - offset) / step;
 
         List<MatchBean> matchList = LiveDataRepository.getMatchListByNum(matchNum);
-
         if (matchList.stream().noneMatch(matchBean -> today.equals(matchBean.getLiveDate()))) {
             matchList.add(MatchBean.builder().liveDate(today).build());
         }
+        //计算最大行数，统计数据占四行
         int maxRow = statistics ? matchList.size() + 4 : matchList.size();
 
         String[][] tableData = new String[maxRow][size];
         String[] lastMissValues = new String[size - offset];
         Arrays.fill(lastMissValues, "0");
 
-        //统计数据
+        //命中次数
         int[] matchCountArr = new int[statisticsSize];
+        //最大遗漏值
         int[] matchMaxArr = new int[statisticsSize];
+        //最近300场最大遗漏值
         int[] matchMax300Arr = null;
 
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
-            String[] curCompareData = getColumns(index, columnNames, offset);
-            //当天未完成的场次 显示空行
+            String[] compareData = getColumns(index, columnNames, offset);
+            //当天的场次 显示空行
             if (matchBean.getLiveDate().equals(today)) {
                 tableData[row] = new String[size];
-                fillTodayData(tableData[row], columnNames, curCompareData, step, offset);
+                fillTodayData(tableData[row], columnNames, compareData, step, offset);
                 row++;
                 continue;
             }
-            //以往，未完成或者已取消的场次
+            //以前未完成或者已取消的场次
             if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
                 continue;
             }
@@ -119,8 +146,10 @@ public abstract class PaneFactory {
             if (matchMax300Arr == null && matchList.size() - index <= 300) {
                 matchMax300Arr = new int[statisticsSize];
             }
+            //计算遗漏值
+            String[] missValues = calcMissValue(matchBean, compareData, lastMissValues, matchCountArr, matchMaxArr, matchMax300Arr);
 
-            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, matchCountArr, matchMaxArr, matchMax300Arr);
+            //将算出来的遗漏值赋值给上一次的遗漏值
             lastMissValues = missValues;
             tableData[row] = new String[size];
             fillTableData(tableData[row], missValues, matchBean);
@@ -130,7 +159,7 @@ public abstract class PaneFactory {
         if (statistics) {
 
             //增加统计数据
-            addStatisticsData(row, size, tableData, matchCountArr, matchMaxArr, matchMax300Arr, step, offset + step - 1);
+            addStatisticsData(row, tableData, matchCountArr, matchMaxArr, matchMax300Arr, step, offset + step - 1);
             row = row + 4;
 
             Map<String, String[]> maxMiss = Constants.MAX_MISS_VALUE_MAP.getOrDefault(type, new HashMap<>());
@@ -143,13 +172,6 @@ public abstract class PaneFactory {
         return MissValueDataBean.builder().missValueData(newTableData).build();
     }
 
-    protected abstract String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException;
-
-    protected abstract void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException;
-
-    protected abstract void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException;
-
-    public abstract String[] getColumns(int index, String[] columnNames, int offset);
 
     Integer[] getSortColumn(int size) {
         Integer[] sortColumn = new Integer[size];
@@ -160,9 +182,9 @@ public abstract class PaneFactory {
     }
 
     boolean skipMatchNum(Date date, String matchNum) {
-        return !Constants.MATCH_STATUS_MAP.containsKey(matchNum) ||
-                (DateUtil.isToday(date) && (isUnPlaying(Constants.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(Constants.MATCH_STATUS_MAP.get(matchNum))))
-                || (!DateUtil.isToday(date) && isCancelled(Constants.MATCH_STATUS_MAP.get(matchNum)));
+        return !MatchStatus.MATCH_STATUS_MAP.containsKey(matchNum) ||
+                (DateUtil.isToday(date) && (isUnPlaying(MatchStatus.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(MatchStatus.MATCH_STATUS_MAP.get(matchNum))))
+                || (!DateUtil.isToday(date) && isCancelled(MatchStatus.MATCH_STATUS_MAP.get(matchNum)));
     }
 
     PaneFactory setTableHeader(JTable table) {
@@ -178,11 +200,9 @@ public abstract class PaneFactory {
             }
         }
 
-
         DefaultTableCellHeaderRenderer hr = new DefaultTableCellHeaderRenderer();
         hr.setHorizontalAlignment(JLabel.CENTER);
         table.getTableHeader().setDefaultRenderer(hr);
-
         return this;
     }
 
@@ -272,18 +292,16 @@ public abstract class PaneFactory {
                 innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 1000, 900);
                 innerFrame.getContentPane().add(MatchHalfPanelFactory.getInstance().showMatchPaneByNum(clickValue));
-
                 innerFrame.setVisible(true);
         }
     }
 
 
-    JScrollPane setPanelScroll(JTable table) {
+    JScrollPane scrollToBottom(JTable table) {
         JScrollPane sPane = new JScrollPane(table);
         JScrollBar sBar = sPane.getVerticalScrollBar();
         sBar.setValue(sBar.getMaximum());
         sPane.setVerticalScrollBar(sBar);
-
         int rowCount = table.getRowCount();
         table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
         Rectangle rect = table.getCellRect(rowCount - 1, 0, true);

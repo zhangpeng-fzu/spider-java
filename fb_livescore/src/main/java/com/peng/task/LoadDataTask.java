@@ -19,7 +19,6 @@ public class LoadDataTask extends Thread implements Runnable {
             e.printStackTrace();
         }
 
-        new CalMatchNumMissTask().start();
         new CalMatchCascadeMissTask().start();
     }
 }

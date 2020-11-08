@@ -3,6 +3,7 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MatchCascadeBean;
 import com.peng.constant.Constants;
+import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchCascadeRepository;
 import com.peng.util.DateUtil;
@@ -16,11 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MatchCascadePanelFactory extends PaneFactory {
-    private static MatchCascadePanelFactory matchCascadePanelFactory;
-
-    static {
-        matchCascadePanelFactory = new MatchCascadePanelFactory();
-    }
+    private static final MatchCascadePanelFactory matchCascadePanelFactory = new MatchCascadePanelFactory();
 
     public static MatchCascadePanelFactory getInstance() {
         return matchCascadePanelFactory;
@@ -38,7 +35,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         int size = columns.length;
 
         Set<String> matchNumSet = new TreeSet<>(Comparator.naturalOrder());
-        matchNumSet.addAll(Constants.MATCH_STATUS_MAP.keySet());
+        matchNumSet.addAll(MatchStatus.MATCH_STATUS_MAP.keySet());
         List<String> matchNumList = new ArrayList<>(matchNumSet);
 
 
@@ -58,9 +55,9 @@ public class MatchCascadePanelFactory extends PaneFactory {
         for (String matchCascadeNum : cascadeMatchNums) {
             String[] matchNums = matchCascadeNum.split("串");
             //只显示有比赛的场次
-            if (!Constants.MATCH_STATUS_MAP.containsKey(matchNums[0]) || !Constants.MATCH_STATUS_MAP.containsKey(matchNums[1]) ||
-                    (DateUtil.isToday(date) && (isUnPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[0])) || isUnPlaying(Constants.MATCH_STATUS_MAP.get(matchNums[1]))))
-                    || (!DateUtil.isToday(date) && (isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNums[0])) || isUnFinished(Constants.MATCH_STATUS_MAP.get(matchNums[1])))
+            if (!MatchStatus.MATCH_STATUS_MAP.containsKey(matchNums[0]) || !MatchStatus.MATCH_STATUS_MAP.containsKey(matchNums[1]) ||
+                    (DateUtil.isToday(date) && (isUnPlaying(MatchStatus.MATCH_STATUS_MAP.get(matchNums[0])) || isUnPlaying(MatchStatus.MATCH_STATUS_MAP.get(matchNums[1]))))
+                    || (!DateUtil.isToday(date) && (isUnFinished(MatchStatus.MATCH_STATUS_MAP.get(matchNums[0])) || isUnFinished(MatchStatus.MATCH_STATUS_MAP.get(matchNums[1])))
             )) {
                 continue;
             }
@@ -172,7 +169,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
             column++;
         }
         //增加统计数据
-        addStatisticsData(column, size, rowData, matchCascadeCountArr, matchCascadeMaxArr, null, 1, 1);
+        this.addStatisticsData(column, rowData, matchCascadeCountArr, matchCascadeMaxArr, null, 1, 1);
         column = column + 4;
         String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
@@ -180,7 +177,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         table.setName(Constants.CASCADE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9});
-        return setPanelScroll(table);
+        return scrollToBottom(table);
     }
 
     @Override

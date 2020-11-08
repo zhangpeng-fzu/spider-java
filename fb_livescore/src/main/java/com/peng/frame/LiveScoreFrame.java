@@ -13,7 +13,6 @@ import java.util.Date;
 @Log
 public class LiveScoreFrame extends JFrame {
 
-
     private static final long serialVersionUID = 3218784607640603309L;
     private static boolean isToday = true;
     private static JTabbedPane jTabbedPane;
@@ -28,17 +27,17 @@ public class LiveScoreFrame extends JFrame {
 
         JPanel controlPanel = new JPanel();
         JLabel dateLabel = new JLabel("日期");
-        JTextField txt1 = new JTextField(10);
-        txt1.setText(DateUtil.getDateFormat().format(new Date()));
+        JTextField selectedDateTxt = new JTextField(10);
+        selectedDateTxt.setText(DateUtil.getDateFormat().format(new Date()));
 
         // 定义日历控件面板类
-        CalendarPanel calendarPanel = new CalendarPanel(txt1, "yyyy-MM-dd");
+        CalendarPanel calendarPanel = new CalendarPanel(selectedDateTxt, "yyyy-MM-dd");
         getContentPane().add(calendarPanel);
 
 
         calendarPanel.initCalendarPanel();
         controlPanel.add(dateLabel);
-        controlPanel.add(txt1);
+        controlPanel.add(selectedDateTxt);
 
         JButton btn = new JButton("读取数据");
 
@@ -48,25 +47,25 @@ public class LiveScoreFrame extends JFrame {
         getContentPane().add(controlPanel, BorderLayout.NORTH);
 
         jTabbedPane = new JTabbedPane();
-        Date selectDate = DateUtil.getDateFormat().parse(txt1.getText());
-        jTabbedPane.add("当天赛事", MatchDataPanelFactory.getInstance().showMatchDataPane(selectDate));
-        jTabbedPane.add("串关分析", MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(selectDate));
-        jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchPaneByDate(selectDate));
-        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchPaneByDate(selectDate));
-        jTabbedPane.add("半全场分析", MatchHalfPanelFactory.getInstance().showMatchPaneByDate(selectDate));
+        Date selectedDate = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
+        jTabbedPane.add("当天赛事", MatchDataPanelFactory.getInstance().showMatchDataPane(selectedDate));
+        jTabbedPane.add("串关分析", MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(selectedDate));
+        jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchPaneByDate(selectedDate));
+        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchPaneByDate(selectedDate));
+        jTabbedPane.add("半全场分析", MatchHalfPanelFactory.getInstance().showMatchPaneByDate(selectedDate));
 
         jTabbedPane.setSelectedIndex(0);
         getContentPane().add(jTabbedPane, BorderLayout.CENTER);
 
         btn.addActionListener(e -> {
-            isToday = txt1.getText().equals(DateUtil.getDateFormat().format(new Date()));
-
+            isToday = selectedDateTxt.getText().equals(DateUtil.getDateFormat().format(new Date()));
             try {
-                jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(1, MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
-                jTabbedPane.setComponentAt(4, MatchHalfPanelFactory.getInstance().showMatchPaneByDate(DateUtil.getDateFormat().parse(txt1.getText())));
+                Date date = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
+                jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(date));
+                jTabbedPane.setComponentAt(1, MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(date));
+                jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchPaneByDate(date));
+                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date));
+                jTabbedPane.setComponentAt(4, MatchHalfPanelFactory.getInstance().showMatchPaneByDate(date));
             } catch (ParseException ex) {
                 ex.printStackTrace();
             }

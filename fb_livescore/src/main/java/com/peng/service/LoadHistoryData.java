@@ -2,6 +2,7 @@ package com.peng.service;
 
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
+import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
@@ -113,11 +114,11 @@ public class LoadHistoryData {
 
         Float[] odds = new Float[]{Float.valueOf(tdDataArr[7]), Float.valueOf(tdDataArr[8]), Float.valueOf(tdDataArr[9])};
         matchBean.setOdds(odds);
-        String status = tdDataArr[10].equals("已完成") ? Constants.FINISHED : Constants.PLAYING;
+        String status = tdDataArr[10].equals("已完成") ? MatchStatus.FINISHED : MatchStatus.PLAYING;
 
         try {
             if (tdDataArr[10].equals("取消") || tdDataArr[6].equals("无效场次") || tdDataArr[6].equals("取消")) {
-                status = Constants.CANCELLED;
+                status = MatchStatus.CANCELLED;
             } else {
                 if (tdDataArr[6].length() > 0) {
                     matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
@@ -130,7 +131,7 @@ public class LoadHistoryData {
                 }
             }
         } catch (NumberFormatException e) {
-            status = Constants.CANCELLED;
+            status = MatchStatus.CANCELLED;
             matchBean.setHostNum(0);
             matchBean.setGuestNum(0);
         }

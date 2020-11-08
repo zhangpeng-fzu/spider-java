@@ -81,7 +81,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
      * @return
      */
     public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
-        String[] columnNames = Constants.MATCH_HALF_COLUMNS;
+        String[] columnNames = Constants.MATCH_HALF_OVERVIEW_COLUMNS;
         int size = columnNames.length;
         Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchMap(date);
         String[][] rowData = new String[Math.max(matchBeans.size(), 10)][size];
@@ -121,7 +121,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
      * @return
      */
     JScrollPane showMatchPaneByNum(String matchNum) throws ParseException {
-        String[] columnNames = Constants.MATCH_HALF_COLUMNS;
+        String[] columnNames = Constants.MATCH_HALF_DETAIL_COLUMNS;
         MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.HALF_TABLE, 1, 1);
         String[][] tableData = missValueDataBean.getMissValueData();
 
@@ -133,6 +133,6 @@ public class MatchHalfPanelFactory extends PaneFactory {
 
 
         this.setTableHeader(table).setTableCell(table).setTableSorter(table, getSortColumn(size));
-        return setPanelScroll(table);
+        return scrollToBottom(table);
     }
 }

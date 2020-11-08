@@ -2,6 +2,7 @@ package com.peng.frame.panel;
 
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
+import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
 
 import javax.swing.*;
@@ -28,19 +29,19 @@ public class MatchDataPanelFactory extends PaneFactory {
         for (int i = 0; i < matchBeanList.size(); i++) {
             MatchBean matchBean = matchBeanList.get(i);
             //缓存比赛状态
-            Constants.MATCH_STATUS_MAP.put(matchBean.getMatchNum().replaceAll("周[一|二|三|四|五|六|日]", ""), matchBean.getStatus());
+            MatchStatus.MATCH_STATUS_MAP.put(matchBean.getMatchNum().replaceAll("周[一|二|三|四|五|六|日]", ""), matchBean.getStatus());
             String result = matchBean.getResult();
 
             String status = matchBean.getStatus();
             switch (matchBean.getStatus()) {
-                case Constants.CANCELLED:
+                case MatchStatus.CANCELLED:
                     status = "取消";
                     break;
-                case Constants.PLAYING:
+                case MatchStatus.PLAYING:
                     status = "未";
                     result = "";
                     break;
-                case Constants.FINISHED:
+                case MatchStatus.FINISHED:
                     status = "完";
                     break;
                 default:

@@ -3,6 +3,7 @@ package com.peng.service;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MatchCascadeBean;
 import com.peng.constant.Constants;
+import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchCascadeRepository;
 import com.peng.util.DateUtil;
@@ -91,8 +92,8 @@ public class CalMatchCascadeMiss {
             }
             matchCascadeBean.setOdds(Arrays.toString(new List[]{odds}));
             //如果i和i-1有一场未完成，使用昨天的数据
-            if (!matchBeans.get(preNum).getStatus().equals(Constants.FINISHED) ||
-                    !matchBeans.get(curNum).getStatus().equals(Constants.FINISHED)) {
+            if (!matchBeans.get(preNum).getStatus().equals(MatchStatus.FINISHED) ||
+                    !matchBeans.get(curNum).getStatus().equals(MatchStatus.FINISHED)) {
                 continue;
             }
             for (int j = 0; j < Constants.MATCH_CASCADE_FIELD_ARR.length; j++) {
