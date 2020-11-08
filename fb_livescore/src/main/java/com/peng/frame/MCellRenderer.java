@@ -36,16 +36,44 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                         || table.getName().startsWith(Constants.HALF_TABLE) && columnName.contains("/")) {
                     component.setBackground(Color.LIGHT_GRAY);
                 }
+
                 //遗漏值达到最大遗漏值的80%，底色改为黄色
-                if (table.getName().equals(Constants.COMPARE_DETAIL_TABLE) && value != null && row < table.getRowCount() - 4) {
-                    if (column > 4 && column % 2 == 1 && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(Constants.MAX_MISS_VALUE_ARR[column].trim()) >= 0.8) {
+                if ((table.getName().equals(Constants.COMPARE_DETAIL_TABLE)) && value != null && String.valueOf(value).length() > 0 && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.COMPARE_TABLE) && row < table.getRowCount() - 4) {
+                    String[] maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(Constants.SELECT_MATCH_NUM);
+
+                    if (column > 4 && column % 2 == 1 && maxMiss != null && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(maxMiss[column].trim()) >= 0.8) {
+                        component.setBackground(Color.ORANGE);
+                    }
+                }
+                if ((table.getName().equals(Constants.COMPARE_TABLE)) && value != null && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.COMPARE_TABLE) && String.valueOf(value).length() > 0) {
+
+                    String matchNum = String.valueOf(table.getValueAt(row, 0));
+                    String[] maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(matchNum);
+                    if (column > 1 && column % 2 == 0 && maxMiss != null && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(maxMiss[column + 3].trim()) >= 0.8) {
+                        component.setBackground(Color.ORANGE);
+                    }
+                }
+
+                //进球分析
+                if ((table.getName().equals(Constants.NUM_DETAIL_TABLE)) && value != null && String.valueOf(value).length() > 0 && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.NUM_TABLE) && row < table.getRowCount() - 4) {
+                    String[] maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(Constants.SELECT_MATCH_NUM);
+
+                    if (column > 1 && column % 2 == 0 && maxMiss != null && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(maxMiss[column].trim()) >= 0.8) {
+                        component.setBackground(Color.ORANGE);
+                    }
+                }
+                if ((table.getName().equals(Constants.NUM_TABLE)) && value != null && String.valueOf(value).length() > 0 && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.NUM_TABLE)) {
+
+                    String matchNum = String.valueOf(table.getValueAt(row, 0));
+                    String[] maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(matchNum);
+                    if (column > 1 && column % 2 == 0 && maxMiss != null && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(maxMiss[column].trim()) >= 0.8) {
                         component.setBackground(Color.ORANGE);
                     }
                 }
             }
         }
         //统计数据加粗
-        if (row >= table.getRowCount() - 3 && (String.valueOf(table.getValueAt(row, 0)).equals("出现总次数")
+        if (row >= table.getRowCount() - 4 && (String.valueOf(table.getValueAt(row, 0)).equals("出现总次数")
                 || String.valueOf(table.getValueAt(row, 0)).equals("平均遗漏值")
                 || String.valueOf(table.getValueAt(row, 0)).contains("最大遗漏值"))
         ) {

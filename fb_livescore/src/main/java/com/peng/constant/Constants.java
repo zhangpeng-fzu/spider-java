@@ -55,8 +55,9 @@ public class Constants {
     public static final String COMPARE_DETAIL_TABLE = "compare_detail";
     public static final String HALF_TABLE = "half";
     public static final String HALF_DETAIL_TABLE = "half_detail";
+    public static String SELECT_MATCH_NUM = null;
 
-    public static String[] MAX_MISS_VALUE_ARR = null;
+    public static Map<String, Map<String, String[]>> MAX_MISS_VALUE_MAP = new HashMap<>();
     public static Map<String, String[][]> TABLE_NAME_MAP = new HashMap<>();
     public static String[] MATCH_COMPARE_COLUMNS;
     public static String[] MATCH_COMPARE_COLUMNS_DATE;

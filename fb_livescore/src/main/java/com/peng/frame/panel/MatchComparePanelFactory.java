@@ -94,6 +94,8 @@ public class MatchComparePanelFactory extends PaneFactory {
         Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchMap(date);
         String[][] rowData = new String[Math.max(matchBeans.size(), 10)][size];
         int column = 0;
+        int step = 2;
+        int offset = 4;
         for (String matchNum : matchBeans.keySet().stream().sorted(Comparator.comparing(String::trim)).collect(Collectors.toCollection(LinkedHashSet::new))) {
             //只显示未完成的场次
             if (this.skipMatchNum(date, matchNum)) {
@@ -101,19 +103,19 @@ public class MatchComparePanelFactory extends PaneFactory {
             }
             rowData[column][0] = matchNum;
 
-            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 1, 1);
+            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, step, offset);
             String[][] missValueData = missValueDataBean.getMissValueData();
 
             //合并今天和昨天的数据
-            String[] todayMiss = missValueData[missValueData.length - 4];
-            String[] yesterdayMiss = missValueData[missValueData.length - 5];
+            String[] todayMiss = missValueData[missValueData.length - 5];
+            String[] yesterdayMiss = missValueData[missValueData.length - 6];
             for (int i = 0; i < todayMiss.length; i++) {
-                if (i % 2 != 0) {
+                if (i % step != 0) {
                     todayMiss[i] = yesterdayMiss[i];
                 }
             }
 
-            System.arraycopy(todayMiss, 4, rowData[column], 1, todayMiss.length - 4);
+            System.arraycopy(todayMiss, offset, rowData[column], 1, todayMiss.length - offset);
             column++;
         }
 
@@ -129,7 +131,7 @@ public class MatchComparePanelFactory extends PaneFactory {
 
     JScrollPane showMatchPaneByNum(String matchNum) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_COLUMNS;
-        MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 1, 1);
+        MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 2, 4);
         String[][] tableData = missValueDataBean.getMissValueData();
         int size = columnNames.length;
         JTable table = new JTable(tableData, columnNames);

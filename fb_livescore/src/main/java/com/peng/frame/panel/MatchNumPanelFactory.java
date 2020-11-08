@@ -114,11 +114,11 @@ public class MatchNumPanelFactory extends PaneFactory {
 
             rowData[column][0] = matchNum;
 
-            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, false, Constants.NUM_TABLE, 1, 1);
+            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.NUM_TABLE, 1, 1);
             String[][] missValueData = missValueDataBean.getMissValueData();
 
             //使用今天的预设数据和昨天的遗漏数据拼出概览数据
-            String[] yesterdayMiss = missValueData[missValueData.length - 2];
+            String[] yesterdayMiss = missValueData[missValueData.length - 6];
             System.arraycopy(yesterdayMiss, 1, rowData[column], 1, yesterdayMiss.length - 1);
             column++;
         }

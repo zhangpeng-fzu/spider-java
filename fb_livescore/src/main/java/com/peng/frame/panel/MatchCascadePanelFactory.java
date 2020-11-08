@@ -119,7 +119,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         String[] columnNames = Constants.MATCH_CASCADE_COLUMNS_DATE;
         int size = columnNames.length;
         java.util.List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.getMatchCascadeDataByNum(matchCascadeNum);
-        String[][] rowData = new String[matchCascadeBeans.size() + 3][size];
+        String[][] rowData = new String[matchCascadeBeans.size() + 4][size];
         String[] matchNums = matchCascadeNum.split("串");
 
         //获取前面编号的状态
@@ -173,7 +173,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         }
         //增加统计数据
         addStatisticsData(column, size, rowData, matchCascadeCountArr, matchCascadeMaxArr, null, 1, 1);
-        column = column + 3;
+        column = column + 4;
         String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, Constants.MATCH_CASCADE_COLUMNS_DATE);

@@ -17,10 +17,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
+import java.util.*;
 
 public abstract class PaneFactory {
 
@@ -47,17 +45,19 @@ public abstract class PaneFactory {
         }
         column++;
         rowData[column] = new String[size];
-        if (max300Arr == null) {
-            rowData[column][0] = Constants.AVG_MISS;
-            for (int i = 0; i < countArr.length; i++) {
-                if (countArr[i] == 0) {
-                    rowData[column][i * step + offset] = handleTableData(total);
-                } else {
-                    rowData[column][i * step + offset] = handleTableData(total / countArr[i]);
-                }
+
+        rowData[column][0] = Constants.AVG_MISS;
+        for (int i = 0; i < countArr.length; i++) {
+            if (countArr[i] == 0) {
+                rowData[column][i * step + offset] = handleTableData(total);
+            } else {
+                rowData[column][i * step + offset] = handleTableData(total / countArr[i]);
             }
-        } else {
-            rowData[column][0] = Constants.MAX_300_MISS;
+        }
+        column++;
+        rowData[column] = new String[size];
+        rowData[column][0] = Constants.MAX_300_MISS;
+        if (max300Arr != null) {
             for (int i = 0; i < max300Arr.length; i++) {
                 rowData[column][i * step + offset] = handleTableData(max300Arr[i]);
             }
@@ -68,11 +68,6 @@ public abstract class PaneFactory {
         rowData[column][0] = Constants.MAX_MISS;
         for (int i = 0; i < maxArr.length; i++) {
             rowData[column][i * step + offset] = handleTableData(maxArr[i]);
-        }
-
-        if (max300Arr != null) {
-            //记录最大遗漏值，遗漏值达到最大遗漏值的80%，底色改为黄色
-            Constants.MAX_MISS_VALUE_ARR = rowData[column];
         }
     }
 
@@ -95,16 +90,16 @@ public abstract class PaneFactory {
         if (matchList.stream().noneMatch(matchBean -> today.equals(matchBean.getLiveDate()))) {
             matchList.add(MatchBean.builder().liveDate(today).build());
         }
-        int maxRow = statistics ? matchList.size() + 3 : matchList.size();
+        int maxRow = statistics ? matchList.size() + 4 : matchList.size();
 
         String[][] tableData = new String[maxRow][size];
         String[] lastMissValues = new String[size - offset];
         Arrays.fill(lastMissValues, "0");
 
         //统计数据
-        int[] matchCompareCountArr = new int[statisticsSize];
-        int[] matchCompareMaxArr = new int[statisticsSize];
-        int[] matchCompareMax300Arr = null;
+        int[] matchCountArr = new int[statisticsSize];
+        int[] matchMaxArr = new int[statisticsSize];
+        int[] matchMax300Arr = null;
 
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
@@ -121,11 +116,11 @@ public abstract class PaneFactory {
                 continue;
             }
 
-            if (matchCompareMax300Arr == null && matchList.size() - index <= 300) {
-                matchCompareMax300Arr = new int[statisticsSize];
+            if (matchMax300Arr == null && matchList.size() - index <= 300) {
+                matchMax300Arr = new int[statisticsSize];
             }
 
-            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, matchCompareCountArr, matchCompareMaxArr, matchCompareMax300Arr);
+            String[] missValues = calcMissValue(matchBean, curCompareData, lastMissValues, matchCountArr, matchMaxArr, matchMax300Arr);
             lastMissValues = missValues;
             tableData[row] = new String[size];
             fillTableData(tableData[row], missValues, matchBean);
@@ -133,9 +128,15 @@ public abstract class PaneFactory {
         }
 
         if (statistics) {
+
             //增加统计数据
-            addStatisticsData(row, size, tableData, matchCompareCountArr, matchCompareMaxArr, matchCompareMax300Arr, step, offset + step - 1);
-            row = row + 3;
+            addStatisticsData(row, size, tableData, matchCountArr, matchMaxArr, matchMax300Arr, step, offset + step - 1);
+            row = row + 4;
+
+            Map<String, String[]> maxMiss = Constants.MAX_MISS_VALUE_MAP.getOrDefault(type, new HashMap<>());
+            maxMiss.put(matchNum, tableData[row - 1]);
+            Constants.MAX_MISS_VALUE_MAP.put(type, maxMiss);
+
         }
         String[][] newTableData = new String[row][size];
         System.arraycopy(tableData, 0, newTableData, 0, row);
@@ -173,7 +174,7 @@ public abstract class PaneFactory {
 
         if (table.getAutoResizeMode() == JTable.AUTO_RESIZE_OFF) {
             for (int i = 1; i < table.getColumnCount(); i++) {
-                table.getColumnModel().getColumn(i).setPreferredWidth(50);
+                table.getColumnModel().getColumn(i).setPreferredWidth(35);
             }
         }
 
@@ -244,7 +245,7 @@ public abstract class PaneFactory {
 
     private void mouseSingleClicked(JTable table, MouseEvent e) throws ParseException {
         String clickValue = String.valueOf(table.getValueAt(table.rowAtPoint(e.getPoint()), 0));
-
+        Constants.SELECT_MATCH_NUM = clickValue.trim();
         switch (table.getName()) {
             case Constants.NUM_TABLE:
                 JFrame innerFrame = new JFrame(clickValue + "详细数据");
