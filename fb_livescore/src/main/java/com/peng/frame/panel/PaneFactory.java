@@ -167,7 +167,7 @@ public abstract class PaneFactory {
             Constants.MAX_MISS_VALUE_MAP.put(type, maxMiss);
 
             Map<String, String[]> max300Miss = Constants.MAX_300_MISS_VALUE_MAP.getOrDefault(type, new HashMap<>());
-            maxMiss.put(matchNum, tableData[row - 1]);
+            max300Miss.put(matchNum, tableData[row - 2]);
             Constants.MAX_300_MISS_VALUE_MAP.put(type, max300Miss);
 
         }
@@ -197,14 +197,17 @@ public abstract class PaneFactory {
 
         TableColumn column = table.getColumnModel().getColumn(0);
         column.setMinWidth(110);
+        DefaultTableCellHeaderRenderer hr = new DefaultTableCellHeaderRenderer();
 
         if (table.getAutoResizeMode() == JTable.AUTO_RESIZE_OFF) {
             for (int i = 1; i < table.getColumnCount(); i++) {
-                table.getColumnModel().getColumn(i).setPreferredWidth(35);
+                table.getColumnModel().getColumn(i).setPreferredWidth(25);
+            }
+            if (table.getName().startsWith(Constants.COMPARE_TABLE)) {
+                table.getTableHeader().setFont(new Font("宋体", Font.PLAIN, 8));
             }
         }
 
-        DefaultTableCellHeaderRenderer hr = new DefaultTableCellHeaderRenderer();
         hr.setHorizontalAlignment(JLabel.CENTER);
         table.getTableHeader().setDefaultRenderer(hr);
         return this;
@@ -291,7 +294,7 @@ public abstract class PaneFactory {
                 break;
             case Constants.COMPARE_TABLE:
                 innerFrame = new JFrame(clickValue + "详细数据");
-                innerFrame.setBounds(400, 50, 1000, 900);
+                innerFrame.setBounds(400, 50, 1900, 900);
                 innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue));
 
                 innerFrame.setVisible(true);

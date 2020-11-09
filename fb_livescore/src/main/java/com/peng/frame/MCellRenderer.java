@@ -45,12 +45,12 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                     component.setBackground(Color.LIGHT_GRAY);
                 }
 
-                if (value != null && String.valueOf(value).length() > 0) {
+                if (value == null || String.valueOf(value).length() == 0) {
                     return component;
                 }
 
                 //遗漏值达到最大遗漏值-1，底色改为ORANGE，达到最近300最大遗漏值-1，YELLOW
-                if ((table.getName().equals(Constants.COMPARE_TABLE)) && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.COMPARE_TABLE)) {
+                if ((table.getName().startsWith(Constants.COMPARE_TABLE)) && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.COMPARE_TABLE)) {
                     String[] maxMiss;
                     String[] max300Miss;
                     if (table.getName().equals(Constants.COMPARE_DETAIL_TABLE)) {
@@ -61,10 +61,10 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                         max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(Constants.SELECT_MATCH_NUM);
                         if (column > 4 && column % 2 == 1) {
                             if (max300Miss != null && isShowColor(max300Miss[column], value)) {
-                                component.setBackground(Color.YELLOW);
+                                component.setBackground(new Color(208, 156, 32));
                             }
                             if (maxMiss != null && isShowColor(maxMiss[column], value)) {
-                                component.setBackground(Color.ORANGE);
+                                component.setBackground(new Color(232, 248, 3));
                             }
                         }
                     } else {
@@ -72,10 +72,10 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                         max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(String.valueOf(table.getValueAt(row, 0)));
                         if (column > 1 && column % 2 == 0) {
                             if (max300Miss != null && isShowColor(max300Miss[column + 3], value)) {
-                                component.setBackground(Color.YELLOW);
+                                component.setBackground(new Color(208, 156, 32));
                             }
                             if (maxMiss != null && isShowColor(maxMiss[column + 3], value)) {
-                                component.setBackground(Color.ORANGE);
+                                component.setBackground(new Color(232, 248, 3));
                             }
                         }
                     }
@@ -97,10 +97,10 @@ public class MCellRenderer extends DefaultTableCellRenderer {
 
                     if (column > 1 && column % 2 == 0) {
                         if (max300Miss != null && isShowColor(max300Miss[column], value)) {
-                            component.setBackground(Color.YELLOW);
+                            component.setBackground(new Color(208, 156, 32));
                         }
                         if (maxMiss != null && isShowColor(maxMiss[column], value)) {
-                            component.setBackground(Color.ORANGE);
+                            component.setBackground(new Color(232, 248, 3));
                         }
                     }
                 }
@@ -112,7 +112,7 @@ public class MCellRenderer extends DefaultTableCellRenderer {
     }
 
     private boolean isShowColor(String missValue, Object value) {
-        return Integer.parseInt(missValue.trim()) - Integer.parseInt(String.valueOf(value)) <= 1;
+        return Integer.parseInt(missValue.trim()) - Integer.parseInt(String.valueOf(value)) == 1;
 
     }
 
