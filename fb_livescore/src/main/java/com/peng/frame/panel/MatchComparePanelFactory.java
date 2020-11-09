@@ -23,8 +23,44 @@ public class MatchComparePanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] getColumns(int index, String[] columnNames, int offset) {
-        return Constants.INIT_COMPARE_DATA[index % Constants.INIT_COMPARE_DATA.length];
+    public String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues) {
+        String[] compareData = Constants.INIT_COMPARE_DATA[index % Constants.INIT_COMPARE_DATA.length];
+        if (index == 0) {
+            return compareData;
+        }
+
+        int pos = 22;
+        String lastValue = lastMissValues[pos * 2];
+        String lastMissValue = lastMissValues[pos * 2 + 1];
+        //确定23路，中反转，不中继续买，共三次
+        if (lastMissValue.equals("中") || Integer.parseInt(lastMissValue) % 3 == 0) {
+            compareData[pos] = lastValue.equals("单") ? "双" : "单";
+        } else {
+            compareData[pos] = lastValue;
+        }
+
+        pos = 23;
+        lastValue = lastMissValues[pos * 2];
+        lastMissValue = lastMissValues[pos * 2 + 1];
+
+        //确定24路，上期中就反向，否则一直买
+        if (lastMissValue.equals("中")) {
+            compareData[pos] = lastValue.equals("单") ? "双" : "单";
+        } else {
+            compareData[pos] = lastValue;
+        }
+
+        pos = 24;
+        lastValue = lastMissValues[pos * 2];
+        lastMissValue = lastMissValues[pos * 2 + 1];
+
+        //确定25路，上期中就买，否则反向
+        if (lastMissValue.equals("中")) {
+            compareData[pos] = lastValue;
+        } else {
+            compareData[pos] = lastValue.equals("单") ? "双" : "单";
+        }
+        return compareData;
     }
 
     @Override

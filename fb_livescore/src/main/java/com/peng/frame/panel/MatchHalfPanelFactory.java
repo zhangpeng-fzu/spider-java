@@ -67,7 +67,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] getColumns(int index, String[] columnNames, int offset) {
+    public String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues) {
         String[] columns = new String[columnNames.length - offset];
         System.arraycopy(columnNames, offset, columns, 0, columns.length);
         return columns;

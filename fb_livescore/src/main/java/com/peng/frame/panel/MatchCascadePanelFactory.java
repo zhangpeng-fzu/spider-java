@@ -196,7 +196,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] getColumns(int index, String[] columnNames, int offset) {
+    public String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues) {
         return new String[0];
     }
 }

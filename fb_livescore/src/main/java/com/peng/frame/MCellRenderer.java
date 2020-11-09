@@ -14,10 +14,18 @@ public class MCellRenderer extends DefaultTableCellRenderer {
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+        //统计数据加粗
+        if (row >= table.getRowCount() - 4 && (String.valueOf(table.getValueAt(row, 0)).equals("出现总次数")
+                || String.valueOf(table.getValueAt(row, 0)).equals("平均遗漏值")
+                || String.valueOf(table.getValueAt(row, 0)).contains("最大遗漏值"))
+        ) {
+            component.setFont(new Font("宋体", Font.BOLD, 12));
+        }
+
 //        命中的显示红色
         if (((String.valueOf(value).equals("0") && !table.getName().equals(Constants.COMPARE_DETAIL_TABLE))
-                || String.valueOf(value).contains(":") || String.valueOf(value).equals("中"))
-                && !table.getColumnName(column).equals("比分")) {
+                || String.valueOf(value).contains(":") || String.valueOf(value).equals("中")) && !table.getColumnName(column).equals("比分")) {
             component.setBackground(Color.RED);
         } else {
             String columnName = String.valueOf(table.getColumnModel().getColumn(column).getHeaderValue());
@@ -37,50 +45,75 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                     component.setBackground(Color.LIGHT_GRAY);
                 }
 
-                //遗漏值达到最大遗漏值的80%，底色改为黄色
-                if ((table.getName().equals(Constants.COMPARE_DETAIL_TABLE)) && value != null && String.valueOf(value).length() > 0 && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.COMPARE_TABLE) && row < table.getRowCount() - 4) {
-                    String[] maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(Constants.SELECT_MATCH_NUM);
-
-                    if (column > 4 && column % 2 == 1 && maxMiss != null && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(maxMiss[column].trim()) >= 0.8) {
-                        component.setBackground(Color.ORANGE);
-                    }
-                }
-                if ((table.getName().equals(Constants.COMPARE_TABLE)) && value != null && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.COMPARE_TABLE) && String.valueOf(value).length() > 0) {
-
-                    String matchNum = String.valueOf(table.getValueAt(row, 0));
-                    String[] maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(matchNum);
-                    if (column > 1 && column % 2 == 0 && maxMiss != null && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(maxMiss[column + 3].trim()) >= 0.8) {
-                        component.setBackground(Color.ORANGE);
-                    }
+                if (value != null && String.valueOf(value).length() > 0) {
+                    return component;
                 }
 
-                //进球分析
-                if ((table.getName().equals(Constants.NUM_DETAIL_TABLE)) && value != null && String.valueOf(value).length() > 0 && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.NUM_TABLE) && row < table.getRowCount() - 4) {
-                    String[] maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(Constants.SELECT_MATCH_NUM);
-
-                    if (column > 1 && column % 2 == 0 && maxMiss != null && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(maxMiss[column].trim()) >= 0.8) {
-                        component.setBackground(Color.ORANGE);
+                //遗漏值达到最大遗漏值-1，底色改为ORANGE，达到最近300最大遗漏值-1，YELLOW
+                if ((table.getName().equals(Constants.COMPARE_TABLE)) && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.COMPARE_TABLE)) {
+                    String[] maxMiss;
+                    String[] max300Miss;
+                    if (table.getName().equals(Constants.COMPARE_DETAIL_TABLE)) {
+                        if (row >= table.getRowCount() - 4) {
+                            return component;
+                        }
+                        maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(Constants.SELECT_MATCH_NUM);
+                        max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(Constants.SELECT_MATCH_NUM);
+                        if (column > 4 && column % 2 == 1) {
+                            if (max300Miss != null && isShowColor(max300Miss[column], value)) {
+                                component.setBackground(Color.YELLOW);
+                            }
+                            if (maxMiss != null && isShowColor(maxMiss[column], value)) {
+                                component.setBackground(Color.ORANGE);
+                            }
+                        }
+                    } else {
+                        maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(String.valueOf(table.getValueAt(row, 0)));
+                        max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(String.valueOf(table.getValueAt(row, 0)));
+                        if (column > 1 && column % 2 == 0) {
+                            if (max300Miss != null && isShowColor(max300Miss[column + 3], value)) {
+                                component.setBackground(Color.YELLOW);
+                            }
+                            if (maxMiss != null && isShowColor(maxMiss[column + 3], value)) {
+                                component.setBackground(Color.ORANGE);
+                            }
+                        }
                     }
                 }
-                if ((table.getName().equals(Constants.NUM_TABLE)) && value != null && String.valueOf(value).length() > 0 && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.NUM_TABLE)) {
 
-                    String matchNum = String.valueOf(table.getValueAt(row, 0));
-                    String[] maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(matchNum);
-                    if (column > 1 && column % 2 == 0 && maxMiss != null && Float.parseFloat(String.valueOf(value)) / Integer.parseInt(maxMiss[column].trim()) >= 0.8) {
-                        component.setBackground(Color.ORANGE);
+                if (table.getName().startsWith(Constants.NUM_TABLE) && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.NUM_TABLE)) {
+                    String[] maxMiss;
+                    String[] max300Miss;
+                    if (table.getName().equals(Constants.NUM_DETAIL_TABLE)) {
+                        if (row >= table.getRowCount() - 4) {
+                            return component;
+                        }
+                        maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(Constants.SELECT_MATCH_NUM);
+                        max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(Constants.SELECT_MATCH_NUM);
+                    } else {
+                        maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(String.valueOf(table.getValueAt(row, 0)));
+                        max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(String.valueOf(table.getValueAt(row, 0)));
+                    }
+
+                    if (column > 1 && column % 2 == 0) {
+                        if (max300Miss != null && isShowColor(max300Miss[column], value)) {
+                            component.setBackground(Color.YELLOW);
+                        }
+                        if (maxMiss != null && isShowColor(maxMiss[column], value)) {
+                            component.setBackground(Color.ORANGE);
+                        }
                     }
                 }
             }
         }
-        //统计数据加粗
-        if (row >= table.getRowCount() - 4 && (String.valueOf(table.getValueAt(row, 0)).equals("出现总次数")
-                || String.valueOf(table.getValueAt(row, 0)).equals("平均遗漏值")
-                || String.valueOf(table.getValueAt(row, 0)).contains("最大遗漏值"))
-        ) {
-            component.setFont(new Font("宋体", Font.BOLD, 12));
-        }
+
 
         return component;
+    }
+
+    private boolean isShowColor(String missValue, Object value) {
+        return Integer.parseInt(missValue.trim()) - Integer.parseInt(String.valueOf(value)) <= 1;
+
     }
 
 }

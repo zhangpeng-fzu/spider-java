@@ -41,7 +41,7 @@ public abstract class PaneFactory {
 
     protected abstract void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException;
 
-    public abstract String[] getColumns(int index, String[] columnNames, int offset);
+    public abstract String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues);
 
     /**
      * 计算统计数据
@@ -130,7 +130,7 @@ public abstract class PaneFactory {
 
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
-            String[] compareData = getColumns(index, columnNames, offset);
+            String[] compareData = getColumns(index, columnNames, offset, lastMissValues);
             //当天的场次 显示空行
             if (matchBean.getLiveDate().equals(today)) {
                 tableData[row] = new String[size];
@@ -165,6 +165,10 @@ public abstract class PaneFactory {
             Map<String, String[]> maxMiss = Constants.MAX_MISS_VALUE_MAP.getOrDefault(type, new HashMap<>());
             maxMiss.put(matchNum, tableData[row - 1]);
             Constants.MAX_MISS_VALUE_MAP.put(type, maxMiss);
+
+            Map<String, String[]> max300Miss = Constants.MAX_300_MISS_VALUE_MAP.getOrDefault(type, new HashMap<>());
+            maxMiss.put(matchNum, tableData[row - 1]);
+            Constants.MAX_300_MISS_VALUE_MAP.put(type, max300Miss);
 
         }
         String[][] newTableData = new String[row][size];
@@ -232,6 +236,10 @@ public abstract class PaneFactory {
                     }
                     if (String.valueOf(arg1).equals("") || String.valueOf(arg1).equals("0.0") || arg1 == null || arg1.contains(":") || arg1.equals("中")) {
                         arg1 = "0";
+                    }
+
+                    if (arg0.contains("年") || arg1.contains("年")) {
+                        return arg0.compareTo(arg1);
                     }
 
                     Float a = Float.parseFloat(arg0);

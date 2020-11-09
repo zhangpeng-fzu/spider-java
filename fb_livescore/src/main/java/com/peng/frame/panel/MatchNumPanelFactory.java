@@ -38,7 +38,7 @@ public class MatchNumPanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] getColumns(int index, String[] columnNames, int offset) {
+    public String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues) {
         String[] columns = new String[columnNames.length - offset];
         System.arraycopy(columnNames, offset, columns, 0, columns.length);
         return columns;
@@ -55,12 +55,12 @@ public class MatchNumPanelFactory extends PaneFactory {
         for (int i = 0; i < columns.length; i++) {
 
             if (isHit(matchNum, i)) {
-                missValues[i] = "0";
+                missValues[i] = matchBean.getHostNum() + ":" + matchBean.getGuestNum();
                 if (matchCountArr != null) {
                     matchCountArr[i]++;
                 }
             } else {
-                missValues[i] = String.valueOf(Integer.parseInt(missValues[i].equals("中") ? "0" : missValues[i]) + 1);
+                missValues[i] = String.valueOf(Integer.parseInt(missValues[i].contains(":") ? "0" : missValues[i]) + 1);
                 if (matchMaxArr != null) {
                     matchMaxArr[i] = Math.max(matchMaxArr[i], Integer.parseInt(missValues[i]));
                 }
