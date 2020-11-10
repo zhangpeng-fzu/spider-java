@@ -23,11 +23,13 @@ public class MatchComparePanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues) {
+    public String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row) {
         String[] compareData = Constants.INIT_COMPARE_DATA[index % Constants.INIT_COMPARE_DATA.length];
         if (index == 0) {
             return compareData;
         }
+
+        String[] lastMissValues = tableData[row - 1];
 
         int pos = 22;
         String lastValue = lastMissValues[pos * 2];
@@ -60,6 +62,21 @@ public class MatchComparePanelFactory extends PaneFactory {
         } else {
             compareData[pos] = lastValue.equals("单") ? "双" : "单";
         }
+
+        pos = 25;
+
+        //确定26路，今天买昨天开的结果，开爆买前天的
+        compareData[pos] = matchBean.getMatchStatus();
+
+        //爆买前天的
+        if (matchBean.getMatchStatus().equals("爆")) {
+            if (row >= 2) {
+                compareData[pos] = tableData[row - 2][pos * 2];
+            }
+        } else {
+            compareData[pos] = lastMissValues[pos * 2];
+        }
+
         return compareData;
     }
 
@@ -126,7 +143,7 @@ public class MatchComparePanelFactory extends PaneFactory {
      * @param date 选择日期
      * @return
      */
-    public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
+    public JScrollPane showMatchPaneByDate(Date date, JFrame jFrame) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_OVERVIEW_COLUMNS;
         int size = columnNames.length;
         Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchMap(date);
@@ -160,14 +177,13 @@ public class MatchComparePanelFactory extends PaneFactory {
         String[][] newRowData = new String[column][size];
         System.arraycopy(rowData, 0, newRowData, 0, column);
         JTable table = new JTable(newRowData, columnNames);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setName(Constants.COMPARE_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, getSortColumn(size));
+        this.setTableHeader(table, jFrame).setTableCell(table).setTableClick(table).setTableSorter(table, getSortColumn(size));
         return new JScrollPane(table);
     }
 
-    JScrollPane showMatchPaneByNum(String matchNum) throws ParseException {
+    JScrollPane showMatchPaneByNum(String matchNum, JFrame jFrame) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_DETAIL_COLUMNS;
         MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 2, 4);
         String[][] tableData = missValueDataBean.getMissValueData();
@@ -175,9 +191,8 @@ public class MatchComparePanelFactory extends PaneFactory {
         JTable table = new JTable(tableData, columnNames);
         table.setName(Constants.COMPARE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        this.setTableHeader(table).setTableCell(table).setTableSorter(table, getSortColumn(size));
+        this.setTableHeader(table, jFrame).setTableCell(table).setTableSorter(table, getSortColumn(size));
         return scrollToBottom(table);
     }
 }

@@ -13,7 +13,7 @@ import java.util.*;
 
 public class LiveDataRepository {
     private static final String INSERT_SQL = "insert into live_data (live_date,match_num,match_group,host_team,guest_team,host_num,guest_num,half_host_num,half_guest_num,odds_s,odds_p,odds_f,status) " +
-            "values(?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE match_num=?,host_num=?,guest_num=?,odds_s=?,odds_p=?,odds_f=?,status=?";
+            "values(?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE match_num=?,host_num=?,guest_num=?,half_host_num=?,half_guest_num=?,odds_s=?,odds_p=?,odds_f=?,status=?";
 
     private static final String SELECT_MAX_DATE = "select distinct live_date from live_data order by live_date desc limit 1";
     private static final String DELETE_SQL = "delete from live_data where live_date >= ?";
@@ -40,10 +40,12 @@ public class LiveDataRepository {
             plsql.setString(14, matchBean.getMatchNum());
             plsql.setInt(15, matchBean.getHostNum());
             plsql.setInt(16, matchBean.getGuestNum());
-            plsql.setFloat(17, matchBean.getOdds()[0] != null ? matchBean.getOdds()[0] : 0);
-            plsql.setFloat(18, matchBean.getOdds()[1] != null ? matchBean.getOdds()[1] : 0);
-            plsql.setFloat(19, matchBean.getOdds()[2] != null ? matchBean.getOdds()[2] : 0);
-            plsql.setString(20, matchBean.getStatus());
+            plsql.setInt(17, matchBean.getHalfHostNum());
+            plsql.setInt(18, matchBean.getHalfGuestNum());
+            plsql.setFloat(19, matchBean.getOdds()[0] != null ? matchBean.getOdds()[0] : 0);
+            plsql.setFloat(20, matchBean.getOdds()[1] != null ? matchBean.getOdds()[1] : 0);
+            plsql.setFloat(21, matchBean.getOdds()[2] != null ? matchBean.getOdds()[2] : 0);
+            plsql.setString(22, matchBean.getStatus());
             plsql.executeUpdate();
         } catch (Exception se) {
             // 处理 JDBC 错误

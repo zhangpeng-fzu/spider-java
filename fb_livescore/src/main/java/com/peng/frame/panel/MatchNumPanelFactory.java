@@ -38,7 +38,7 @@ public class MatchNumPanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues) {
+    public String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row) {
         String[] columns = new String[columnNames.length - offset];
         System.arraycopy(columnNames, offset, columns, 0, columns.length);
         return columns;

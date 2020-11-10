@@ -61,10 +61,10 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                         max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(Constants.SELECT_MATCH_NUM);
                         if (column > 4 && column % 2 == 1) {
                             if (max300Miss != null && isShowColor(max300Miss[column], value)) {
-                                component.setBackground(new Color(208, 156, 32));
+                                component.setBackground(Color.CYAN);
                             }
                             if (maxMiss != null && isShowColor(maxMiss[column], value)) {
-                                component.setBackground(new Color(232, 248, 3));
+                                component.setBackground(Color.YELLOW);
                             }
                         }
                     } else {
@@ -72,38 +72,18 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                         max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.COMPARE_TABLE).get(String.valueOf(table.getValueAt(row, 0)));
                         if (column > 1 && column % 2 == 0) {
                             if (max300Miss != null && isShowColor(max300Miss[column + 3], value)) {
-                                component.setBackground(new Color(208, 156, 32));
+                                component.setBackground(Color.CYAN);
                             }
                             if (maxMiss != null && isShowColor(maxMiss[column + 3], value)) {
-                                component.setBackground(new Color(232, 248, 3));
+                                component.setBackground(Color.YELLOW);
                             }
                         }
                     }
                 }
 
-                if (table.getName().startsWith(Constants.NUM_TABLE) && Constants.MAX_MISS_VALUE_MAP.containsKey(Constants.NUM_TABLE)) {
-                    String[] maxMiss;
-                    String[] max300Miss;
-                    if (table.getName().equals(Constants.NUM_DETAIL_TABLE)) {
-                        if (row >= table.getRowCount() - 4) {
-                            return component;
-                        }
-                        maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(Constants.SELECT_MATCH_NUM);
-                        max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(Constants.SELECT_MATCH_NUM);
-                    } else {
-                        maxMiss = Constants.MAX_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(String.valueOf(table.getValueAt(row, 0)));
-                        max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(Constants.NUM_TABLE).get(String.valueOf(table.getValueAt(row, 0)));
-                    }
+                handleWarnEvent(table, component, row, column, value, Constants.NUM_TABLE);
+                handleWarnEvent(table, component, row, column, value, Constants.HALF_TABLE);
 
-                    if (column > 1 && column % 2 == 0) {
-                        if (max300Miss != null && isShowColor(max300Miss[column], value)) {
-                            component.setBackground(new Color(208, 156, 32));
-                        }
-                        if (maxMiss != null && isShowColor(maxMiss[column], value)) {
-                            component.setBackground(new Color(232, 248, 3));
-                        }
-                    }
-                }
             }
         }
 
@@ -112,8 +92,34 @@ public class MCellRenderer extends DefaultTableCellRenderer {
     }
 
     private boolean isShowColor(String missValue, Object value) {
-        return Integer.parseInt(missValue.trim()) - Integer.parseInt(String.valueOf(value)) == 1;
+        return missValue != null && value != null && Integer.parseInt(missValue.trim()) - Integer.parseInt(String.valueOf(value)) <= 1;
 
+    }
+
+    private void handleWarnEvent(JTable table, Component component, int row, int column, Object value, String tableName) {
+        if (table.getName().startsWith(tableName) && Constants.MAX_MISS_VALUE_MAP.containsKey(tableName)) {
+            String[] maxMiss;
+            String[] max300Miss;
+            if (table.getName().equals(tableName)) {
+                maxMiss = Constants.MAX_MISS_VALUE_MAP.get(tableName).get(String.valueOf(table.getValueAt(row, 0)));
+                max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(tableName).get(String.valueOf(table.getValueAt(row, 0)));
+            } else {
+                if (row >= table.getRowCount() - 4) {
+                    return;
+                }
+                maxMiss = Constants.MAX_MISS_VALUE_MAP.get(tableName).get(Constants.SELECT_MATCH_NUM);
+                max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(tableName).get(Constants.SELECT_MATCH_NUM);
+            }
+
+            if (column > 1 && column % 2 == 0) {
+                if (max300Miss != null && isShowColor(max300Miss[column], value)) {
+                    component.setBackground(Color.CYAN);
+                }
+                if (maxMiss != null && isShowColor(maxMiss[column], value)) {
+                    component.setBackground(Color.YELLOW);
+                }
+            }
+        }
     }
 
 }

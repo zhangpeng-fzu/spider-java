@@ -76,7 +76,7 @@ public class MatchDataPanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues) {
+    public String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row) {
         return new String[0];
     }
 }

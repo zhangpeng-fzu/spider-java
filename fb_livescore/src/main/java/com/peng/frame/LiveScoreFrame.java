@@ -7,6 +7,8 @@ import lombok.extern.java.Log;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -23,7 +25,6 @@ public class LiveScoreFrame extends JFrame {
 
         setBounds(300, 200, 1100, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
 
         JPanel controlPanel = new JPanel();
         JLabel dateLabel = new JLabel("日期");
@@ -51,7 +52,7 @@ public class LiveScoreFrame extends JFrame {
         jTabbedPane.add("当天赛事", MatchDataPanelFactory.getInstance().showMatchDataPane(selectedDate));
         jTabbedPane.add("串关分析", MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(selectedDate));
         jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchPaneByDate(selectedDate));
-        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchPaneByDate(selectedDate));
+        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchPaneByDate(selectedDate, this));
         jTabbedPane.add("半全场分析", MatchHalfPanelFactory.getInstance().showMatchPaneByDate(selectedDate));
 
         jTabbedPane.setSelectedIndex(0);
@@ -64,10 +65,22 @@ public class LiveScoreFrame extends JFrame {
                 jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(date));
                 jTabbedPane.setComponentAt(1, MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(date));
                 jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchPaneByDate(date));
-                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date));
+                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date, this));
                 jTabbedPane.setComponentAt(4, MatchHalfPanelFactory.getInstance().showMatchPaneByDate(date));
             } catch (ParseException ex) {
                 ex.printStackTrace();
+            }
+        });
+        JFrame frame = this;
+        this.addComponentListener(new ComponentAdapter() {//让窗口响应大小改变事件
+            @Override
+            public void componentResized(ComponentEvent e) {
+                try {
+                    Date date = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
+                    jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date, frame));
+                } catch (ParseException ex) {
+                    ex.printStackTrace();
+                }
             }
         });
     }
@@ -86,7 +99,7 @@ public class LiveScoreFrame extends JFrame {
         new Thread(() -> {
             //当前不是今天，停止同步
             while (isToday) {
-                System.out.println(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
+                System.out.printf("正在同步%s的数据%n", DateUtil.getDateFormat(1).format(new Date()));
 
                 try {
                     SyncTodayData.getMatchData();

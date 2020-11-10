@@ -15,6 +15,8 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
@@ -41,7 +43,7 @@ public abstract class PaneFactory {
 
     protected abstract void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException;
 
-    public abstract String[] getColumns(int index, String[] columnNames, int offset, String[] lastMissValues);
+    public abstract String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row);
 
     /**
      * 计算统计数据
@@ -74,14 +76,15 @@ public abstract class PaneFactory {
                 tableData[row][i * step + offset] = String.valueOf(total / countArr[i]);
             }
         }
-        row++;
-        tableData[row] = new String[size];
-        tableData[row][0] = Constants.MAX_300_MISS;
         if (max300Arr != null) {
+            row++;
+            tableData[row] = new String[size];
+            tableData[row][0] = Constants.MAX_300_MISS;
             for (int i = 0; i < max300Arr.length; i++) {
                 tableData[row][i * step + offset] = String.valueOf(max300Arr[i]);
             }
         }
+
 
         row++;
         tableData[row] = new String[size];
@@ -130,7 +133,7 @@ public abstract class PaneFactory {
 
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
-            String[] compareData = getColumns(index, columnNames, offset, lastMissValues);
+            String[] compareData = getColumns(index, columnNames, offset, matchBean, tableData, row);
             //当天的场次 显示空行
             if (matchBean.getLiveDate().equals(today)) {
                 tableData[row] = new String[size];
@@ -192,6 +195,10 @@ public abstract class PaneFactory {
     }
 
     PaneFactory setTableHeader(JTable table) {
+        return this.setTableHeader(table, null);
+    }
+
+    PaneFactory setTableHeader(JTable table, JFrame jFrame) {
         table.setAutoCreateRowSorter(true);
         table.setRowHeight(25);
 
@@ -199,12 +206,14 @@ public abstract class PaneFactory {
         column.setMinWidth(110);
         DefaultTableCellHeaderRenderer hr = new DefaultTableCellHeaderRenderer();
 
-        if (table.getAutoResizeMode() == JTable.AUTO_RESIZE_OFF) {
-            for (int i = 1; i < table.getColumnCount(); i++) {
-                table.getColumnModel().getColumn(i).setPreferredWidth(25);
-            }
-            if (table.getName().startsWith(Constants.COMPARE_TABLE)) {
-                table.getTableHeader().setFont(new Font("宋体", Font.PLAIN, 8));
+
+        if (table.getName() != null && table.getName().startsWith(Constants.COMPARE_TABLE)) {
+            if (jFrame != null && jFrame.getWidth() < 1520) {
+                table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+                for (int i = 1; i < table.getColumnCount(); i++) {
+                    table.getColumnModel().getColumn(i).setPreferredWidth(25);
+                }
+                table.getTableHeader().setFont(new Font("宋体", Font.PLAIN, 9));
             }
         }
 
@@ -283,21 +292,31 @@ public abstract class PaneFactory {
                 innerFrame.setBounds(400, 50, 800, 900);
                 innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchPaneByNum(clickValue));
                 innerFrame.setVisible(true);
-
                 break;
             case Constants.CASCADE_TABLE:
                 innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 650, 900);
                 innerFrame.getContentPane().add(MatchCascadePanelFactory.getInstance().showMatchCascadePaneByNum(clickValue));
                 innerFrame.setVisible(true);
-
                 break;
             case Constants.COMPARE_TABLE:
                 innerFrame = new JFrame(clickValue + "详细数据");
-                innerFrame.setBounds(400, 50, 1900, 900);
-                innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue));
-
+                innerFrame.setBounds(400, 50, 1520, 900);
+                innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame));
                 innerFrame.setVisible(true);
+
+                innerFrame.addComponentListener(new ComponentAdapter() {//让窗口响应大小改变事件
+                    @Override
+                    public void componentResized(ComponentEvent e) {
+                        try {
+                            innerFrame.getContentPane().setComponentZOrder(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame), 0);
+                        } catch (ParseException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
+
                 break;
             case Constants.HALF_TABLE:
                 innerFrame = new JFrame(clickValue + "详细数据");
