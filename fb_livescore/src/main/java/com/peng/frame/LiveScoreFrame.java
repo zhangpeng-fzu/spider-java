@@ -1,5 +1,6 @@
 package com.peng.frame;
 
+import com.peng.constant.Constants;
 import com.peng.frame.panel.*;
 import com.peng.service.SyncTodayData;
 import com.peng.util.DateUtil;
@@ -47,12 +48,14 @@ public class LiveScoreFrame extends JFrame {
         // 将滚动面板添加到边界布局的中间
         getContentPane().add(controlPanel, BorderLayout.NORTH);
 
+        JFrame frame = this;
+
         jTabbedPane = new JTabbedPane();
         Date selectedDate = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
         jTabbedPane.add("当天赛事", MatchDataPanelFactory.getInstance().showMatchDataPane(selectedDate));
         jTabbedPane.add("串关分析", MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(selectedDate));
         jTabbedPane.add("进球分析", MatchNumPanelFactory.getInstance().showMatchPaneByDate(selectedDate));
-        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchPaneByDate(selectedDate, this));
+        jTabbedPane.add("进球对比", MatchComparePanelFactory.getInstance().showMatchPaneByDate(selectedDate, frame, null));
         jTabbedPane.add("半全场分析", MatchHalfPanelFactory.getInstance().showMatchPaneByDate(selectedDate));
 
         jTabbedPane.setSelectedIndex(0);
@@ -65,19 +68,22 @@ public class LiveScoreFrame extends JFrame {
                 jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(date));
                 jTabbedPane.setComponentAt(1, MatchCascadePanelFactory.getInstance().showMatchCascadePaneByDate(date));
                 jTabbedPane.setComponentAt(2, MatchNumPanelFactory.getInstance().showMatchPaneByDate(date));
-                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date, this));
+                jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date, frame, null));
                 jTabbedPane.setComponentAt(4, MatchHalfPanelFactory.getInstance().showMatchPaneByDate(date));
             } catch (ParseException ex) {
                 ex.printStackTrace();
             }
         });
-        JFrame frame = this;
         this.addComponentListener(new ComponentAdapter() {//让窗口响应大小改变事件
             @Override
             public void componentResized(ComponentEvent e) {
                 try {
-                    Date date = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
-                    jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date, frame));
+                    JTable table = (JTable) ((JScrollPane) (((JTabbedPane) (frame.getContentPane().getComponents()[2])).getComponentAt(3))).getViewport().getComponent(0);
+                    if (Constants.COMPARE_TABLE.equals(table.getName())) {
+                        Date date = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
+                        jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date, frame, table));
+                    }
+
                 } catch (ParseException ex) {
                     ex.printStackTrace();
                 }

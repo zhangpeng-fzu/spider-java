@@ -111,7 +111,7 @@ public class MCellRenderer extends DefaultTableCellRenderer {
                 max300Miss = Constants.MAX_300_MISS_VALUE_MAP.get(tableName).get(Constants.SELECT_MATCH_NUM);
             }
 
-            if (column > 1 && column % 2 == 0) {
+            if (column >= 1) {
                 if (max300Miss != null && isShowColor(max300Miss[column], value)) {
                     component.setBackground(Color.CYAN);
                 }

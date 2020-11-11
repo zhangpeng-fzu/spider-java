@@ -301,15 +301,16 @@ public abstract class PaneFactory {
                 break;
             case Constants.COMPARE_TABLE:
                 innerFrame = new JFrame(clickValue + "详细数据");
-                innerFrame.setBounds(400, 50, 1520, 900);
-                innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame));
+                innerFrame.setBounds(200, 50, 1520, 900);
+                innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame, null));
                 innerFrame.setVisible(true);
 
                 innerFrame.addComponentListener(new ComponentAdapter() {//让窗口响应大小改变事件
                     @Override
                     public void componentResized(ComponentEvent e) {
+                        JTable table1 = null;
                         try {
-                            innerFrame.getContentPane().setComponentZOrder(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame), 0);
+                            innerFrame.getContentPane().setComponentZOrder(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame, table1), 0);
                         } catch (ParseException ex) {
                             ex.printStackTrace();
                         }

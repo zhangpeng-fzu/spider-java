@@ -25,7 +25,7 @@ public class MatchComparePanelFactory extends PaneFactory {
     @Override
     public String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row) {
         String[] compareData = Constants.INIT_COMPARE_DATA[index % Constants.INIT_COMPARE_DATA.length];
-        if (index == 0) {
+        if (index == 0 || row == 0) {
             return compareData;
         }
 
@@ -143,52 +143,59 @@ public class MatchComparePanelFactory extends PaneFactory {
      * @param date 选择日期
      * @return
      */
-    public JScrollPane showMatchPaneByDate(Date date, JFrame jFrame) throws ParseException {
+    public JScrollPane showMatchPaneByDate(Date date, JFrame jFrame, JTable table) throws ParseException {
+
         String[] columnNames = Constants.MATCH_COMPARE_OVERVIEW_COLUMNS;
         int size = columnNames.length;
-        Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchMap(date);
-        String[][] rowData = new String[matchBeans.size()][size];
-        int column = 0;
-        int step = 2;
-        int offset = 4;
-        for (String matchNum : matchBeans.keySet().stream().sorted(Comparator.comparing(String::trim)).collect(Collectors.toCollection(LinkedHashSet::new))) {
-            //只显示未完成的场次
-            if (this.skipMatchNum(date, matchNum)) {
-                continue;
-            }
-            rowData[column][0] = matchNum;
-
-            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, step, offset);
-            String[][] missValueData = missValueDataBean.getMissValueData();
-
-            //合并今天和昨天的数据
-            String[] todayMiss = missValueData[missValueData.length - 5];
-            String[] yesterdayMiss = missValueData[missValueData.length - 6];
-            for (int i = 0; i < todayMiss.length; i++) {
-                if (i % step != 0) {
-                    todayMiss[i] = yesterdayMiss[i];
+        if (table == null) {
+            Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchMap(date);
+            String[][] rowData = new String[matchBeans.size()][size];
+            int column = 0;
+            int step = 2;
+            int offset = 4;
+            for (String matchNum : matchBeans.keySet().stream().sorted(Comparator.comparing(String::trim)).collect(Collectors.toCollection(LinkedHashSet::new))) {
+                //只显示未完成的场次
+                if (this.skipMatchNum(date, matchNum)) {
+                    continue;
                 }
+                rowData[column][0] = matchNum;
+
+                MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, step, offset);
+                String[][] missValueData = missValueDataBean.getMissValueData();
+
+                //合并今天和昨天的数据
+                String[] todayMiss = missValueData[missValueData.length - 5];
+                String[] yesterdayMiss = missValueData[missValueData.length - 6];
+                for (int i = 0; i < todayMiss.length; i++) {
+                    if (i % step != 0) {
+                        todayMiss[i] = yesterdayMiss[i];
+                    }
+                }
+
+                System.arraycopy(todayMiss, offset, rowData[column], 1, todayMiss.length - offset);
+                column++;
             }
 
-            System.arraycopy(todayMiss, offset, rowData[column], 1, todayMiss.length - offset);
-            column++;
+            String[][] newRowData = new String[column][size];
+            System.arraycopy(rowData, 0, newRowData, 0, column);
+            table = new JTable(newRowData, columnNames);
         }
-
-        String[][] newRowData = new String[column][size];
-        System.arraycopy(rowData, 0, newRowData, 0, column);
-        JTable table = new JTable(newRowData, columnNames);
         table.setName(Constants.COMPARE_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.setTableHeader(table, jFrame).setTableCell(table).setTableClick(table).setTableSorter(table, getSortColumn(size));
         return new JScrollPane(table);
     }
 
-    JScrollPane showMatchPaneByNum(String matchNum, JFrame jFrame) throws ParseException {
+    JScrollPane showMatchPaneByNum(String matchNum, JFrame jFrame, JTable table) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_DETAIL_COLUMNS;
-        MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 2, 4);
-        String[][] tableData = missValueDataBean.getMissValueData();
         int size = columnNames.length;
-        JTable table = new JTable(tableData, columnNames);
+
+        if (table == null) {
+            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 2, 4);
+            String[][] tableData = missValueDataBean.getMissValueData();
+            table = new JTable(tableData, columnNames);
+        }
+
         table.setName(Constants.COMPARE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
