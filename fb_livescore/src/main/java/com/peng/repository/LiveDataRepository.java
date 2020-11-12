@@ -1,6 +1,7 @@
 package com.peng.repository;
 
 import com.peng.bean.MatchBean;
+import com.peng.constant.Constants;
 import com.peng.database.MysqlManager;
 import com.peng.util.DateUtil;
 
@@ -10,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class LiveDataRepository {
     private static final String INSERT_SQL = "insert into live_data (live_date,match_num,match_group,host_team,guest_team,host_num,guest_num,half_host_num,half_guest_num,odds_s,odds_p,odds_f,status) " +
@@ -54,7 +56,7 @@ public class LiveDataRepository {
     }
 
     public static String clearLastThreeDayData() {
-        Date lastDate = Date.valueOf("2010-01-01");
+        Date lastDate = Date.valueOf("2018-01-01");
         try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(SELECT_MAX_DATE)) {
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
@@ -83,7 +85,7 @@ public class LiveDataRepository {
     }
 
     public static java.util.Date getMaxLiveDate() throws ParseException {
-        Date maxDate = Date.valueOf("2010-01-01");
+        Date maxDate = Date.valueOf("2018-01-01");
         try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(SELECT_ONE)) {
             ResultSet rs = plsql.executeQuery();
             if (rs.next()) {
@@ -147,5 +149,20 @@ public class LiveDataRepository {
             se.printStackTrace();
         }
         return matchBeans;
+    }
+
+    public static void cacheAllMatchData() {
+        List<MatchBean> matchBeans = new ArrayList<>();
+        try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement("select * from live_data")) {
+            ResultSet rs = plsql.executeQuery();
+            while (rs.next()) {
+                matchBeans.add(new MatchBean(rs));
+            }
+        } catch (Exception se) {
+            se.printStackTrace();
+        }
+
+        Constants.MATCH_CACHE_MAP = matchBeans.stream().peek(matchBean -> matchBean.setMatchNum(matchBean.getMatchNum().substring(2))).collect(Collectors.groupingBy(MatchBean::getMatchNum));
+
     }
 }

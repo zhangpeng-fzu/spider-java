@@ -1,6 +1,7 @@
 package com.peng.task;
 
 import com.peng.frame.LiveScoreFrame;
+import com.peng.repository.LiveDataRepository;
 import com.peng.service.LoadHistoryData;
 import lombok.extern.java.Log;
 
@@ -20,5 +21,6 @@ public class LoadDataTask extends Thread implements Runnable {
         }
 
         new CalMatchCascadeMissTask().start();
+        LiveDataRepository.cacheAllMatchData();
     }
 }

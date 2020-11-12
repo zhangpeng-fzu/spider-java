@@ -1,5 +1,7 @@
 package com.peng.constant;
 
+import com.peng.bean.MatchBean;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +71,7 @@ public class Constants {
     public static Map<String, Map<String, String[]>> MAX_MISS_VALUE_MAP = new HashMap<>();
     public static Map<String, Map<String, String[]>> MAX_300_MISS_VALUE_MAP = new HashMap<>();
     public static Map<String, String[][]> TABLE_NAME_MAP = new HashMap<>();
+    public static Map<String, List<MatchBean>> MATCH_CACHE_MAP = new HashMap<>();
 
     //进行数据初始化
     static {

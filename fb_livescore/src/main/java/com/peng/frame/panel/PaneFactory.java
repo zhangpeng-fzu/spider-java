@@ -5,7 +5,6 @@ import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
 import com.peng.frame.MCellRenderer;
-import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import sun.swing.table.DefaultTableCellHeaderRenderer;
 
@@ -113,7 +112,7 @@ public abstract class PaneFactory {
         int row = 0;
         int statisticsSize = (size - offset) / step;
 
-        List<MatchBean> matchList = LiveDataRepository.getMatchListByNum(matchNum);
+        List<MatchBean> matchList = Constants.MATCH_CACHE_MAP.getOrDefault(matchNum, new ArrayList<>());
         if (matchList.stream().noneMatch(matchBean -> today.equals(matchBean.getLiveDate()))) {
             matchList.add(MatchBean.builder().liveDate(today).build());
         }
@@ -309,8 +308,12 @@ public abstract class PaneFactory {
                     @Override
                     public void componentResized(ComponentEvent e) {
                         JTable table1 = null;
+                        Component[] components = ((JScrollPane) (innerFrame.getContentPane().getComponent(0))).getViewport().getComponents();
+                        if (components.length > 0) {
+                            table1 = (JTable) components[0];
+                        }
                         try {
-                            innerFrame.getContentPane().setComponentZOrder(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame, table1), 0);
+                            MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame, table1);
                         } catch (ParseException ex) {
                             ex.printStackTrace();
                         }

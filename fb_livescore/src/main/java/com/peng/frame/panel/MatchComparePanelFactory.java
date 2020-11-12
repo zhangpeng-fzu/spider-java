@@ -29,7 +29,12 @@ public class MatchComparePanelFactory extends PaneFactory {
             return compareData;
         }
 
-        String[] lastMissValues = tableData[row - 1];
+        String[] lastMissValues;
+        try {
+            lastMissValues = tableData[row - 1];
+        } catch (Exception e) {
+            return compareData;
+        }
 
         int pos = 22;
         String lastValue = lastMissValues[pos * 2];
@@ -179,27 +184,36 @@ public class MatchComparePanelFactory extends PaneFactory {
             String[][] newRowData = new String[column][size];
             System.arraycopy(rowData, 0, newRowData, 0, column);
             table = new JTable(newRowData, columnNames);
+            table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            this.setTableCell(table).setTableClick(table).setTableSorter(table, getSortColumn(size));
         }
         table.setName(Constants.COMPARE_TABLE);
-        table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table, jFrame).setTableCell(table).setTableClick(table).setTableSorter(table, getSortColumn(size));
+        this.setTableHeader(table, jFrame);
         return new JScrollPane(table);
     }
 
     JScrollPane showMatchPaneByNum(String matchNum, JFrame jFrame, JTable table) throws ParseException {
         String[] columnNames = Constants.MATCH_COMPARE_DETAIL_COLUMNS;
         int size = columnNames.length;
-
+        boolean isFirst = false;
         if (table == null) {
+            isFirst = true;
             MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 2, 4);
             String[][] tableData = missValueDataBean.getMissValueData();
             table = new JTable(tableData, columnNames);
+            this.setTableCell(table).setTableSorter(table, getSortColumn(size));
         }
 
         table.setName(Constants.COMPARE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-        this.setTableHeader(table, jFrame).setTableCell(table).setTableSorter(table, getSortColumn(size));
-        return scrollToBottom(table);
+        this.setTableHeader(table, jFrame);
+        if (!isFirst) {
+            JScrollPane scrollPane = ((JScrollPane) (jFrame.getContentPane().getComponent(0)));
+            scrollPane.setViewportView(table);
+            return scrollPane;
+        } else {
+            return scrollToBottom(table);
+        }
     }
 }
