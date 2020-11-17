@@ -4,17 +4,24 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
-import com.peng.repository.LiveDataRepository;
+import com.peng.repository.LiveDataNRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 
+@Service
+@Transactional
 public class SyncTodayData {
 
+    @Autowired
+    private LiveDataNRepository liveDataNRepository;
 
     /**
      * 查询今日数据
@@ -29,27 +36,6 @@ public class SyncTodayData {
     }
 
     /**
-     * 解析今日数据
-     *
-     * @throws ParseException
-     */
-    public static void getMatchData() throws ParseException {
-        //删除已有数据
-        LiveDataRepository.delete(new Date());
-        String queryData = queryToday();
-
-        JSONObject matchList = JSON.parseObject(queryData).getJSONObject("data");
-        for (String key : matchList.keySet()) {
-            JSONObject match = (JSONObject) matchList.get(key);
-            MatchBean matchBean = transMatchBean(match);
-            if (matchBean == null) {
-                continue;
-            }
-            LiveDataRepository.insert(matchBean);
-        }
-    }
-
-    /**
      * 转换数据
      *
      * @param match
@@ -61,7 +47,7 @@ public class SyncTodayData {
         MatchBean matchBean = new MatchBean();
         matchBean.setMatchNum(match.getString("num"));
         matchBean.setLiveDate(match.getString("b_date"));
-        matchBean.setGroupName(match.getString("l_cn_abbr"));
+        matchBean.setMatchGroup(match.getString("l_cn_abbr"));
         matchBean.setStatus(match.getString("status"));
         matchBean.setHostTeam(match.getString("h_cn"));
         matchBean.setGuestTeam(match.getString("a_cn"));
@@ -105,5 +91,31 @@ public class SyncTodayData {
         matchBean.setLiveDate(DateUtil.getDateFormat().format(liveDate));
 
         return matchBean;
+    }
+
+    /**
+     * 解析今日数据
+     *
+     * @throws ParseException
+     */
+    public void getMatchData() throws ParseException {
+        //删除已有数据
+//        LiveDataRepository.delete(new Date());
+        String queryData = queryToday();
+
+        JSONObject matchList = JSON.parseObject(queryData).getJSONObject("data");
+        for (String key : matchList.keySet()) {
+            JSONObject match = (JSONObject) matchList.get(key);
+            MatchBean insertMatchBean = transMatchBean(match);
+            if (insertMatchBean == null) {
+                continue;
+            }
+
+            MatchBean matchBeanDB = liveDataNRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
+            if (matchBeanDB != null) {
+                insertMatchBean.setId(matchBeanDB.getId());
+            }
+            liveDataNRepository.save(insertMatchBean);
+        }
     }
 }

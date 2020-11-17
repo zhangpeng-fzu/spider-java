@@ -5,10 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -16,6 +13,7 @@ import java.sql.SQLException;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Entity
 @Table(name = "live_data")
 public class MatchBean {
 
@@ -25,17 +23,29 @@ public class MatchBean {
 
     private String matchNum;
     private String liveDate;
-    private String groupName;
+    private String matchGroup;
     private String status;
     private String hostTeam;
     private String guestTeam;
-    private Float[] odds;
+    @Column(name = "odds_s")
+    private Float oddsS;
+    @Column(name = "odds_p")
+    private Float oddsP;
+    @Column(name = "odds_f")
+    private Float oddsF;
+
     private int hostNum;
     private int guestNum;
     private int halfHostNum;
     private int halfGuestNum;
+    @Transient
+    private Float[] odds;
+
+    @Transient
     private String result;
+    @Transient
     private String halfResult;
+    @Transient
     private int num;
 
 
@@ -46,11 +56,21 @@ public class MatchBean {
         this.setGuestNum(rs.getInt("guest_num"));
         this.setHalfGuestNum(rs.getInt("half_guest_num"));
         this.setLiveDate(rs.getDate("live_date").toString());
-        this.setGroupName(rs.getString("match_group"));
+        this.setMatchGroup(rs.getString("match_group"));
         this.setHostTeam(rs.getString("host_team"));
         this.setGuestTeam(rs.getString("guest_team"));
         this.setOdds(new Float[]{rs.getFloat("odds_s"), rs.getFloat("odds_p"), rs.getFloat("odds_f")});
         this.setStatus(rs.getString("status"));
+    }
+
+    public Float[] getOdds() {
+        return new Float[]{this.oddsS, this.oddsP, this.oddsF};
+    }
+
+    public void setOdds(Float[] odds) {
+        this.oddsS = odds[0];
+        this.oddsP = odds[1];
+        this.oddsF = odds[2];
     }
 
     public String getResult() {
