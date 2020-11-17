@@ -4,10 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
-import com.peng.repository.LiveDataNRepository;
+import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -20,19 +19,10 @@ import java.util.Date;
 @Transactional
 public class SyncTodayData {
 
-    @Autowired
-    private LiveDataNRepository liveDataNRepository;
+    private final LiveDataRepository liveDataRepository;
 
-    /**
-     * 查询今日数据
-     *
-     * @return
-     */
-    static String queryToday() {
-        return HttpClientUtil
-                .doGet("https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=hhad&poolcode[]=had&_" + System.currentTimeMillis(),
-                        StandardCharsets.UTF_8.displayName()).replace("getData(", "").replace(");", "");
-
+    public SyncTodayData(LiveDataRepository liveDataRepository) {
+        this.liveDataRepository = liveDataRepository;
     }
 
     /**
@@ -42,7 +32,7 @@ public class SyncTodayData {
      * @return
      * @throws ParseException
      */
-    public static MatchBean transMatchBean(JSONObject match) throws ParseException {
+    public MatchBean transMatchBean(JSONObject match) throws ParseException {
         Calendar calendar = Calendar.getInstance();
         MatchBean matchBean = new MatchBean();
         matchBean.setMatchNum(match.getString("num"));
@@ -94,14 +84,24 @@ public class SyncTodayData {
     }
 
     /**
+     * 查询今日数据
+     *
+     * @return
+     */
+    String queryToday() {
+        return HttpClientUtil
+                .doGet("https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=hhad&poolcode[]=had&_" + System.currentTimeMillis(),
+                        StandardCharsets.UTF_8.displayName()).replace("getData(", "").replace(");", "");
+
+    }
+
+    /**
      * 解析今日数据
      *
      * @throws ParseException
      */
-    public void getMatchData() throws ParseException {
-        //删除已有数据
-//        LiveDataRepository.delete(new Date());
-        String queryData = queryToday();
+    public void syncTodayMatch() throws ParseException {
+        String queryData = this.queryToday();
 
         JSONObject matchList = JSON.parseObject(queryData).getJSONObject("data");
         for (String key : matchList.keySet()) {
@@ -111,11 +111,11 @@ public class SyncTodayData {
                 continue;
             }
 
-            MatchBean matchBeanDB = liveDataNRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
+            MatchBean matchBeanDB = liveDataRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
             if (matchBeanDB != null) {
                 insertMatchBean.setId(matchBeanDB.getId());
             }
-            liveDataNRepository.save(insertMatchBean);
+            liveDataRepository.save(insertMatchBean);
         }
     }
 }

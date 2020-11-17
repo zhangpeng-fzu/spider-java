@@ -1,28 +1,28 @@
 package com.peng.frame.panel;
 
 import com.peng.bean.MatchBean;
-import com.peng.bean.MatchCascadeBean;
+import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
-import com.peng.repository.MatchCascadeRepository;
 import com.peng.util.DateUtil;
 import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
-import java.lang.reflect.Field;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class MatchCascadePanelFactory extends PaneFactory {
-    private static final MatchCascadePanelFactory matchCascadePanelFactory = new MatchCascadePanelFactory();
 
-    public static MatchCascadePanelFactory getInstance() {
-        return matchCascadePanelFactory;
+    private final LiveDataRepository liveDataRepository;
+
+    public MatchCascadePanelFactory(LiveDataRepository liveDataRepository) {
+        this.liveDataRepository = liveDataRepository;
     }
 
     /**
@@ -31,68 +31,53 @@ public class MatchCascadePanelFactory extends PaneFactory {
      * @param date 选择日期
      * @return
      */
-    public JScrollPane showMatchCascadePaneByDate(Date date) {
-        String[] columns = Constants.MATCH_CASCADE_COLUMNS;
-        String[] columnNames = new String[]{"串关场次", "胜平负组合", "当前遗漏值", "赔率"};// 定义表格列名数组
+    public JScrollPane showMatchDataPane(Date date) throws ParseException {
+        String[] columns = Constants.MATCH_CASCADE_COMMON;
+        String[] columnNames = Constants.MATCH_CASCADE_OVERVIEW_COLUMNS;// 定义表格列名数组
         int size = columns.length;
 
-        Set<String> matchNumSet = new TreeSet<>(Comparator.naturalOrder());
-        matchNumSet.addAll(MatchStatus.MATCH_STATUS_MAP.keySet());
-        List<String> matchNumList = new ArrayList<>(matchNumSet);
-
+        List<String> matchNums = liveDataRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date)).stream().map(matchBean -> matchBean.getMatchNum().substring(2)).collect(Collectors.toList());
 
         List<String> cascadeMatchNums = new ArrayList<>();
-        for (int i = 0; i < matchNumList.size(); i++) {
-            for (int j = i + 1; j < matchNumList.size(); j++) {
-                cascadeMatchNums.add(String.format("%s串%s", matchNumList.get(i), matchNumList.get(j)));
+
+        for (int i = 0; i < matchNums.size(); i++) {
+            for (int j = i + 1; j < matchNums.size(); j++) {
+                cascadeMatchNums.add(String.format("%s串%s", matchNums.get(i), matchNums.get(j)));
             }
         }
 
-        List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.findLatestCascadeData(date);
-        Map<String, MatchCascadeBean> matchCascadeBeanMap = matchCascadeBeans.stream().collect(Collectors.toMap(MatchCascadeBean::getMatchCascadeNum, matchCascadeBean -> matchCascadeBean));
-
-        String[][] rowData = new String[matchCascadeBeans.size() * size][columnNames.length];
+        String[][] rowData = new String[cascadeMatchNums.size() * size][columnNames.length];
         int column = 0;
 
         for (String matchCascadeNum : cascadeMatchNums) {
-            String[] matchNums = matchCascadeNum.split("串");
-            //只显示有比赛的场次
-            if (!MatchStatus.MATCH_STATUS_MAP.containsKey(matchNums[0]) || !MatchStatus.MATCH_STATUS_MAP.containsKey(matchNums[1]) ||
-                    (DateUtil.isToday(date) && (isUnPlaying(MatchStatus.MATCH_STATUS_MAP.get(matchNums[0])) || isUnPlaying(MatchStatus.MATCH_STATUS_MAP.get(matchNums[1]))))
-                    || (!DateUtil.isToday(date) && (isUnFinished(MatchStatus.MATCH_STATUS_MAP.get(matchNums[0])) || isUnFinished(MatchStatus.MATCH_STATUS_MAP.get(matchNums[1])))
-            )) {
-                continue;
-            }
-            MatchCascadeBean matchCascadeBean = matchCascadeBeanMap.get(matchCascadeNum);
-            if (matchCascadeBean == null) {
-                continue;
-            }
+
+
+            MissValueDataBean missValueDataBean = this.getMissValueData(matchCascadeNum, true, Constants.CASCADE_TABLE, 1, 1);
+            String[][] missValueData = missValueDataBean.getMissValueData();
+
+            String[] yesterdayMiss = missValueData[missValueData.length - 6];
+
+
             //获取赔率
             String[] odds = new String[size];
-            if (matchCascadeBean.getOdds() != null && matchCascadeBean.getOdds().length() > 0) {
-                odds = matchCascadeBean.getOdds().replace("[", "").replace("]", "").split(",");
-            }
-            for (int i = 0; i < odds.length; i++) {
-                String odd = odds[i];
-                if (odd != null && odd.trim().length() > 5) {
-                    odd = odd.trim().substring(0, 4);
-                }
-                odds[i] = odd;
-            }
+
+//            if (matchCascadeBean.getOdds() != null && matchCascadeBean.getOdds().length() > 0) {
+//                odds = matchCascadeBean.getOdds().replace("[", "").replace("]", "").split(",");
+//            }
+//            for (int i = 0; i < odds.length; i++) {
+//                String odd = odds[i];
+//                if (odd != null && odd.trim().length() > 5) {
+//                    odd = odd.trim().substring(0, 4);
+//                }
+//                odds[i] = odd;
+//            }
             //获取遗漏值
             int j = column * size;
-            for (int i = 0; i < Constants.MATCH_CASCADE_FIELD_ARR.length; i++) {
-                try {
-                    Field field = MatchCascadeBean.class.getDeclaredField(Constants.MATCH_CASCADE_FIELD_ARR[i]);
-                    field.setAccessible(true);
-                    if (odds[i] == null) {
-                        odds[i] = "";
-                    }
-                    rowData[j + i] = new String[]{matchCascadeBean.getMatchCascadeNum(), columns[i], String.valueOf(field.get(matchCascadeBean)), odds[i].trim()};
-
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
+            for (int i = 0; i < Constants.MATCH_CASCADE_COMMON.length; i++) {
+                if (odds[i] == null) {
+                    odds[i] = "";
                 }
+                rowData[j + i] = new String[]{matchCascadeNum, columns[i], yesterdayMiss[i + 1], odds[i].trim()};
             }
             column++;
         }
@@ -111,94 +96,71 @@ public class MatchCascadePanelFactory extends PaneFactory {
     /**
      * 获取串关详细数据
      *
-     * @param matchCascadeNum 串关编号
+     * @param matchNum 串关编号
      * @return
      */
-    JScrollPane showMatchCascadePaneByNum(String matchCascadeNum) {
-        String[] columnNames = Constants.MATCH_CASCADE_COLUMNS_DATE;
+    public JScrollPane showMatchCascadePaneByNum(String matchNum) throws ParseException {
+        String[] columnNames = Constants.MATCH_CASCADE_DETAIL_COLUMNS;
+        MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.CASCADE_TABLE, 1, 1);
+        String[][] tableData = missValueDataBean.getMissValueData();
         int size = columnNames.length;
-        java.util.List<MatchCascadeBean> matchCascadeBeans = MatchCascadeRepository.getMatchCascadeDataByNum(matchCascadeNum);
-        String[][] rowData = new String[matchCascadeBeans.size() + 3][size];
-        String[] matchNums = matchCascadeNum.split("串");
 
-        //获取前面编号的状态
-        List<MatchBean> matchBeans = LiveDataRepository.getMatchListByNum(matchNums[0]);
-        Map<String, String> matchStatusMapByNum1 = new HashMap<>();
-        for (MatchBean matchBean : matchBeans) {
-            matchStatusMapByNum1.put(matchBean.getLiveDate(), matchBean.getStatus());
-        }
-
-        //获取后面编号的状态
-        matchBeans = LiveDataRepository.getMatchListByNum(matchNums[1]);
-        Map<String, String> matchStatusMapByNum2 = new HashMap<>();
-        for (MatchBean matchBean : matchBeans) {
-            matchStatusMapByNum2.put(matchBean.getLiveDate(), matchBean.getStatus());
-        }
-        int column = 0;
-        int[] matchCascadeCountArr = new int[size - 1];
-        int[] matchCascadeMaxArr = new int[size - 1];
-        for (MatchCascadeBean matchCascadeBean : matchCascadeBeans) {
-            //不显示已取消或者不存在的场次
-            String date = DateUtil.getDateFormat().format(matchCascadeBean.getLiveDate());
-            if (!matchStatusMapByNum1.containsKey(date) || !matchStatusMapByNum2.containsKey(date) ||
-                    isCancelled(matchStatusMapByNum1.get(date)) || isCancelled(matchStatusMapByNum2.get(date))) {
-                continue;
-            }
-            if (date.equals(DateUtil.getDateFormat().format(new Date())) &&
-                    (isUnFinished(matchStatusMapByNum1.get(date)) || isUnFinished(matchStatusMapByNum2.get(date)))) {
-                rowData[column] = new String[size];
-                rowData[column][0] = DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate());
-                column++;
-                continue;
-            }
-            rowData[column] = new String[size];
-            rowData[column][0] = DateUtil.getDateFormat(1).format(matchCascadeBean.getLiveDate());
-
-            for (int i = 0; i < Constants.MATCH_CASCADE_FIELD_ARR.length; i++) {
-                try {
-                    Field field = MatchCascadeBean.class.getDeclaredField(Constants.MATCH_CASCADE_FIELD_ARR[i]);
-                    field.setAccessible(true);
-                    int value = Integer.parseInt(String.valueOf(field.get(matchCascadeBean)));
-                    if (value == 0) {
-                        matchCascadeCountArr[i]++;
-                    }
-                    matchCascadeMaxArr[i] = Math.max(matchCascadeMaxArr[i], value);
-                    rowData[column][i + 1] = String.valueOf(value);
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-            column++;
-        }
-        //增加统计数据
-        this.addStatisticsData(column, rowData, matchCascadeCountArr, matchCascadeMaxArr, null, 1, 1);
-        column = column + 3;
-        String[][] newRowData = new String[column][size];
-        System.arraycopy(rowData, 0, newRowData, 0, column);
-        JTable table = new JTable(newRowData, Constants.MATCH_CASCADE_COLUMNS_DATE);
+        JTable table = new JTable(tableData, columnNames);
         table.setName(Constants.CASCADE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableSorter(table, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9});
+        this.setTableHeader(table).setTableCell(table).setTableSorter(table, getSortColumn(size));
         return scrollToBottom(table);
     }
 
     @Override
-    protected String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) {
-        return new String[0];
+    protected String[] calcMissValue(MatchBean matchBean, MatchBean nextMatch, String[] columns, String[] lastMissValues, int[] matchCountArr, int[] matchMaxArr, int[] matchMax300Arr) {
+
+        if (matchBean == null || nextMatch == null || !matchBean.getStatus().equals(MatchStatus.FINISHED) ||
+                !nextMatch.getStatus().equals(MatchStatus.FINISHED)) {
+            return lastMissValues;
+        }
+        String[] missValues = new String[lastMissValues.length];
+        System.arraycopy(lastMissValues, 0, missValues, 0, lastMissValues.length);
+
+        String cascadeResult = matchBean.getCNResult() + nextMatch.getCNResult();
+
+        for (int i = 0; i < columns.length; i++) {
+            if (columns[i].equals(cascadeResult)) {
+                missValues[i] = "0";
+                if (matchCountArr != null) {
+                    matchCountArr[i]++;
+                }
+            } else {
+                missValues[i] = String.valueOf(Integer.parseInt(missValues[i]) + 1);
+                if (matchMaxArr != null) {
+                    matchMaxArr[i] = Math.max(matchMaxArr[i], Integer.parseInt(missValues[i]));
+                }
+                if (matchMax300Arr != null) {
+                    matchMax300Arr[i] = Math.max(matchMax300Arr[i], Integer.parseInt(missValues[i]));
+                }
+            }
+        }
+        return missValues;
     }
 
     @Override
-    protected void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException {
-
+    protected void fillTableData(String[] tableRow, String[] missValues, MatchBean matchBean) throws ParseException {
+        tableRow[0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
+        System.arraycopy(missValues, 0, tableRow, 1, missValues.length);
     }
 
     @Override
     protected void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
-
+        tableDatum[0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(DateUtil.getDateFormat().format(new Date())));
+        for (int i = 1; i < columnNames.length; i++) {
+            tableDatum[i] = "";
+        }
     }
 
     @Override
     public String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row) {
-        return new String[0];
+        String[] columns = new String[columnNames.length - offset];
+        System.arraycopy(columnNames, offset, columns, 0, columns.length);
+        return columns;
     }
 }

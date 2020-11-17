@@ -3,7 +3,7 @@ package com.peng.service;
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
-import com.peng.repository.LiveDataNRepository;
+import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 public class LoadHistoryData {
 
     @Autowired
-    private LiveDataNRepository liveDataNRepository;
+    private LiveDataRepository liveDataRepository;
 
     /**
      * 转换成matchBean
@@ -85,7 +85,7 @@ public class LoadHistoryData {
 
     public void loadHistoryData() throws ParseException {
 
-        MatchBean matchBean = liveDataNRepository.findFirstByOrderByLiveDateDesc();
+        MatchBean matchBean = liveDataRepository.findFirstByOrderByLiveDateDesc();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
         //需删除前两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
@@ -145,11 +145,11 @@ public class LoadHistoryData {
 
                 MatchBean insertMatchBean = transMatchBean(tdData.toString());
 
-                MatchBean matchBeanDB = liveDataNRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
+                MatchBean matchBeanDB = liveDataRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
                 if (matchBeanDB != null) {
                     insertMatchBean.setId(matchBeanDB.getId());
                 }
-                liveDataNRepository.save(insertMatchBean);
+                liveDataRepository.save(insertMatchBean);
             }
 
             System.out.println("正在抓取第" + page + "页");

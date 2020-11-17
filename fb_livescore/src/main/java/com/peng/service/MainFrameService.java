@@ -3,7 +3,7 @@ package com.peng.service;
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.frame.LiveScoreFrame;
-import com.peng.repository.LiveDataNRepository;
+import com.peng.repository.LiveDataRepository;
 import com.peng.util.AesUtil;
 import com.peng.util.DateUtil;
 import org.apache.commons.io.FileUtils;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 public class MainFrameService {
     @Autowired
-    private LiveDataNRepository liveDataNRepository;
+    private LiveDataRepository liveDataRepository;
 
 
     private static boolean checkLicense(Frame frame) {
@@ -65,7 +65,7 @@ public class MainFrameService {
     public void initMainFrame() {
         LiveScoreFrame frame;
         try {
-            List<MatchBean> matchBeans = liveDataNRepository.findAll();
+            List<MatchBean> matchBeans = liveDataRepository.findAll();
             Constants.MATCH_CACHE_MAP = matchBeans.stream().peek(matchBean -> matchBean.setMatchNum(matchBean.getMatchNum().substring(2))).collect(Collectors.groupingBy(MatchBean::getMatchNum));
 
             frame = new LiveScoreFrame();
@@ -78,7 +78,7 @@ public class MainFrameService {
             return;
         }
 
-        frame.setVisible(true);
+//        frame.setVisible(true);
         //启动数据加载任务
 //        new LoadDataTask().start();
     }

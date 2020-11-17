@@ -13,9 +13,9 @@ public class Constants {
     public static final String[] MATCH_COLUMNS = new String[]{"赛事编号", "比赛时间", "赛事", "状态", "主队", "客队", "胜赔率", "平赔率", "负赔率", "比分", "赛果"};
 
     //串关分析
-    public static final String[] MATCH_CASCADE_FIELD_ARR = new String[]{"ss", "sp", "sf", "ps", "pp", "pf", "fs", "fp", "ff"};
-    public static final String[] MATCH_CASCADE_COLUMNS = new String[]{"胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};
-    public static final String[] MATCH_CASCADE_COLUMNS_DATE = new String[MATCH_CASCADE_COLUMNS.length + 1];
+    public static final String[] MATCH_CASCADE_COMMON = new String[]{"胜胜", "胜平", "胜负", "平胜", "平平", "平负", "负胜", "负平", "负负"};
+    public static final String[] MATCH_CASCADE_DETAIL_COLUMNS = new String[MATCH_CASCADE_COMMON.length + 1];
+    public static final String[] MATCH_CASCADE_OVERVIEW_COLUMNS = new String[]{"串关场次", "胜平负组合", "当前遗漏值", "赔率"};
 
     //进球分析
     public static final String[] MATCH_NUM_COMMON = new String[]{"0球", "1球", "2球", "3球", "4球", "5球", "6球", "7球", "零球", "1球3球", "2球4球", "5球6球7球"};
@@ -88,8 +88,8 @@ public class Constants {
         MATCH_HALF_DETAIL_COLUMNS[0] = "日期";
         System.arraycopy(MATCH_HALF_COMMON, 0, MATCH_HALF_DETAIL_COLUMNS, 1, MATCH_HALF_COMMON.length);
 
-        MATCH_CASCADE_COLUMNS_DATE[0] = "日期";
-        System.arraycopy(MATCH_CASCADE_COLUMNS, 0, MATCH_CASCADE_COLUMNS_DATE, 1, MATCH_CASCADE_COLUMNS.length);
+        MATCH_CASCADE_DETAIL_COLUMNS[0] = "日期";
+        System.arraycopy(MATCH_CASCADE_COMMON, 0, MATCH_CASCADE_DETAIL_COLUMNS, 1, MATCH_CASCADE_COMMON.length);
 
         MATCH_COMPARE_OVERVIEW_COLUMNS = new String[INIT_COMPARE_DATA[0].length * 2 + 1];
         MATCH_COMPARE_DETAIL_COLUMNS = new String[INIT_COMPARE_DATA[0].length * 2 + 4];
@@ -111,6 +111,7 @@ public class Constants {
         TABLE_NAME_MAP.put(NUM_TABLE, new String[][]{MATCH_NUM_OVERVIEW_COLUMNS, MATCH_NUM_DETAIL_COLUMNS});
         TABLE_NAME_MAP.put(COMPARE_TABLE, new String[][]{MATCH_COMPARE_OVERVIEW_COLUMNS, MATCH_COMPARE_DETAIL_COLUMNS});
         TABLE_NAME_MAP.put(HALF_TABLE, new String[][]{MATCH_HALF_OVERVIEW_COLUMNS, MATCH_HALF_DETAIL_COLUMNS});
+        TABLE_NAME_MAP.put(CASCADE_TABLE, new String[][]{MATCH_CASCADE_OVERVIEW_COLUMNS, MATCH_CASCADE_DETAIL_COLUMNS});
 
     }
 }

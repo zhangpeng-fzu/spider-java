@@ -1,20 +1,23 @@
 package com.peng.task;
 
 import com.peng.service.MainFrameService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TestRunner implements CommandLineRunner {
+@Order(1)
+public class InitFrameRunner implements CommandLineRunner {
 
 
-    @Autowired
-    private MainFrameService mainFrameService;
+    private final MainFrameService mainFrameService;
+
+    public InitFrameRunner(MainFrameService mainFrameService) {
+        this.mainFrameService = mainFrameService;
+    }
 
     @Override
     public void run(String... args) throws Exception {
         mainFrameService.initMainFrame();
-
     }
 }

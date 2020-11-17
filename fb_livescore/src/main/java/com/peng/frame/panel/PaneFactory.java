@@ -6,6 +6,7 @@ import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
 import com.peng.frame.MCellRenderer;
 import com.peng.util.DateUtil;
+import com.peng.util.SpringBeanUtils;
 import sun.swing.table.DefaultTableCellHeaderRenderer;
 
 import javax.swing.*;
@@ -25,19 +26,19 @@ import java.util.stream.Collectors;
 
 public abstract class PaneFactory {
 
-    static boolean isUnPlaying(String status) {
+    public static boolean isUnPlaying(String status) {
         return !MatchStatus.PLAYING.equals(status);
     }
 
-    static boolean isUnFinished(String status) {
+    public static boolean isUnFinished(String status) {
         return !MatchStatus.FINISHED.equals(status);
     }
 
-    static boolean isCancelled(String status) {
+    public static boolean isCancelled(String status) {
         return MatchStatus.CANCELLED.equals(status);
     }
 
-    protected abstract String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException;
+    protected abstract String[] calcMissValue(MatchBean matchBean, MatchBean nextMatch, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException;
 
     protected abstract void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException;
 
@@ -113,7 +114,9 @@ public abstract class PaneFactory {
         int row = 0;
         int statisticsSize = (size - offset) / step;
 
+
         List<MatchBean> matchList = Constants.MATCH_CACHE_MAP.getOrDefault(matchNum, new ArrayList<>()).stream().sorted(Comparator.comparing(MatchBean::getLiveDate)).collect(Collectors.toList());
+
         if (matchList.stream().noneMatch(matchBean -> today.equals(matchBean.getLiveDate()))) {
             matchList.add(MatchBean.builder().liveDate(today).build());
         }
@@ -122,6 +125,15 @@ public abstract class PaneFactory {
 
         String[][] tableData = new String[maxRow][size];
         String[] lastMissValues = new String[size - offset];
+
+        String nextMatchNum = null;
+        if (matchNum.contains("串")) {
+            String[] matchNums = matchNum.split("串");
+            matchNum = matchNums[0];
+            nextMatchNum = matchNums[1];
+            lastMissValues = new String[size - offset + 1];
+        }
+
         Arrays.fill(lastMissValues, "0");
 
         //命中次数
@@ -133,6 +145,16 @@ public abstract class PaneFactory {
 
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
+
+            MatchBean nextMatch = null;
+            if (nextMatchNum != null) {
+                Optional<MatchBean> optionalMatchBean = Constants.MATCH_CACHE_MAP.get(nextMatchNum).stream().filter(m -> m.getLiveDate().equals(matchBean.getLiveDate())).findFirst();
+                if (!optionalMatchBean.isPresent()) {
+                    continue;
+                }
+                nextMatch = optionalMatchBean.get();
+            }
+
             String[] compareData = getColumns(index, columnNames, offset, matchBean, tableData, row);
             //当天的场次 显示空行
             if (matchBean.getLiveDate().equals(today)) {
@@ -149,8 +171,10 @@ public abstract class PaneFactory {
             if (matchMax300Arr == null && matchList.size() - index <= 300) {
                 matchMax300Arr = new int[statisticsSize];
             }
+
+
             //计算遗漏值
-            String[] missValues = calcMissValue(matchBean, compareData, lastMissValues, matchCountArr, matchMaxArr, matchMax300Arr);
+            String[] missValues = calcMissValue(matchBean, nextMatch, compareData, lastMissValues, matchCountArr, matchMaxArr, matchMax300Arr);
 
             //将算出来的遗漏值赋值给上一次的遗漏值
             lastMissValues = missValues;
@@ -288,21 +312,30 @@ public abstract class PaneFactory {
         Constants.SELECT_MATCH_NUM = clickValue.trim();
         switch (table.getName()) {
             case Constants.NUM_TABLE:
+                MatchNumPanelFactory matchNumPanelFactory = SpringBeanUtils.getBean("matchNumPanelFactory");
+                assert matchNumPanelFactory != null;
+
                 JFrame innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 800, 900);
-                innerFrame.getContentPane().add(MatchNumPanelFactory.getInstance().showMatchPaneByNum(clickValue));
+                innerFrame.getContentPane().add(matchNumPanelFactory.showMatchPaneByNum(clickValue));
                 innerFrame.setVisible(true);
                 break;
             case Constants.CASCADE_TABLE:
+                MatchCascadePanelFactory matchCascadePanelFactory = SpringBeanUtils.getBean("matchCascadePanelFactory");
+                assert matchCascadePanelFactory != null;
+
                 innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 650, 900);
-                innerFrame.getContentPane().add(MatchCascadePanelFactory.getInstance().showMatchCascadePaneByNum(clickValue));
+                innerFrame.getContentPane().add(matchCascadePanelFactory.showMatchCascadePaneByNum(clickValue));
                 innerFrame.setVisible(true);
                 break;
             case Constants.COMPARE_TABLE:
+                MatchComparePanelFactory matchComparePanelFactory = SpringBeanUtils.getBean("matchComparePanelFactory");
+                assert matchComparePanelFactory != null;
+
                 innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(200, 50, 1520, 900);
-                innerFrame.getContentPane().add(MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame, null));
+                innerFrame.getContentPane().add(matchComparePanelFactory.showMatchPaneByNum(clickValue, innerFrame, null));
                 innerFrame.setVisible(true);
 
                 innerFrame.addComponentListener(new ComponentAdapter() {//让窗口响应大小改变事件
@@ -314,7 +347,7 @@ public abstract class PaneFactory {
                             table1 = (JTable) components[0];
                         }
                         try {
-                            MatchComparePanelFactory.getInstance().showMatchPaneByNum(clickValue, innerFrame, table1);
+                            matchComparePanelFactory.showMatchPaneByNum(clickValue, innerFrame, table1);
                         } catch (ParseException ex) {
                             ex.printStackTrace();
                         }
@@ -324,9 +357,12 @@ public abstract class PaneFactory {
 
                 break;
             case Constants.HALF_TABLE:
+                MatchHalfPanelFactory matchHalfPanelFactory = SpringBeanUtils.getBean("matchHalfPanelFactory");
+                assert matchHalfPanelFactory != null;
+
                 innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 1000, 900);
-                innerFrame.getContentPane().add(MatchHalfPanelFactory.getInstance().showMatchPaneByNum(clickValue));
+                innerFrame.getContentPane().add(matchHalfPanelFactory.showMatchPaneByNum(clickValue));
                 innerFrame.setVisible(true);
         }
     }

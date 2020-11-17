@@ -2,6 +2,7 @@ package com.peng.frame;
 
 import com.peng.constant.Constants;
 import com.peng.frame.panel.*;
+import com.peng.service.SyncTodayData;
 import com.peng.util.DateUtil;
 import com.peng.util.SpringBeanUtils;
 import lombok.extern.java.Log;
@@ -17,7 +18,6 @@ import java.util.Date;
 public class LiveScoreFrame extends JFrame {
 
     private static final long serialVersionUID = 3218784607640603309L;
-    private static boolean isToday = true;
     private static JTabbedPane jTabbedPane;
 
     public LiveScoreFrame() throws ParseException {
@@ -60,24 +60,30 @@ public class LiveScoreFrame extends JFrame {
         assert matchDataPanelFactory != null;
         assert matchNumPanelFactory != null;
         assert matchHalfPanelFactory != null;
+        assert matchCascadePanelFactory != null;
 
         jTabbedPane = new JTabbedPane();
         Date selectedDate = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
         jTabbedPane.add("当天赛事", matchDataPanelFactory.showMatchDataPane(selectedDate));
-        jTabbedPane.add("串关分析", matchDataPanelFactory.showMatchDataPane(selectedDate));
+        jTabbedPane.add("串关分析", matchCascadePanelFactory.showMatchDataPane(selectedDate));
         jTabbedPane.add("进球分析", matchNumPanelFactory.showMatchPaneByDate(selectedDate));
         jTabbedPane.add("进球对比", matchComparePanelFactory.showMatchPaneByDate(selectedDate, frame, null));
         jTabbedPane.add("半全场分析", matchHalfPanelFactory.showMatchPaneByDate(selectedDate));
 
+
         jTabbedPane.setSelectedIndex(0);
         getContentPane().add(jTabbedPane, BorderLayout.CENTER);
-
+        this.syncMatchData(true);
         btn.addActionListener(e -> {
-            isToday = selectedDateTxt.getText().equals(DateUtil.getDateFormat().format(new Date()));
+            //当天数据立即同步一次
+            boolean isToday = selectedDateTxt.getText().equals(DateUtil.getDateFormat().format(new Date()));
+            if (isToday) {
+                this.syncMatchData(false);
+            }
             try {
                 Date date = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
                 jTabbedPane.setComponentAt(0, matchDataPanelFactory.showMatchDataPane(date));
-                jTabbedPane.setComponentAt(1, matchDataPanelFactory.showMatchDataPane(date));
+                jTabbedPane.setComponentAt(1, matchCascadePanelFactory.showMatchDataPane(date));
                 jTabbedPane.setComponentAt(2, matchNumPanelFactory.showMatchPaneByDate(date));
                 jTabbedPane.setComponentAt(3, matchComparePanelFactory.showMatchPaneByDate(date, frame, null));
                 jTabbedPane.setComponentAt(4, matchHalfPanelFactory.showMatchPaneByDate(date));
@@ -92,7 +98,7 @@ public class LiveScoreFrame extends JFrame {
                     JTable table = (JTable) ((JScrollPane) (((JTabbedPane) (frame.getContentPane().getComponents()[2])).getComponentAt(3))).getViewport().getComponent(0);
                     if (Constants.COMPARE_TABLE.equals(table.getName())) {
                         Date date = DateUtil.getDateFormat().parse(selectedDateTxt.getText());
-                        jTabbedPane.setComponentAt(3, MatchComparePanelFactory.getInstance().showMatchPaneByDate(date, frame, table));
+                        jTabbedPane.setComponentAt(3, matchComparePanelFactory.showMatchPaneByDate(date, frame, table));
                     }
 
                 } catch (ParseException ex) {
@@ -103,35 +109,40 @@ public class LiveScoreFrame extends JFrame {
     }
 
 
-//    public static void syncMatchData(boolean isFirst) {
-//        if (isFirst) {
-//            try {
-//                SyncTodayData.getMatchData();
-//            } catch (ParseException e) {
-//                e.printStackTrace();
-//            }
-//            jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(new Date()));
-//        }
-//
-//        new Thread(() -> {
-//            //当前不是今天，停止同步
-//            while (isToday) {
-//                System.out.printf("正在同步%s的数据%n", DateUtil.getDateFormat(1).format(new Date()));
-//
-//                try {
-//                    SyncTodayData.getMatchData();
-//                    jTabbedPane.setComponentAt(0, MatchDataPanelFactory.getInstance().showMatchDataPane(new Date()));
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                try {
-//                    Thread.sleep(60000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//        }).start();
-//    }
+    public void syncMatchData(boolean isFirst) {
+        SyncTodayData syncTodayData = SpringBeanUtils.getBean("syncTodayData");
+        MatchDataPanelFactory matchDataPanelFactory = SpringBeanUtils.getBean("matchDataPanelFactory");
+        assert syncTodayData != null;
+        assert matchDataPanelFactory != null;
+
+        if (isFirst) {
+            try {
+                syncTodayData.syncTodayMatch();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            jTabbedPane.setComponentAt(0, matchDataPanelFactory.showMatchDataPane(new Date()));
+        }
+
+        new Thread(() -> {
+            //当前不是今天，停止同步
+            while (true) {
+                System.out.printf("正在同步%s的数据%n", DateUtil.getDateFormat(1).format(new Date()));
+
+                try {
+                    syncTodayData.syncTodayMatch();
+                    jTabbedPane.setComponentAt(0, matchDataPanelFactory.showMatchDataPane(new Date()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Thread.sleep(60000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }).start();
+    }
 }
 

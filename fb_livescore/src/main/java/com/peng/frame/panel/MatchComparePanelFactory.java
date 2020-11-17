@@ -3,9 +3,8 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
-import com.peng.repository.LiveDataNRepository;
+import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.swing.*;
@@ -19,13 +18,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class MatchComparePanelFactory extends PaneFactory {
-    private static final MatchComparePanelFactory matchNumPanelFactory = new MatchComparePanelFactory();
-    @Autowired
-    private LiveDataNRepository liveDataNRepository;
+    private final LiveDataRepository liveDataRepository;
 
-    public static MatchComparePanelFactory getInstance() {
-        return matchNumPanelFactory;
+    public MatchComparePanelFactory(LiveDataRepository liveDataRepository) {
+        this.liveDataRepository = liveDataRepository;
     }
+
 
     @Override
     public String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row) {
@@ -114,7 +112,7 @@ public class MatchComparePanelFactory extends PaneFactory {
     }
 
     @Override
-    public String[] calcMissValue(MatchBean matchBean, String[] compareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) {
+    public String[] calcMissValue(MatchBean matchBean, MatchBean nextMatch, String[] compareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) {
 
         String[] missValues = new String[lastMissValues.length];
         System.arraycopy(lastMissValues, 0, missValues, 0, lastMissValues.length);
@@ -158,7 +156,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         String[] columnNames = Constants.MATCH_COMPARE_OVERVIEW_COLUMNS;
         int size = columnNames.length;
         if (table == null) {
-            Map<String, MatchBean> matchBeans = liveDataNRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
+            Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
             String[][] rowData = new String[matchBeans.size()][size];
             int column = 0;
             int step = 2;

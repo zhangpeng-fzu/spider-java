@@ -3,9 +3,8 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
-import com.peng.repository.LiveDataNRepository;
+import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.swing.*;
@@ -16,18 +15,16 @@ import java.util.List;
 
 @Service
 public class MatchDataPanelFactory extends PaneFactory {
-    private final static MatchDataPanelFactory matchDataPanelFactory = new MatchDataPanelFactory();
-    @Autowired
-    private LiveDataNRepository liveDataNRepository;
+    private final LiveDataRepository liveDataRepository;
 
-    public static MatchDataPanelFactory getInstance() {
-        return matchDataPanelFactory;
+    public MatchDataPanelFactory(LiveDataRepository liveDataRepository) {
+        this.liveDataRepository = liveDataRepository;
     }
 
     public JScrollPane showMatchDataPane(Date date) {
 
         String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
-        List<MatchBean> matchBeanList = liveDataNRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date));
+        List<MatchBean> matchBeanList = liveDataRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date));
 
         String[][] rowData = new String[matchBeanList.size()][11];
 
@@ -67,7 +64,7 @@ public class MatchDataPanelFactory extends PaneFactory {
     }
 
     @Override
-    protected String[] calcMissValue(MatchBean matchBean, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException {
+    protected String[] calcMissValue(MatchBean matchBean, MatchBean nextMatch, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException {
         return new String[0];
     }
 
