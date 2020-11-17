@@ -3,25 +3,31 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
-import com.peng.repository.LiveDataRepository;
+import com.peng.repository.LiveDataNRepository;
+import com.peng.util.DateUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
+@Service
 public class MatchDataPanelFactory extends PaneFactory {
     private final static MatchDataPanelFactory matchDataPanelFactory = new MatchDataPanelFactory();
+    @Autowired
+    private LiveDataNRepository liveDataNRepository;
 
     public static MatchDataPanelFactory getInstance() {
         return matchDataPanelFactory;
     }
 
-
     public JScrollPane showMatchDataPane(Date date) {
 
         String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
-        java.util.List<MatchBean> matchBeanList = LiveDataRepository.getMatchData(date);
+        List<MatchBean> matchBeanList = liveDataNRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date));
 
         String[][] rowData = new String[matchBeanList.size()][11];
 
@@ -48,7 +54,7 @@ public class MatchDataPanelFactory extends PaneFactory {
                     result = "";
                     break;
             }
-            rowData[i] = new String[]{matchBean.getMatchNum(), matchBean.getLiveDate(), matchBean.getGroupName(), status, matchBean.getHostTeam(),
+            rowData[i] = new String[]{matchBean.getMatchNum(), matchBean.getLiveDate(), matchBean.getMatchGroup(), status, matchBean.getHostTeam(),
                     matchBean.getGuestTeam(), String.valueOf(matchBean.getOdds()[0]), String.valueOf(matchBean.getOdds()[1]), String.valueOf(matchBean.getOdds()[2]),
                     status.equals("完") ? String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()) : "", Constants.MATCH_RES_MAP.get(result)};
         }

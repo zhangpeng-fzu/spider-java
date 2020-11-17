@@ -21,6 +21,7 @@ import java.awt.event.MouseEvent;
 import java.text.ParseException;
 import java.util.List;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class PaneFactory {
 
@@ -112,7 +113,7 @@ public abstract class PaneFactory {
         int row = 0;
         int statisticsSize = (size - offset) / step;
 
-        List<MatchBean> matchList = Constants.MATCH_CACHE_MAP.getOrDefault(matchNum, new ArrayList<>());
+        List<MatchBean> matchList = Constants.MATCH_CACHE_MAP.getOrDefault(matchNum, new ArrayList<>()).stream().sorted(Comparator.comparing(MatchBean::getLiveDate)).collect(Collectors.toList());
         if (matchList.stream().noneMatch(matchBean -> today.equals(matchBean.getLiveDate()))) {
             matchList.add(MatchBean.builder().liveDate(today).build());
         }

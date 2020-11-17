@@ -7,6 +7,7 @@ import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
 import com.peng.repository.MatchCascadeRepository;
 import com.peng.util.DateUtil;
+import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Service
 public class MatchCascadePanelFactory extends PaneFactory {
     private static final MatchCascadePanelFactory matchCascadePanelFactory = new MatchCascadePanelFactory();
 

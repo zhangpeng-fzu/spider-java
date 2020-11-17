@@ -28,7 +28,7 @@ public class LiveDataRepository {
         try (PreparedStatement plsql = MysqlManager.getConn().prepareStatement(INSERT_SQL)) {
             plsql.setDate(1, Date.valueOf(matchBean.getLiveDate()));              //设置参数1，创建id为3212的数据
             plsql.setString(2, matchBean.getMatchNum());      //设置参数2，name 为王刚
-            plsql.setString(3, matchBean.getGroupName());
+            plsql.setString(3, matchBean.getMatchGroup());
             plsql.setString(4, matchBean.getHostTeam());
             plsql.setString(5, matchBean.getGuestTeam());
             plsql.setInt(6, matchBean.getHostNum());

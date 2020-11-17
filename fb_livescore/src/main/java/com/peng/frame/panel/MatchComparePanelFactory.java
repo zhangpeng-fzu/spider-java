@@ -3,8 +3,10 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
-import com.peng.repository.LiveDataRepository;
+import com.peng.repository.LiveDataNRepository;
 import com.peng.util.DateUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,8 +17,11 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Service
 public class MatchComparePanelFactory extends PaneFactory {
     private static final MatchComparePanelFactory matchNumPanelFactory = new MatchComparePanelFactory();
+    @Autowired
+    private LiveDataNRepository liveDataNRepository;
 
     public static MatchComparePanelFactory getInstance() {
         return matchNumPanelFactory;
@@ -153,7 +158,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         String[] columnNames = Constants.MATCH_COMPARE_OVERVIEW_COLUMNS;
         int size = columnNames.length;
         if (table == null) {
-            Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchMap(date);
+            Map<String, MatchBean> matchBeans = liveDataNRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
             String[][] rowData = new String[matchBeans.size()][size];
             int column = 0;
             int step = 2;

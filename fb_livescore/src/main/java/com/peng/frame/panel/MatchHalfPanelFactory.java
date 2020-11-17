@@ -3,8 +3,10 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
-import com.peng.repository.LiveDataRepository;
+import com.peng.repository.LiveDataNRepository;
 import com.peng.util.DateUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,8 +17,11 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Service
 public class MatchHalfPanelFactory extends PaneFactory {
     private static final MatchHalfPanelFactory matchHalfPanelFactory = new MatchHalfPanelFactory();
+    @Autowired
+    private LiveDataNRepository liveDataNRepository;
 
     public static MatchHalfPanelFactory getInstance() {
         return matchHalfPanelFactory;
@@ -83,7 +88,7 @@ public class MatchHalfPanelFactory extends PaneFactory {
     public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
         String[] columnNames = Constants.MATCH_HALF_OVERVIEW_COLUMNS;
         int size = columnNames.length;
-        Map<String, MatchBean> matchBeans = LiveDataRepository.getMatchMap(date);
+        Map<String, MatchBean> matchBeans = liveDataNRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
         String[][] rowData = new String[Math.max(matchBeans.size(), 10)][size];
         int column = 0;
 

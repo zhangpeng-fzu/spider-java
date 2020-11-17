@@ -3,24 +3,99 @@ package com.peng.service;
 import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
-import com.peng.repository.LiveDataRepository;
+import com.peng.repository.LiveDataNRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
-import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Log
+@Service
+@Transactional
 public class LoadHistoryData {
 
+    @Autowired
+    private LiveDataNRepository liveDataNRepository;
 
-    public static void loadHistoryData() {
+    /**
+     * 转换成matchBean
+     *
+     * @param tdData
+     * @return
+     */
+    private static MatchBean transMatchBean(String tdData) {
+        Calendar calendar = Calendar.getInstance();
 
-        String lastDate = LiveDataRepository.clearLastThreeDayData();
+        MatchBean matchBean = new MatchBean();
+        String[] tdDataArr = tdData.split(",");
+
+        matchBean.setMatchNum(tdDataArr[1]);
+        try {
+            Date liveDate = DateUtil.getDateFormat().parse(tdDataArr[0]);
+            calendar.setTime(liveDate);
+            int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+            //如果赛事编号的星期与实际日期的星期不一致，修改日期
+            if (!matchBean.getMatchNum().contains(Constants.WEEK_DAYS.get(w))) {
+                calendar.add(Calendar.DAY_OF_WEEK, DateUtil.calculateDateOffset(Constants.WEEK_DAYS.indexOf(matchBean.getMatchNum().substring(0, 2)), w));
+            }
+            liveDate = calendar.getTime();
+            matchBean.setLiveDate(DateUtil.getDateFormat().format(liveDate));
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+            matchBean.setMatchGroup(tdDataArr[0]);
+        }
+        matchBean.setMatchGroup(tdDataArr[2]);
+        matchBean.setHostTeam(tdDataArr[3]);
+        matchBean.setGuestTeam(tdDataArr[4]);
+
+        Float[] odds = new Float[]{Float.valueOf(tdDataArr[7]), Float.valueOf(tdDataArr[8]), Float.valueOf(tdDataArr[9])};
+        matchBean.setOdds(odds);
+        String status = tdDataArr[10].equals("已完成") ? MatchStatus.FINISHED : MatchStatus.PLAYING;
+
+        try {
+            if (tdDataArr[10].equals("取消") || tdDataArr[6].equals("无效场次") || tdDataArr[6].equals("取消")) {
+                status = MatchStatus.CANCELLED;
+            } else {
+                if (tdDataArr[6].length() > 0) {
+                    matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
+                    matchBean.setGuestNum(Integer.parseInt(tdDataArr[6].split(":")[1]));
+                }
+
+                if (tdDataArr[5].length() > 0) {
+                    matchBean.setHalfHostNum(Integer.parseInt(tdDataArr[5].split(":")[0]));
+                    matchBean.setHalfGuestNum(Integer.parseInt(tdDataArr[5].split(":")[1]));
+                }
+            }
+        } catch (NumberFormatException e) {
+            status = MatchStatus.CANCELLED;
+            matchBean.setHostNum(0);
+            matchBean.setGuestNum(0);
+        }
+
+        matchBean.setStatus(status);
+        return matchBean;
+    }
+
+    public void loadHistoryData() throws ParseException {
+
+        MatchBean matchBean = liveDataNRepository.findFirstByOrderByLiveDateDesc();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
+        //需删除前两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
+        calendar.add(Calendar.DATE, -2);
+
+
+        String lastDate = DateUtil.getDateFormat().format(calendar.getTime());
+
+//        liveDataNRepository.deleteByLiveDateGreaterThanEqual();
+
 
         String response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
                 1, lastDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
@@ -68,7 +143,13 @@ public class LoadHistoryData {
                     continue;
                 }
 
-                LiveDataRepository.insert(transMatchBean(tdData.toString()));
+                MatchBean insertMatchBean = transMatchBean(tdData.toString());
+
+                MatchBean matchBeanDB = liveDataNRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
+                if (matchBeanDB != null) {
+                    insertMatchBean.setId(matchBeanDB.getId());
+                }
+                liveDataNRepository.save(insertMatchBean);
             }
 
             System.out.println("正在抓取第" + page + "页");
@@ -78,65 +159,5 @@ public class LoadHistoryData {
                 e.printStackTrace();
             }
         }
-    }
-
-    /**
-     * 转换成matchBean
-     *
-     * @param tdData
-     * @return
-     */
-    private static MatchBean transMatchBean(String tdData) {
-        Calendar calendar = Calendar.getInstance();
-
-        MatchBean matchBean = new MatchBean();
-        String[] tdDataArr = tdData.split(",");
-
-        matchBean.setMatchNum(tdDataArr[1]);
-        try {
-            Date liveDate = DateUtil.getDateFormat().parse(tdDataArr[0]);
-            calendar.setTime(liveDate);
-            int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-            //如果赛事编号的星期与实际日期的星期不一致，修改日期
-            if (!matchBean.getMatchNum().contains(Constants.WEEK_DAYS.get(w))) {
-                calendar.add(Calendar.DAY_OF_WEEK, DateUtil.calculateDateOffset(Constants.WEEK_DAYS.indexOf(matchBean.getMatchNum().substring(0, 2)), w));
-            }
-            liveDate = calendar.getTime();
-            matchBean.setLiveDate(DateUtil.getDateFormat().format(liveDate));
-
-        } catch (ParseException e) {
-            e.printStackTrace();
-            matchBean.setGroupName(tdDataArr[0]);
-        }
-        matchBean.setGroupName(tdDataArr[2]);
-        matchBean.setHostTeam(tdDataArr[3]);
-        matchBean.setGuestTeam(tdDataArr[4]);
-
-        Float[] odds = new Float[]{Float.valueOf(tdDataArr[7]), Float.valueOf(tdDataArr[8]), Float.valueOf(tdDataArr[9])};
-        matchBean.setOdds(odds);
-        String status = tdDataArr[10].equals("已完成") ? MatchStatus.FINISHED : MatchStatus.PLAYING;
-
-        try {
-            if (tdDataArr[10].equals("取消") || tdDataArr[6].equals("无效场次") || tdDataArr[6].equals("取消")) {
-                status = MatchStatus.CANCELLED;
-            } else {
-                if (tdDataArr[6].length() > 0) {
-                    matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
-                    matchBean.setGuestNum(Integer.parseInt(tdDataArr[6].split(":")[1]));
-                }
-
-                if (tdDataArr[5].length() > 0) {
-                    matchBean.setHalfHostNum(Integer.parseInt(tdDataArr[5].split(":")[0]));
-                    matchBean.setHalfGuestNum(Integer.parseInt(tdDataArr[5].split(":")[1]));
-                }
-            }
-        } catch (NumberFormatException e) {
-            status = MatchStatus.CANCELLED;
-            matchBean.setHostNum(0);
-            matchBean.setGuestNum(0);
-        }
-
-        matchBean.setStatus(status);
-        return matchBean;
     }
 }
