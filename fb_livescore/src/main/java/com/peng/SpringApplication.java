@@ -37,7 +37,7 @@ public class SpringApplication {
 //        org.springframework.boot.SpringApplication app = new org.springframework.boot.SpringApplication(SpringApplication.class);
 //        DefaultProfileUtil.addDefaultProfile(app);
 //        Environment env = app.run(args).getEnvironment();
-        logApplicationStartup(env);
+//        logApplicationStartup(env);
     }
 
     private static void logApplicationStartup(Environment env) {

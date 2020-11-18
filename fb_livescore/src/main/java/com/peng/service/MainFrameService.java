@@ -78,6 +78,6 @@ public class MainFrameService {
             return;
         }
 
-//        frame.setVisible(true);
+        frame.setVisible(true);
     }
 }
