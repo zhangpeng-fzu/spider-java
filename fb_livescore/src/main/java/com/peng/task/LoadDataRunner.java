@@ -1,7 +1,6 @@
 package com.peng.task;
 
 import com.peng.service.LoadHistoryData;
-import com.peng.service.SyncTodayData;
 import lombok.extern.java.Log;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -11,11 +10,9 @@ import org.springframework.stereotype.Component;
 public class LoadDataRunner implements CommandLineRunner {
 
     private final LoadHistoryData loadHistoryData;
-    private final SyncTodayData syncMatchData;
 
-    public LoadDataRunner(LoadHistoryData loadHistoryData, SyncTodayData syncMatchData) {
+    public LoadDataRunner(LoadHistoryData loadHistoryData) {
         this.loadHistoryData = loadHistoryData;
-        this.syncMatchData = syncMatchData;
     }
 
     @Override

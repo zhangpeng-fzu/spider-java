@@ -79,7 +79,5 @@ public class MainFrameService {
         }
 
 //        frame.setVisible(true);
-        //启动数据加载任务
-//        new LoadDataTask().start();
     }
 }

@@ -70,7 +70,6 @@ public class LiveScoreFrame extends JFrame {
         jTabbedPane.add("进球对比", matchComparePanelFactory.showMatchPaneByDate(selectedDate, frame, null));
         jTabbedPane.add("半全场分析", matchHalfPanelFactory.showMatchPaneByDate(selectedDate));
 
-
         jTabbedPane.setSelectedIndex(0);
         getContentPane().add(jTabbedPane, BorderLayout.CENTER);
         this.syncMatchData(true);

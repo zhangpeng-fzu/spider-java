@@ -1,5 +1,6 @@
 package com.peng.frame.panel;
 
+import com.alibaba.fastjson.JSON;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
@@ -50,27 +51,19 @@ public class MatchCascadePanelFactory extends PaneFactory {
         int column = 0;
 
         for (String matchCascadeNum : cascadeMatchNums) {
-
-
             MissValueDataBean missValueDataBean = this.getMissValueData(matchCascadeNum, true, Constants.CASCADE_TABLE, 1, 1);
             String[][] missValueData = missValueDataBean.getMissValueData();
-
             String[] yesterdayMiss = missValueData[missValueData.length - 6];
 
-
             //获取赔率
-            String[] odds = new String[size];
-
-//            if (matchCascadeBean.getOdds() != null && matchCascadeBean.getOdds().length() > 0) {
-//                odds = matchCascadeBean.getOdds().replace("[", "").replace("]", "").split(",");
-//            }
-//            for (int i = 0; i < odds.length; i++) {
-//                String odd = odds[i];
-//                if (odd != null && odd.trim().length() > 5) {
-//                    odd = odd.trim().substring(0, 4);
-//                }
-//                odds[i] = odd;
-//            }
+            String[] odds = yesterdayMiss[yesterdayMiss.length - 1].replace("[", "").replace("]", "").split(",");
+            for (int i = 0; i < odds.length; i++) {
+                String odd = odds[i];
+                if (odd != null && odd.trim().length() > 5) {
+                    odd = odd.trim().substring(0, 4);
+                }
+                odds[i] = odd;
+            }
             //获取遗漏值
             int j = column * size;
             for (int i = 0; i < Constants.MATCH_CASCADE_COMMON.length; i++) {
@@ -89,7 +82,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         JTable table = new JTable(newRowData, columnNames);
         table.setName(Constants.CASCADE_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, new Integer[]{2, 3});
+        this.setTableHeader(table).setTableCell(table).setTableClick(table).setTableSorter(table, getSortColumn(columnNames.length));
         return new JScrollPane(table);
     }
 
@@ -140,6 +133,21 @@ public class MatchCascadePanelFactory extends PaneFactory {
                 }
             }
         }
+
+        //计算赔率
+        Float[] odds = new Float[9];
+        odds[0] = matchBean.getOddsS() * nextMatch.getOddsS();
+        odds[1] = matchBean.getOddsS() * nextMatch.getOddsP();
+        odds[2] = matchBean.getOddsS() * nextMatch.getOddsF();
+        odds[3] = matchBean.getOddsP() * nextMatch.getOddsS();
+        odds[4] = matchBean.getOddsP() * nextMatch.getOddsP();
+        odds[5] = matchBean.getOddsP() * nextMatch.getOddsF();
+        odds[6] = matchBean.getOddsF() * nextMatch.getOddsS();
+        odds[7] = matchBean.getOddsF() * nextMatch.getOddsP();
+        odds[8] = matchBean.getOddsF() * nextMatch.getOddsF();
+
+        missValues[lastMissValues.length - 1] = JSON.toJSONString(odds);
+
         return missValues;
     }
 

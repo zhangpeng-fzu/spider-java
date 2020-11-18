@@ -115,7 +115,7 @@ public abstract class PaneFactory {
         int statisticsSize = (size - offset) / step;
 
 
-        List<MatchBean> matchList = Constants.MATCH_CACHE_MAP.getOrDefault(matchNum, new ArrayList<>()).stream().sorted(Comparator.comparing(MatchBean::getLiveDate)).collect(Collectors.toList());
+        List<MatchBean> matchList = Constants.MATCH_CACHE_MAP.getOrDefault(matchNum.split("串")[0], new ArrayList<>()).stream().sorted(Comparator.comparing(MatchBean::getLiveDate)).collect(Collectors.toList());
 
         if (matchList.stream().noneMatch(matchBean -> today.equals(matchBean.getLiveDate()))) {
             matchList.add(MatchBean.builder().liveDate(today).build());
@@ -123,7 +123,6 @@ public abstract class PaneFactory {
         //计算最大行数，统计数据占四行
         int maxRow = statistics ? matchList.size() + 4 : matchList.size();
 
-        String[][] tableData = new String[maxRow][size];
         String[] lastMissValues = new String[size - offset];
 
         String nextMatchNum = null;
@@ -133,6 +132,8 @@ public abstract class PaneFactory {
             nextMatchNum = matchNums[1];
             lastMissValues = new String[size - offset + 1];
         }
+        String[][] tableData = new String[maxRow][lastMissValues.length + offset];
+
 
         Arrays.fill(lastMissValues, "0");
 
@@ -158,7 +159,7 @@ public abstract class PaneFactory {
             String[] compareData = getColumns(index, columnNames, offset, matchBean, tableData, row);
             //当天的场次 显示空行
             if (matchBean.getLiveDate().equals(today)) {
-                tableData[row] = new String[size];
+                tableData[row] = new String[lastMissValues.length + offset];
                 fillTodayData(tableData[row], columnNames, compareData, step, offset);
                 row++;
                 continue;
@@ -178,7 +179,7 @@ public abstract class PaneFactory {
 
             //将算出来的遗漏值赋值给上一次的遗漏值
             lastMissValues = missValues;
-            tableData[row] = new String[size];
+            tableData[row] = new String[lastMissValues.length + offset];
             fillTableData(tableData[row], missValues, matchBean);
             row++;
         }

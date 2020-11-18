@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 @Data
 @AllArgsConstructor
@@ -48,20 +46,6 @@ public class MatchBean {
     @Transient
     private int num;
 
-
-    public MatchBean(ResultSet rs) throws SQLException {
-        this.setMatchNum(rs.getString("match_num"));
-        this.setHostNum(rs.getInt("host_num"));
-        this.setHalfHostNum(rs.getInt("half_host_num"));
-        this.setGuestNum(rs.getInt("guest_num"));
-        this.setHalfGuestNum(rs.getInt("half_guest_num"));
-        this.setLiveDate(rs.getDate("live_date").toString());
-        this.setMatchGroup(rs.getString("match_group"));
-        this.setHostTeam(rs.getString("host_team"));
-        this.setGuestTeam(rs.getString("guest_team"));
-        this.setOdds(new Float[]{rs.getFloat("odds_s"), rs.getFloat("odds_p"), rs.getFloat("odds_f")});
-        this.setStatus(rs.getString("status"));
-    }
 
     public Float[] getOdds() {
         return new Float[]{this.oddsS, this.oddsP, this.oddsF};

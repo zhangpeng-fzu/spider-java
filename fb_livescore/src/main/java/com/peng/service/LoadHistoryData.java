@@ -6,7 +6,7 @@ import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.java.Log;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -18,10 +18,14 @@ import java.util.regex.Pattern;
 
 @Service
 @Transactional
+@Log
 public class LoadHistoryData {
 
-    @Autowired
-    private LiveDataRepository liveDataRepository;
+    private final LiveDataRepository liveDataRepository;
+
+    public LoadHistoryData(LiveDataRepository liveDataRepository) {
+        this.liveDataRepository = liveDataRepository;
+    }
 
     /**
      * 转换成matchBean
@@ -91,11 +95,7 @@ public class LoadHistoryData {
         //需删除前两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
         calendar.add(Calendar.DATE, -2);
 
-
         String lastDate = DateUtil.getDateFormat().format(calendar.getTime());
-
-//        liveDataNRepository.deleteByLiveDateGreaterThanEqual();
-
 
         String response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
                 1, lastDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
@@ -105,6 +105,8 @@ public class LoadHistoryData {
         int page = Integer.parseInt(total) / 30 + 1;
 
         for (; page > 0; page--) {
+            log.info("正在抓取第" + page + "页");
+
             response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
                     page, lastDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
 
@@ -149,10 +151,9 @@ public class LoadHistoryData {
                 if (matchBeanDB != null) {
                     insertMatchBean.setId(matchBeanDB.getId());
                 }
-                liveDataRepository.save(insertMatchBean);
+                liveDataRepository.saveAndFlush(insertMatchBean);
             }
 
-            System.out.println("正在抓取第" + page + "页");
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {

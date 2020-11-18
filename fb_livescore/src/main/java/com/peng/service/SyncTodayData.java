@@ -115,7 +115,7 @@ public class SyncTodayData {
             if (matchBeanDB != null) {
                 insertMatchBean.setId(matchBeanDB.getId());
             }
-            liveDataRepository.save(insertMatchBean);
+            liveDataRepository.saveAndFlush(insertMatchBean);
         }
     }
 }
