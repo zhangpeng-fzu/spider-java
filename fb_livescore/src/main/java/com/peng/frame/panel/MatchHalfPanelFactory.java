@@ -4,12 +4,12 @@ import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
 import com.peng.repository.LiveDataRepository;
-import com.peng.util.DateUtil;
 import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class MatchHalfPanelFactory extends PaneFactory {
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat DATE_FORMAT_CN = new SimpleDateFormat("yyyy年MM月dd日");
     private final LiveDataRepository liveDataRepository;
 
     public MatchHalfPanelFactory(LiveDataRepository liveDataRepository) {
@@ -56,13 +58,13 @@ public class MatchHalfPanelFactory extends PaneFactory {
 
     @Override
     protected void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException {
-        tableDatum[0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
+        tableDatum[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(matchBean.getLiveDate()));
         System.arraycopy(missValues, 0, tableDatum, 1, missValues.length);
     }
 
     @Override
     protected void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
-        tableDatum[0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(DateUtil.getDateFormat().format(new Date())));
+        tableDatum[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(DATE_FORMAT.format(new Date())));
         for (int i = 1; i < columnNames.length; i++) {
             tableDatum[i] = "";
         }
@@ -82,10 +84,11 @@ public class MatchHalfPanelFactory extends PaneFactory {
      * @param date 选择日期
      * @return
      */
+    @Override
     public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
         String[] columnNames = Constants.MATCH_HALF_OVERVIEW_COLUMNS;
         int size = columnNames.length;
-        Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
+        Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(DATE_FORMAT.format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
         String[][] rowData = new String[Math.max(matchBeans.size(), 10)][size];
         int column = 0;
 

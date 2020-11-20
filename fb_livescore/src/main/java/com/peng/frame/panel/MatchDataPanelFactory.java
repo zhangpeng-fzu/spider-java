@@ -4,27 +4,29 @@ import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
-import com.peng.util.DateUtil;
 import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 @Service
 public class MatchDataPanelFactory extends PaneFactory {
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private final LiveDataRepository liveDataRepository;
 
     public MatchDataPanelFactory(LiveDataRepository liveDataRepository) {
         this.liveDataRepository = liveDataRepository;
     }
 
-    public JScrollPane showMatchDataPane(Date date) {
+    @Override
+    public JScrollPane showMatchPaneByDate(Date date) {
 
         String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
-        List<MatchBean> matchBeanList = liveDataRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date));
+        List<MatchBean> matchBeanList = liveDataRepository.findAllByLiveDate(DATE_FORMAT.format(date));
 
         String[][] rowData = new String[matchBeanList.size()][11];
 

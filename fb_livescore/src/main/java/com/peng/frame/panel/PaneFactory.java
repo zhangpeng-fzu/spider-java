@@ -5,8 +5,8 @@ import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
 import com.peng.frame.MCellRenderer;
-import com.peng.util.DateUtil;
 import com.peng.util.SpringBeanUtils;
+import org.springframework.util.CollectionUtils;
 import sun.swing.table.DefaultTableCellHeaderRenderer;
 
 import javax.swing.*;
@@ -20,11 +20,13 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class PaneFactory {
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     public static boolean isUnPlaying(String status) {
         return !MatchStatus.PLAYING.equals(status);
@@ -45,6 +47,8 @@ public abstract class PaneFactory {
     protected abstract void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException;
 
     public abstract String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row);
+
+    public abstract JScrollPane showMatchPaneByDate(Date date) throws ParseException;
 
     /**
      * 计算统计数据
@@ -108,7 +112,7 @@ public abstract class PaneFactory {
      */
     public MissValueDataBean getMissValueData(String matchNum, boolean statistics, String type, int step, int offset) throws ParseException {
         String[] columnNames = Constants.TABLE_NAME_MAP.get(type)[1];
-        String today = DateUtil.getDateFormat().format(new Date());
+        String today = DATE_FORMAT.format(new Date());
 
         int size = columnNames.length;
         int row = 0;
@@ -126,11 +130,13 @@ public abstract class PaneFactory {
         String[] lastMissValues = new String[size - offset];
 
         String nextMatchNum = null;
+        Map<String, List<MatchBean>> nextMatchListDateMap = new HashMap<>();
         if (matchNum.contains("串")) {
             String[] matchNums = matchNum.split("串");
             matchNum = matchNums[0];
             nextMatchNum = matchNums[1];
             lastMissValues = new String[size - offset + 1];
+            nextMatchListDateMap = Constants.MATCH_CACHE_MAP.getOrDefault(nextMatchNum, new ArrayList<>()).stream().collect(Collectors.groupingBy(MatchBean::getLiveDate));
         }
         String[][] tableData = new String[maxRow][lastMissValues.length + offset];
 
@@ -146,17 +152,8 @@ public abstract class PaneFactory {
 
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
-
-            MatchBean nextMatch = null;
-            if (nextMatchNum != null) {
-                Optional<MatchBean> optionalMatchBean = Constants.MATCH_CACHE_MAP.get(nextMatchNum).stream().filter(m -> m.getLiveDate().equals(matchBean.getLiveDate())).findFirst();
-                if (!optionalMatchBean.isPresent()) {
-                    continue;
-                }
-                nextMatch = optionalMatchBean.get();
-            }
-
             String[] compareData = getColumns(index, columnNames, offset, matchBean, tableData, row);
+
             //当天的场次 显示空行
             if (matchBean.getLiveDate().equals(today)) {
                 tableData[row] = new String[lastMissValues.length + offset];
@@ -164,6 +161,16 @@ public abstract class PaneFactory {
                 row++;
                 continue;
             }
+
+            MatchBean nextMatch = null;
+            if (nextMatchNum != null) {
+                List<MatchBean> matchBeans = nextMatchListDateMap.get(matchBean.getLiveDate());
+                if (CollectionUtils.isEmpty(matchBeans)) {
+                    continue;
+                }
+                nextMatch = matchBeans.get(0);
+            }
+
             //以前未完成或者已取消的场次
             if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
                 continue;
@@ -324,7 +331,7 @@ public abstract class PaneFactory {
 
                 innerFrame = new JFrame(clickValue + "详细数据");
                 innerFrame.setBounds(400, 50, 650, 900);
-                innerFrame.getContentPane().add(matchCascadePanelFactory.showMatchCascadePaneByNum(clickValue));
+                innerFrame.getContentPane().add(matchCascadePanelFactory.showMatchPaneByNum(clickValue));
                 innerFrame.setVisible(true);
                 break;
             case Constants.COMPARE_TABLE:
@@ -377,4 +384,5 @@ public abstract class PaneFactory {
         table.scrollRectToVisible(rect);
         return sPane;
     }
+
 }

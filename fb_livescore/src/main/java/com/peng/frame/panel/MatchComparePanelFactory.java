@@ -4,12 +4,13 @@ import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
 import com.peng.repository.LiveDataRepository;
-import com.peng.util.DateUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.awt.*;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -18,6 +19,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class MatchComparePanelFactory extends PaneFactory {
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat DATE_FORMAT_CN = new SimpleDateFormat("yyyy年MM月dd日");
     private final LiveDataRepository liveDataRepository;
 
     public MatchComparePanelFactory(LiveDataRepository liveDataRepository) {
@@ -43,7 +46,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         String lastValue = lastMissValues[pos * 2];
         String lastMissValue = lastMissValues[pos * 2 + 1];
         //确定23路，中反转，不中继续买，共三次
-        if (lastMissValue.equals("中") || Integer.parseInt(lastMissValue) % 3 == 0) {
+        if (lastMissValue.equals("中") || (StringUtils.isNotBlank(lastMissValue) && Integer.parseInt(lastMissValue) % 3 == 0)) {
             compareData[pos] = lastValue.equals("单") ? "双" : "单";
         } else {
             compareData[pos] = lastValue;
@@ -90,7 +93,7 @@ public class MatchComparePanelFactory extends PaneFactory {
 
     @Override
     public void fillTodayData(String[] tableRow, String[] columnNames, String[] compareData, int step, int offset) throws ParseException {
-        tableRow[0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(DateUtil.getDateFormat().format(new Date())));
+        tableRow[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(DATE_FORMAT.format(new Date())));
         for (int i = 1; i < columnNames.length; i++) {
             if (i >= offset && i % step == 0) {
                 tableRow[i] = compareData[(i - offset) / step];
@@ -103,7 +106,7 @@ public class MatchComparePanelFactory extends PaneFactory {
 
     @Override
     public void fillTableData(String[] tableRow, String[] missValues, MatchBean matchBean) throws ParseException {
-        tableRow[0] = DateUtil.getDateFormat(1).format(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
+        tableRow[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(matchBean.getLiveDate()));
         tableRow[1] = String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum());
         tableRow[2] = String.valueOf(matchBean.getNum());
         tableRow[3] = matchBean.getMatchStatus();
@@ -145,18 +148,23 @@ public class MatchComparePanelFactory extends PaneFactory {
         return missValues;
     }
 
+    @Override
+    public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
+        return this.showMatchDataPane(date, null, null);
+    }
+
     /**
      * 按照日期获取进球数据
      *
      * @param date 选择日期
      * @return
      */
-    public JScrollPane showMatchPaneByDate(Date date, JFrame jFrame, JTable table) throws ParseException {
+    public JScrollPane showMatchDataPane(Date date, JFrame jFrame, JTable table) throws ParseException {
 
         String[] columnNames = Constants.MATCH_COMPARE_OVERVIEW_COLUMNS;
         int size = columnNames.length;
         if (table == null) {
-            Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(DateUtil.getDateFormat().format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
+            Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(DATE_FORMAT.format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
             String[][] rowData = new String[matchBeans.size()][size];
             int column = 0;
             int step = 2;

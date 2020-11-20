@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -23,7 +24,7 @@ import java.util.regex.Pattern;
 @Transactional
 @Log
 public class MatchDataService {
-
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private final LiveDataRepository liveDataRepository;
 
     public MatchDataService(LiveDataRepository liveDataRepository) {
@@ -66,14 +67,14 @@ public class MatchDataService {
 
         MatchBean matchBean = liveDataRepository.findFirstByOrderByLiveDateDesc();
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(DateUtil.getDateFormat().parse(matchBean.getLiveDate()));
+        calendar.setTime(DATE_FORMAT.parse(matchBean.getLiveDate()));
         //需覆盖前两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
         calendar.add(Calendar.DATE, -2);
 
-        String beginDate = DateUtil.getDateFormat().format(calendar.getTime());
+        String beginDate = DATE_FORMAT.format(calendar.getTime());
 
         String response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
-                1, beginDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
+                1, beginDate, DATE_FORMAT.format(new Date())), "gb2312");
         String total = response.substring(response.indexOf("查询结果：有"), response.indexOf("场赛事符合条件"))
                 .replace("查询结果：有<span class=\"u-org\">", "").replace("</span>", "");
 
@@ -83,7 +84,7 @@ public class MatchDataService {
             log.info("正在抓取第" + page + "页");
 
             response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
-                    page, beginDate, DateUtil.getDateFormat().format(new Date())), "gb2312");
+                    page, beginDate, DATE_FORMAT.format(new Date())), "gb2312");
 
             String matchListData = response.substring(response.indexOf("<div class=\"match_list\">"), response.indexOf("<div class=\"m-notice\">"));
             String[] matchData = matchListData.split("</tr>");
@@ -151,7 +152,7 @@ public class MatchDataService {
 
         matchBean.setMatchNum(tdDataArr[1]);
         try {
-            Date liveDate = DateUtil.getDateFormat().parse(tdDataArr[0]);
+            Date liveDate = DATE_FORMAT.parse(tdDataArr[0]);
             calendar.setTime(liveDate);
             int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
             //如果赛事编号的星期与实际日期的星期不一致，修改日期
@@ -159,7 +160,7 @@ public class MatchDataService {
                 calendar.add(Calendar.DAY_OF_WEEK, DateUtil.calculateDateOffset(Constants.WEEK_DAYS.indexOf(matchBean.getMatchNum().substring(0, 2)), w));
             }
             liveDate = calendar.getTime();
-            matchBean.setLiveDate(DateUtil.getDateFormat().format(liveDate));
+            matchBean.setLiveDate(DATE_FORMAT.format(liveDate));
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -235,7 +236,7 @@ public class MatchDataService {
             matchBean.setStatus("0");
         }
 
-        Date liveDate = DateUtil.getDateFormat().parse(matchBean.getLiveDate());
+        Date liveDate = DATE_FORMAT.parse(matchBean.getLiveDate());
         calendar.setTime(liveDate);
 
         int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
@@ -250,7 +251,7 @@ public class MatchDataService {
         if (liveDate.after(DateUtil.getTomorrow())) {
             return null;
         }
-        matchBean.setLiveDate(DateUtil.getDateFormat().format(liveDate));
+        matchBean.setLiveDate(DATE_FORMAT.format(liveDate));
 
         return matchBean;
     }
