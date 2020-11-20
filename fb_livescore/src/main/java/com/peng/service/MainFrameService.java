@@ -1,13 +1,13 @@
 package com.peng.service;
 
 import com.peng.bean.MatchBean;
+import com.peng.config.ApplicationProperties;
 import com.peng.constant.Constants;
 import com.peng.frame.LiveScoreFrame;
 import com.peng.repository.LiveDataRepository;
 import com.peng.util.AesUtil;
 import com.peng.util.DateUtil;
 import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.swing.*;
@@ -21,15 +21,19 @@ import java.util.stream.Collectors;
 
 @Service
 public class MainFrameService {
-    @Autowired
-    private LiveDataRepository liveDataRepository;
+    private final LiveDataRepository liveDataRepository;
+    private final ApplicationProperties applicationProperties;
+
+    public MainFrameService(LiveDataRepository liveDataRepository, ApplicationProperties applicationProperties) {
+        this.liveDataRepository = liveDataRepository;
+        this.applicationProperties = applicationProperties;
+    }
 
 
-    private static boolean checkLicense(Frame frame) {
+    private boolean checkLicense(Frame frame) {
         String expireMessage = "激活码已过期，请重新激活，软件授权联系QQ：470360567";
         String noActiveCodeMessage = "请输入激活码，软件授权联系QQ：470360567";
-//        String licencePath = "/Users/zhangpeng/._licence";
-        String licencePath = "D:/._licence";
+        String licencePath = applicationProperties.getLicencePath();
 
         try {
             String licence;
@@ -62,7 +66,7 @@ public class MainFrameService {
         }
     }
 
-    public void initMainFrame() {
+    public boolean initMainFrame() {
         LiveScoreFrame frame;
         try {
             List<MatchBean> matchBeans = liveDataRepository.findAll();
@@ -71,13 +75,15 @@ public class MainFrameService {
             frame = new LiveScoreFrame();
         } catch (ParseException e) {
             e.printStackTrace();
-            return;
+            return false;
         }
-        if (!checkLicense(frame)) {
+        if (!this.checkLicense(frame)) {
             frame.dispose();
-            return;
+
+            return false;
         }
 
         frame.setVisible(true);
+        return true;
     }
 }

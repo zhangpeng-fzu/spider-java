@@ -32,15 +32,6 @@ public class Constants {
     public static final String MAX_MISS = "最大遗漏值";
     public static final String MAX_300_MISS = "300场最大遗漏值";
     public static final List<String> WEEK_DAYS = Arrays.asList("周日", "周一", "周二", "周三", "周四", "周五", "周六");
-    public static final HashMap<String, String> MATCH_RES_MAP = new HashMap<String, String>() {
-        private static final long serialVersionUID = 1520605194545292329L;
-
-        {
-            put("s", "胜");
-            put("p", "平");
-            put("f", "负");
-        }
-    };
 
     //用于进球对比的数据
     public static final String[][] INIT_COMPARE_DATA = {

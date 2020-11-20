@@ -1,6 +1,6 @@
 package com.peng.task;
 
-import com.peng.service.LoadHistoryData;
+import com.peng.service.MatchDataService;
 import lombok.extern.java.Log;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -9,16 +9,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoadDataRunner implements CommandLineRunner {
 
-    private final LoadHistoryData loadHistoryData;
+    private final MatchDataService matchDataService;
 
-    public LoadDataRunner(LoadHistoryData loadHistoryData) {
-        this.loadHistoryData = loadHistoryData;
+    public LoadDataRunner(MatchDataService matchDataService) {
+        this.matchDataService = matchDataService;
     }
 
     @Override
     public void run(String... args) throws Exception {
         //加载所有场次数据
         log.info("正在加载所有场次数据");
-        loadHistoryData.loadHistoryData();
+        matchDataService.loadHistoryMatch();
     }
 }

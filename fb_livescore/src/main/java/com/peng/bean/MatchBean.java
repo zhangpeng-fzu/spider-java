@@ -38,9 +38,6 @@ public class MatchBean {
     private int halfGuestNum;
     @Transient
     private Float[] odds;
-
-    @Transient
-    private String result;
     @Transient
     private String halfResult;
     @Transient
@@ -57,16 +54,6 @@ public class MatchBean {
         this.oddsF = odds[2];
     }
 
-    public String getResult() {
-        if (this.hostNum > this.guestNum) {
-            this.result = "s";
-        } else if (this.hostNum == this.guestNum) {
-            this.result = "p";
-        } else {
-            this.result = "f";
-        }
-        return this.result;
-    }
 
     public String getCNResult() {
         if (this.hostNum > this.guestNum) {

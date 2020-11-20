@@ -14,13 +14,13 @@ import java.net.UnknownHostException;
 
 @SpringBootApplication
 @EnableScheduling
-public class SpringApplication {
+public class LiveScoreApplication {
 
-    private static final Logger log = LoggerFactory.getLogger(SpringApplication.class);
+    private static final Logger log = LoggerFactory.getLogger(LiveScoreApplication.class);
 
     private final Environment env;
 
-    public SpringApplication(Environment env) {
+    public LiveScoreApplication(Environment env) {
         this.env = env;
     }
 
@@ -31,7 +31,7 @@ public class SpringApplication {
      */
     public static void main(String[] args) {
 
-        SpringApplicationBuilder builder = new SpringApplicationBuilder(SpringApplication.class);
+        SpringApplicationBuilder builder = new SpringApplicationBuilder(LiveScoreApplication.class);
         Environment env = builder.headless(false).web(WebApplicationType.NONE).run(args).getEnvironment();
 
 //        org.springframework.boot.SpringApplication app = new org.springframework.boot.SpringApplication(SpringApplication.class);

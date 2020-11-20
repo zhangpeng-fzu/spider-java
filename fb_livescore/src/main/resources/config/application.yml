@@ -90,3 +90,7 @@ server:
     session:
       cookie:
         http-only: true
+
+livescore:
+  licence:
+    path: C:/._licence

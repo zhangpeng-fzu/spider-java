@@ -214,9 +214,10 @@ public abstract class PaneFactory {
     }
 
     boolean skipMatchNum(Date date, String matchNum) {
-        return !MatchStatus.MATCH_STATUS_MAP.containsKey(matchNum) ||
-                (DateUtil.isToday(date) && (isUnPlaying(MatchStatus.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(MatchStatus.MATCH_STATUS_MAP.get(matchNum))))
-                || (!DateUtil.isToday(date) && isCancelled(MatchStatus.MATCH_STATUS_MAP.get(matchNum)));
+//        return !MatchStatus.MATCH_STATUS_MAP.containsKey(matchNum) ||
+//                (DateUtil.isToday(date) && (isUnPlaying(MatchStatus.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(MatchStatus.MATCH_STATUS_MAP.get(matchNum))))
+//                || (!DateUtil.isToday(date) && isCancelled(MatchStatus.MATCH_STATUS_MAP.get(matchNum)));
+        return false;
     }
 
     PaneFactory setTableHeader(JTable table) {
@@ -239,6 +240,8 @@ public abstract class PaneFactory {
                     table.getColumnModel().getColumn(i).setPreferredWidth(25);
                 }
                 table.getTableHeader().setFont(new Font("宋体", Font.PLAIN, 9));
+            } else {
+                table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
             }
         }
 
@@ -261,17 +264,11 @@ public abstract class PaneFactory {
         for (Integer column : columns) {
             sorter.setComparator(column, (Comparator<String>) (arg0, arg1) -> {
                 try {
-                    if (String.valueOf(arg0).contains(" ")) {
-                        return 1;
-                    }
-                    if (String.valueOf(arg1).contains(" ")) {
-                        return -1;
-                    }
 
-                    if (String.valueOf(arg0).equals("") || String.valueOf(arg0).equals("0.0") || arg0 == null || arg0.contains(":") || arg0.equals("中")) {
+                    if (String.valueOf(arg0).contains(" ") || String.valueOf(arg0).equals("") || String.valueOf(arg0).equals("0.0") || arg0 == null || arg0.contains(":") || arg0.equals("中")) {
                         arg0 = "0";
                     }
-                    if (String.valueOf(arg1).equals("") || String.valueOf(arg1).equals("0.0") || arg1 == null || arg1.contains(":") || arg1.equals("中")) {
+                    if (String.valueOf(arg1).contains(" ") || String.valueOf(arg1).equals("") || String.valueOf(arg1).equals("0.0") || arg1 == null || arg1.contains(":") || arg1.equals("中")) {
                         arg1 = "0";
                     }
 

@@ -2,7 +2,7 @@ package com.peng.frame;
 
 import com.peng.constant.Constants;
 import com.peng.frame.panel.*;
-import com.peng.service.SyncTodayData;
+import com.peng.service.MatchDataService;
 import com.peng.util.DateUtil;
 import com.peng.util.SpringBeanUtils;
 import lombok.extern.java.Log;
@@ -109,14 +109,14 @@ public class LiveScoreFrame extends JFrame {
 
 
     public void syncMatchData(boolean isFirst) {
-        SyncTodayData syncTodayData = SpringBeanUtils.getBean("syncTodayData");
+        MatchDataService matchDataService = SpringBeanUtils.getBean("matchDataService");
         MatchDataPanelFactory matchDataPanelFactory = SpringBeanUtils.getBean("matchDataPanelFactory");
-        assert syncTodayData != null;
+        assert matchDataService != null;
         assert matchDataPanelFactory != null;
 
         if (isFirst) {
             try {
-                syncTodayData.syncTodayMatch();
+                matchDataService.syncTodayMatch();
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -129,7 +129,7 @@ public class LiveScoreFrame extends JFrame {
                 log.info(String.format("正在同步%s的数据", DateUtil.getDateFormat(1).format(new Date())));
 
                 try {
-                    syncTodayData.syncTodayMatch();
+                    matchDataService.syncTodayMatch();
                     jTabbedPane.setComponentAt(0, matchDataPanelFactory.showMatchDataPane(new Date()));
                 } catch (Exception e) {
                     e.printStackTrace();

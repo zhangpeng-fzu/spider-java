@@ -33,7 +33,7 @@ public class MatchDataPanelFactory extends PaneFactory {
             MatchBean matchBean = matchBeanList.get(i);
             //缓存比赛状态
             MatchStatus.MATCH_STATUS_MAP.put(matchBean.getMatchNum().replaceAll("周[一|二|三|四|五|六|日]", ""), matchBean.getStatus());
-            String result = matchBean.getResult();
+            String result = matchBean.getCNResult();
 
             String status = matchBean.getStatus();
             switch (matchBean.getStatus()) {
@@ -53,7 +53,7 @@ public class MatchDataPanelFactory extends PaneFactory {
             }
             rowData[i] = new String[]{matchBean.getMatchNum(), matchBean.getLiveDate(), matchBean.getMatchGroup(), status, matchBean.getHostTeam(),
                     matchBean.getGuestTeam(), String.valueOf(matchBean.getOdds()[0]), String.valueOf(matchBean.getOdds()[1]), String.valueOf(matchBean.getOdds()[2]),
-                    status.equals("完") ? String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()) : "", Constants.MATCH_RES_MAP.get(result)};
+                    status.equals("完") ? String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()) : "", result};
         }
 
 

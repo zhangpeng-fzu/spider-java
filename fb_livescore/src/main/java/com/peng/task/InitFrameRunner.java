@@ -18,6 +18,9 @@ public class InitFrameRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        mainFrameService.initMainFrame();
+        boolean initStatus = mainFrameService.initMainFrame();
+        if (!initStatus) {
+            System.exit(0);
+        }
     }
 }
