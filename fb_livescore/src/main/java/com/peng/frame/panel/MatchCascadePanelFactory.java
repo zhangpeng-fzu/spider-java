@@ -5,6 +5,7 @@ import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
+import com.peng.frame.LiveScoreFrame;
 import com.peng.repository.LiveDataRepository;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +14,11 @@ import java.awt.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class MatchCascadePanelFactory extends PaneFactory {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat DATE_FORMAT_CN = new SimpleDateFormat("yyyy年MM月dd日");
     private final LiveDataRepository liveDataRepository;
 
@@ -34,12 +33,12 @@ public class MatchCascadePanelFactory extends PaneFactory {
      * @return
      */
     @Override
-    public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
+    public JScrollPane showMatchPaneByDate(String date) throws ParseException {
         String[] columns = Constants.MATCH_CASCADE_COMMON;
         String[] columnNames = Constants.MATCH_CASCADE_OVERVIEW_COLUMNS;// 定义表格列名数组
         int size = columns.length;
 
-        List<String> matchNums = liveDataRepository.findAllByLiveDate(DATE_FORMAT.format(date)).stream().map(matchBean -> matchBean.getMatchNum().substring(2)).collect(Collectors.toList());
+        List<String> matchNums = liveDataRepository.findAllByLiveDate(date).stream().map(MatchBean::getMatchNum).collect(Collectors.toList());
 
         List<String> cascadeMatchNums = new ArrayList<>();
 
@@ -53,7 +52,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         int column = 0;
 
         for (String matchCascadeNum : cascadeMatchNums) {
-            MissValueDataBean missValueDataBean = this.getMissValueData(matchCascadeNum, true, Constants.CASCADE_TABLE, 1, 1);
+            MissValueDataBean missValueDataBean = this.getMissValueData(date, matchCascadeNum, true, Constants.CASCADE_TABLE, 1, 1);
             String[][] missValueData = missValueDataBean.getMissValueData();
             String[] yesterdayMiss = missValueData[missValueData.length - 6];
 
@@ -96,7 +95,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
      */
     public JScrollPane showMatchPaneByNum(String matchNum) throws ParseException {
         String[] columnNames = Constants.MATCH_CASCADE_DETAIL_COLUMNS;
-        MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.CASCADE_TABLE, 1, 1);
+        MissValueDataBean missValueDataBean = this.getMissValueData(LiveScoreFrame.selectDate, matchNum, true, Constants.CASCADE_TABLE, 1, 1);
         String[][] tableData = missValueDataBean.getMissValueData();
         int size = columnNames.length;
 
@@ -154,17 +153,9 @@ public class MatchCascadePanelFactory extends PaneFactory {
     }
 
     @Override
-    protected void fillTableData(String[] tableRow, String[] missValues, MatchBean matchBean) throws ParseException {
-        tableRow[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(matchBean.getLiveDate()));
+    protected void fillTableRow(String[] tableRow, String[] missValues, MatchBean matchBean) throws ParseException {
+        tableRow[0] = matchBean.getLiveDate().replaceFirst("-", "年").replaceFirst("-", "月");
         System.arraycopy(missValues, 0, tableRow, 1, missValues.length);
-    }
-
-    @Override
-    protected void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
-        tableDatum[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(DATE_FORMAT.format(new Date())));
-        for (int i = 1; i < columnNames.length; i++) {
-            tableDatum[i] = "";
-        }
     }
 
     @Override

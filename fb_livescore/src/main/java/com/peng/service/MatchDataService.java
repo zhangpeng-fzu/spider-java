@@ -9,6 +9,7 @@ import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
 import lombok.extern.java.Log;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -17,6 +18,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,9 +30,12 @@ import java.util.regex.Pattern;
 public class MatchDataService {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private final LiveDataRepository liveDataRepository;
+    private final TaskExecutor spiderTaskExecutor;
+    private final Semaphore semaphore = new Semaphore(100);
 
-    public MatchDataService(LiveDataRepository liveDataRepository) {
+    public MatchDataService(LiveDataRepository liveDataRepository, TaskExecutor spiderTaskExecutor) {
         this.liveDataRepository = liveDataRepository;
+        this.spiderTaskExecutor = spiderTaskExecutor;
     }
 
     /**
@@ -63,104 +70,129 @@ public class MatchDataService {
      *
      * @throws ParseException
      */
-    public void loadHistoryMatch() throws ParseException {
+    public void loadHistoryMatch() throws ParseException, InterruptedException {
 
         MatchBean matchBean = liveDataRepository.findFirstByOrderByLiveDateDesc();
+
+        String beginDateStr = matchBean == null ? "2010-01-01" : matchBean.getLiveDate();
+
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(DATE_FORMAT.parse(matchBean.getLiveDate()));
+        calendar.setTime(DATE_FORMAT.parse(beginDateStr));
         //需覆盖前两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
-        calendar.add(Calendar.DATE, -2);
+        calendar.add(Calendar.DATE, -5);
 
-        String beginDate = DATE_FORMAT.format(calendar.getTime());
+        //清除最近两天的数据，防止定时同步导致的最近一次抓取日期异常
+        liveDataRepository.deleteByLiveDateGreaterThanEqual(DATE_FORMAT.format(calendar.getTime()));
 
-        String response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
+        matchBean = liveDataRepository.findFirstByOrderByLiveDateDesc();
+        String beginDate = matchBean == null ? "2010-01-01" : matchBean.getLiveDate();
+
+        String totalResponse = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
                 1, beginDate, DATE_FORMAT.format(new Date())), "gb2312");
-        String total = response.substring(response.indexOf("查询结果：有"), response.indexOf("场赛事符合条件"))
+        String total = totalResponse.substring(totalResponse.indexOf("查询结果：有"), totalResponse.indexOf("场赛事符合条件"))
                 .replace("查询结果：有<span class=\"u-org\">", "").replace("</span>", "");
 
         int page = Integer.parseInt(total) / 30 + 1;
 
+        Map<String, SimpleDateFormat> dateFormatMap = new HashMap<>();
+
+
         for (; page > 0; page--) {
-            log.info("正在抓取第" + page + "页");
+            semaphore.acquire();
 
-            response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
-                    page, beginDate, DATE_FORMAT.format(new Date())), "gb2312");
+            int finalPage = page;
+            spiderTaskExecutor.execute(() -> {
 
-            String matchListData = response.substring(response.indexOf("<div class=\"match_list\">"), response.indexOf("<div class=\"m-notice\">"));
-            String[] matchData = matchListData.split("</tr>");
 
-            for (String tr : matchData) {
-                String[] tds = tr.split("\r\n|>VS<");
-                StringBuilder tdData = new StringBuilder();
-                for (String td : tds) {
-                    if (td.contains("class=\"u-detal\"")) {
-                        break;
-                    }
-                    if (!td.contains("<td") && !td.contains("</td>")) {
-                        continue;
-                    }
-                    Pattern pattern = Pattern.compile(">.*?</");
-                    Matcher matcher = pattern.matcher(td);
-                    if (!matcher.find()) {
-                        continue;
-                    }
-                    String text = matcher.group(0).replace(">", " ").replace("</", "");
-                    if (text.contains(" ")) {
-                        text = text.substring(text.lastIndexOf(" ")).replaceAll("title=\"|class=\"blue\"|font-size:13px;\"|class=", "")
-                                .split("\"")[0];
-                        if (text.length() == 0) {
+                String key = Thread.currentThread().getName();
+                SimpleDateFormat dateFormat = dateFormatMap.get(key);
+                if (dateFormat == null) {
+                    dateFormatMap.put(key, new SimpleDateFormat("yyyy-MM-dd"));
+                    dateFormat = dateFormatMap.get(key);
+                }
+
+
+                try {
+                    String response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
+                            finalPage, beginDate, dateFormat.format(new Date())), "gb2312");
+
+                    String matchListData = response.substring(response.indexOf("<div class=\"match_list\">"), response.indexOf("<div class=\"m-notice\">"));
+                    String[] matchData = matchListData.split("</tr>");
+
+                    for (String tr : matchData) {
+                        String[] tds = tr.split("\r\n|>VS<");
+                        StringBuilder tdData = new StringBuilder();
+                        for (String td : tds) {
+                            if (td.contains("class=\"u-detal\"")) {
+                                break;
+                            }
+                            if (!td.contains("<td") && !td.contains("</td>")) {
+                                continue;
+                            }
+                            Pattern pattern = Pattern.compile(">.*?</");
+                            Matcher matcher = pattern.matcher(td);
+                            if (!matcher.find()) {
+                                continue;
+                            }
+                            String text = matcher.group(0).replace(">", " ").replace("</", "");
+                            if (text.contains(" ")) {
+                                text = text.substring(text.lastIndexOf(" ")).replaceAll("title=\"|class=\"blue\"|font-size:13px;\"|class=", "")
+                                        .split("\"")[0];
+                                if (text.length() == 0) {
+                                    continue;
+                                }
+                                if (text.trim().equals("--")) {
+                                    text = "0";
+                                }
+                            }
+                            tdData.append(text.trim()).append(",");
+                        }
+                        if (tdData.length() < 10) {
                             continue;
                         }
-                        if (text.trim().equals("--")) {
-                            text = "0";
+
+                        MatchBean insertMatchBean = transHistory(dateFormat, tdData.toString());
+
+                        MatchBean matchBeanDB = liveDataRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
+                        if (matchBeanDB != null) {
+                            insertMatchBean.setId(matchBeanDB.getId());
                         }
+                        liveDataRepository.saveAndFlush(insertMatchBean);
                     }
-                    tdData.append(text.trim()).append(",");
-                }
-                if (tdData.length() < 10) {
-                    continue;
-                }
+                    log.info("已经抓取完成第" + finalPage + "页");
 
-                MatchBean insertMatchBean = transHistory(tdData.toString());
-
-                MatchBean matchBeanDB = liveDataRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
-                if (matchBeanDB != null) {
-                    insertMatchBean.setId(matchBeanDB.getId());
+                } finally {
+                    semaphore.release();
                 }
-                liveDataRepository.saveAndFlush(insertMatchBean);
-            }
-
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            });
         }
     }
 
     /**
      * 转换成matchBean
      *
+     * @param dateFormat
      * @param tdData
      * @return
      */
-    private MatchBean transHistory(String tdData) {
+    private MatchBean transHistory(SimpleDateFormat dateFormat, String tdData) {
         Calendar calendar = Calendar.getInstance();
 
         MatchBean matchBean = new MatchBean();
         String[] tdDataArr = tdData.split(",");
 
-        matchBean.setMatchNum(tdDataArr[1]);
+        matchBean.setWeekNum(tdDataArr[1].substring(0, 2));
+        matchBean.setMatchNum(tdDataArr[1].substring(2));
         try {
-            Date liveDate = DATE_FORMAT.parse(tdDataArr[0]);
+            Date liveDate = dateFormat.parse(tdDataArr[0]);
             calendar.setTime(liveDate);
             int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
             //如果赛事编号的星期与实际日期的星期不一致，修改日期
-            if (!matchBean.getMatchNum().contains(Constants.WEEK_DAYS.get(w))) {
-                calendar.add(Calendar.DAY_OF_WEEK, DateUtil.calculateDateOffset(Constants.WEEK_DAYS.indexOf(matchBean.getMatchNum().substring(0, 2)), w));
+            if (!matchBean.getWeekNum().contains(Constants.WEEK_DAYS.get(w))) {
+                calendar.add(Calendar.DAY_OF_WEEK, DateUtil.calculateDateOffset(Constants.WEEK_DAYS.indexOf(matchBean.getWeekNum()), w));
             }
             liveDate = calendar.getTime();
-            matchBean.setLiveDate(DATE_FORMAT.format(liveDate));
+            matchBean.setLiveDate(dateFormat.format(liveDate));
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -208,7 +240,6 @@ public class MatchDataService {
     public MatchBean transToday(JSONObject match) throws ParseException {
         Calendar calendar = Calendar.getInstance();
         MatchBean matchBean = new MatchBean();
-        matchBean.setMatchNum(match.getString("num"));
         matchBean.setLiveDate(match.getString("b_date"));
         matchBean.setMatchGroup(match.getString("l_cn_abbr"));
         matchBean.setStatus(match.getString("status"));
@@ -235,14 +266,16 @@ public class MatchDataService {
             matchBean.setGuestNum(0);
             matchBean.setStatus("0");
         }
+        matchBean.setWeekNum(match.getString("num").substring(0, 2));
+        matchBean.setMatchNum(match.getString("num").substring(2));
 
         Date liveDate = DATE_FORMAT.parse(matchBean.getLiveDate());
         calendar.setTime(liveDate);
 
         int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
         //如果赛事编号的星期与实际日期的星期不一致，修改日期
-        if (!matchBean.getMatchNum().contains(Constants.WEEK_DAYS.get(w))) {
-            int c = Constants.WEEK_DAYS.indexOf(matchBean.getMatchNum().substring(0, 2));
+        if (!matchBean.getWeekNum().contains(Constants.WEEK_DAYS.get(w))) {
+            int c = Constants.WEEK_DAYS.indexOf(matchBean.getWeekNum());
             int offset = DateUtil.calculateDateOffset(c, w);
             calendar.add(Calendar.DAY_OF_WEEK, offset);
         }

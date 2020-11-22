@@ -19,6 +19,7 @@ public class MatchBean {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    private String weekNum;
     private String matchNum;
     private String liveDate;
     private String matchGroup;

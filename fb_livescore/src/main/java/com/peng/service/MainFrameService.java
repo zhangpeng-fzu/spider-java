@@ -70,7 +70,7 @@ public class MainFrameService {
         LiveScoreFrame frame;
         try {
             List<MatchBean> matchBeans = liveDataRepository.findAll();
-            Constants.MATCH_CACHE_MAP = matchBeans.stream().peek(matchBean -> matchBean.setMatchNum(matchBean.getMatchNum().substring(2))).collect(Collectors.groupingBy(MatchBean::getMatchNum));
+            Constants.MATCH_CACHE_MAP = matchBeans.stream().collect(Collectors.groupingBy(MatchBean::getMatchNum));
 
             frame = new LiveScoreFrame();
         } catch (ParseException e) {

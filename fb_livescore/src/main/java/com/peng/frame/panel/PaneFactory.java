@@ -20,35 +20,30 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class PaneFactory {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-
-    public static boolean isUnPlaying(String status) {
-        return !MatchStatus.PLAYING.equals(status);
-    }
 
     public static boolean isUnFinished(String status) {
         return !MatchStatus.FINISHED.equals(status);
     }
 
-    public static boolean isCancelled(String status) {
-        return MatchStatus.CANCELLED.equals(status);
-    }
-
     protected abstract String[] calcMissValue(MatchBean matchBean, MatchBean nextMatch, String[] curCompareData, String[] lastMissValues, int[] matchCompareCountArr, int[] matchCompareMaxArr, int[] matchCompareMax300Arr) throws ParseException;
 
-    protected abstract void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException;
+    protected abstract void fillTableRow(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException;
 
-    protected abstract void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException;
+    protected void fillLastRow(String deadline, String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
+        tableDatum[0] = deadline;
+        for (int i = 1; i < columnNames.length; i++) {
+            tableDatum[i] = "";
+        }
+    }
 
     public abstract String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row);
 
-    public abstract JScrollPane showMatchPaneByDate(Date date) throws ParseException;
+    public abstract JScrollPane showMatchPaneByDate(String date) throws ParseException;
 
     /**
      * 计算统计数据
@@ -89,8 +84,6 @@ public abstract class PaneFactory {
                 tableData[row][i * step + offset] = String.valueOf(max300Arr[i]);
             }
         }
-
-
         row++;
         tableData[row] = new String[size];
         tableData[row][0] = Constants.MAX_MISS;
@@ -102,6 +95,7 @@ public abstract class PaneFactory {
     /**
      * 计算遗漏值
      *
+     * @param deadline   截止计算日期
      * @param matchNum   赛事编号
      * @param statistics 是否需要统计数据
      * @param type       统计表格类型
@@ -110,19 +104,17 @@ public abstract class PaneFactory {
      * @return 遗漏值数据
      * @throws ParseException e
      */
-    public MissValueDataBean getMissValueData(String matchNum, boolean statistics, String type, int step, int offset) throws ParseException {
+    public MissValueDataBean getMissValueData(String deadline, String matchNum, boolean statistics, String type, int step, int offset) throws ParseException {
         String[] columnNames = Constants.TABLE_NAME_MAP.get(type)[1];
-        String today = DATE_FORMAT.format(new Date());
 
         int size = columnNames.length;
         int row = 0;
         int statisticsSize = (size - offset) / step;
 
-
         List<MatchBean> matchList = Constants.MATCH_CACHE_MAP.getOrDefault(matchNum.split("串")[0], new ArrayList<>()).stream().sorted(Comparator.comparing(MatchBean::getLiveDate)).collect(Collectors.toList());
 
-        if (matchList.stream().noneMatch(matchBean -> today.equals(matchBean.getLiveDate()))) {
-            matchList.add(MatchBean.builder().liveDate(today).build());
+        if (matchList.stream().noneMatch(matchBean -> deadline.equals(matchBean.getLiveDate()))) {
+            matchList.add(MatchBean.builder().liveDate(deadline).build());
         }
         //计算最大行数，统计数据占四行
         int maxRow = statistics ? matchList.size() + 4 : matchList.size();
@@ -140,7 +132,6 @@ public abstract class PaneFactory {
         }
         String[][] tableData = new String[maxRow][lastMissValues.length + offset];
 
-
         Arrays.fill(lastMissValues, "0");
 
         //命中次数
@@ -153,13 +144,12 @@ public abstract class PaneFactory {
         for (int index = 0; index < matchList.size(); index++) {
             MatchBean matchBean = matchList.get(index);
             String[] compareData = getColumns(index, columnNames, offset, matchBean, tableData, row);
-
             //当天的场次 显示空行
-            if (matchBean.getLiveDate().equals(today)) {
+            if (matchBean.getLiveDate().equals(deadline)) {
                 tableData[row] = new String[lastMissValues.length + offset];
-                fillTodayData(tableData[row], columnNames, compareData, step, offset);
+                fillLastRow(deadline, tableData[row], columnNames, compareData, step, offset);
                 row++;
-                continue;
+                break;
             }
 
             MatchBean nextMatch = null;
@@ -172,7 +162,7 @@ public abstract class PaneFactory {
             }
 
             //以前未完成或者已取消的场次
-            if (!matchBean.getLiveDate().equals(today) && isUnFinished(matchBean.getStatus())) {
+            if (!matchBean.getLiveDate().equals(deadline) && isUnFinished(matchBean.getStatus())) {
                 continue;
             }
 
@@ -187,7 +177,7 @@ public abstract class PaneFactory {
             //将算出来的遗漏值赋值给上一次的遗漏值
             lastMissValues = missValues;
             tableData[row] = new String[lastMissValues.length + offset];
-            fillTableData(tableData[row], missValues, matchBean);
+            fillTableRow(tableData[row], missValues, matchBean);
             row++;
         }
 
@@ -220,7 +210,7 @@ public abstract class PaneFactory {
         return sortColumn;
     }
 
-    boolean skipMatchNum(Date date, String matchNum) {
+    boolean skipMatchNum(String date, String matchNum) {
 //        return !MatchStatus.MATCH_STATUS_MAP.containsKey(matchNum) ||
 //                (DateUtil.isToday(date) && (isUnPlaying(MatchStatus.MATCH_STATUS_MAP.get(matchNum)) || isCancelled(MatchStatus.MATCH_STATUS_MAP.get(matchNum))))
 //                || (!DateUtil.isToday(date) && isCancelled(MatchStatus.MATCH_STATUS_MAP.get(matchNum)));

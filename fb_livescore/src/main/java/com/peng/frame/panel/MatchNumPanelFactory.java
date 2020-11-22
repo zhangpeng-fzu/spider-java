@@ -3,6 +3,7 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
+import com.peng.frame.LiveScoreFrame;
 import com.peng.repository.LiveDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,30 +13,20 @@ import java.awt.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class MatchNumPanelFactory extends PaneFactory {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat DATE_FORMAT_CN = new SimpleDateFormat("yyyy年MM月dd日");
     @Autowired
     private LiveDataRepository liveDataRepository;
 
     @Override
-    public void fillTableData(String[] tableRow, String[] missValues, MatchBean matchBean) throws ParseException {
-        tableRow[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(matchBean.getLiveDate()));
+    public void fillTableRow(String[] tableRow, String[] missValues, MatchBean matchBean) throws ParseException {
+        tableRow[0] = matchBean.getLiveDate().replaceFirst("-", "年").replaceFirst("-", "月");
         System.arraycopy(missValues, 0, tableRow, 1, missValues.length);
-    }
-
-    @Override
-    protected void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
-        tableDatum[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(DATE_FORMAT.format(new Date())));
-        for (int i = 1; i < columnNames.length; i++) {
-            tableDatum[i] = "";
-        }
     }
 
     @Override
@@ -101,10 +92,10 @@ public class MatchNumPanelFactory extends PaneFactory {
      * @return
      */
     @Override
-    public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
+    public JScrollPane showMatchPaneByDate(String date) throws ParseException {
         String[] columnNames = Constants.MATCH_NUM_OVERVIEW_COLUMNS;
         int size = columnNames.length;
-        Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(DATE_FORMAT.format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
+        Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(date).stream().collect(Collectors.toMap(MatchBean::getMatchNum, matchBean -> matchBean));
 
         String[][] rowData = new String[Math.max(matchBeans.size(), 10)][size];
         int column = 0;
@@ -117,7 +108,7 @@ public class MatchNumPanelFactory extends PaneFactory {
 
             rowData[column][0] = matchNum;
 
-            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.NUM_TABLE, 1, 1);
+            MissValueDataBean missValueDataBean = this.getMissValueData(date, matchNum, true, Constants.NUM_TABLE, 1, 1);
             String[][] missValueData = missValueDataBean.getMissValueData();
 
             //使用今天的预设数据和昨天的遗漏数据拼出概览数据
@@ -143,7 +134,7 @@ public class MatchNumPanelFactory extends PaneFactory {
      */
     JScrollPane showMatchPaneByNum(String matchNum) throws ParseException {
         String[] columnNames = Constants.MATCH_NUM_DETAIL_COLUMNS;
-        MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.NUM_TABLE, 1, 1);
+        MissValueDataBean missValueDataBean = this.getMissValueData(LiveScoreFrame.selectDate, matchNum, true, Constants.NUM_TABLE, 1, 1);
         String[][] tableData = missValueDataBean.getMissValueData();
         int size = columnNames.length;
 

@@ -9,13 +9,10 @@ import org.springframework.stereotype.Service;
 import javax.swing.*;
 import java.awt.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 @Service
 public class MatchDataPanelFactory extends PaneFactory {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private final LiveDataRepository liveDataRepository;
 
     public MatchDataPanelFactory(LiveDataRepository liveDataRepository) {
@@ -23,18 +20,16 @@ public class MatchDataPanelFactory extends PaneFactory {
     }
 
     @Override
-    public JScrollPane showMatchPaneByDate(Date date) {
+    public JScrollPane showMatchPaneByDate(String date) {
 
         String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
-        List<MatchBean> matchBeanList = liveDataRepository.findAllByLiveDate(DATE_FORMAT.format(date));
+        List<MatchBean> matchBeanList = liveDataRepository.findAllByLiveDate(date);
 
         String[][] rowData = new String[matchBeanList.size()][11];
 
 
         for (int i = 0; i < matchBeanList.size(); i++) {
             MatchBean matchBean = matchBeanList.get(i);
-            //缓存比赛状态
-            MatchStatus.MATCH_STATUS_MAP.put(matchBean.getMatchNum().replaceAll("周[一|二|三|四|五|六|日]", ""), matchBean.getStatus());
             String result = matchBean.getCNResult();
 
             String status = matchBean.getStatus();
@@ -71,12 +66,7 @@ public class MatchDataPanelFactory extends PaneFactory {
     }
 
     @Override
-    protected void fillTableData(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException {
-
-    }
-
-    @Override
-    protected void fillTodayData(String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
+    protected void fillTableRow(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException {
 
     }
 

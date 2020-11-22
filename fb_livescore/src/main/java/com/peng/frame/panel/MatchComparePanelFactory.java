@@ -3,6 +3,7 @@ package com.peng.frame.panel;
 import com.peng.bean.MatchBean;
 import com.peng.bean.MissValueDataBean;
 import com.peng.constant.Constants;
+import com.peng.frame.LiveScoreFrame;
 import com.peng.repository.LiveDataRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -12,14 +13,12 @@ import java.awt.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class MatchComparePanelFactory extends PaneFactory {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat DATE_FORMAT_CN = new SimpleDateFormat("yyyy年MM月dd日");
     private final LiveDataRepository liveDataRepository;
 
@@ -92,8 +91,8 @@ public class MatchComparePanelFactory extends PaneFactory {
     }
 
     @Override
-    public void fillTodayData(String[] tableRow, String[] columnNames, String[] compareData, int step, int offset) throws ParseException {
-        tableRow[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(DATE_FORMAT.format(new Date())));
+    public void fillLastRow(String deadline, String[] tableRow, String[] columnNames, String[] compareData, int step, int offset) throws ParseException {
+        tableRow[0] = deadline;
         for (int i = 1; i < columnNames.length; i++) {
             if (i >= offset && i % step == 0) {
                 tableRow[i] = compareData[(i - offset) / step];
@@ -105,8 +104,8 @@ public class MatchComparePanelFactory extends PaneFactory {
 
 
     @Override
-    public void fillTableData(String[] tableRow, String[] missValues, MatchBean matchBean) throws ParseException {
-        tableRow[0] = DATE_FORMAT_CN.format(DATE_FORMAT.parse(matchBean.getLiveDate()));
+    public void fillTableRow(String[] tableRow, String[] missValues, MatchBean matchBean) throws ParseException {
+        tableRow[0] = matchBean.getLiveDate().replaceFirst("-", "年").replaceFirst("-", "月");
         tableRow[1] = String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum());
         tableRow[2] = String.valueOf(matchBean.getNum());
         tableRow[3] = matchBean.getMatchStatus();
@@ -149,7 +148,7 @@ public class MatchComparePanelFactory extends PaneFactory {
     }
 
     @Override
-    public JScrollPane showMatchPaneByDate(Date date) throws ParseException {
+    public JScrollPane showMatchPaneByDate(String date) throws ParseException {
         return this.showMatchDataPane(date, null, null);
     }
 
@@ -159,12 +158,12 @@ public class MatchComparePanelFactory extends PaneFactory {
      * @param date 选择日期
      * @return
      */
-    public JScrollPane showMatchDataPane(Date date, JFrame jFrame, JTable table) throws ParseException {
+    public JScrollPane showMatchDataPane(String date, JFrame jFrame, JTable table) throws ParseException {
 
         String[] columnNames = Constants.MATCH_COMPARE_OVERVIEW_COLUMNS;
         int size = columnNames.length;
         if (table == null) {
-            Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(DATE_FORMAT.format(date)).stream().collect(Collectors.toMap(matchBean -> matchBean.getMatchNum().substring(2), matchBean -> matchBean));
+            Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(date).stream().collect(Collectors.toMap(MatchBean::getMatchNum, matchBean -> matchBean));
             String[][] rowData = new String[matchBeans.size()][size];
             int column = 0;
             int step = 2;
@@ -176,7 +175,7 @@ public class MatchComparePanelFactory extends PaneFactory {
                 }
                 rowData[column][0] = matchNum;
 
-                MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, step, offset);
+                MissValueDataBean missValueDataBean = this.getMissValueData(date, matchNum, true, Constants.COMPARE_TABLE, step, offset);
                 String[][] missValueData = missValueDataBean.getMissValueData();
 
                 //合并今天和昨天的数据
@@ -209,7 +208,7 @@ public class MatchComparePanelFactory extends PaneFactory {
         boolean isFirst = false;
         if (table == null) {
             isFirst = true;
-            MissValueDataBean missValueDataBean = this.getMissValueData(matchNum, true, Constants.COMPARE_TABLE, 2, 4);
+            MissValueDataBean missValueDataBean = this.getMissValueData(LiveScoreFrame.selectDate, matchNum, true, Constants.COMPARE_TABLE, 2, 4);
             String[][] tableData = missValueDataBean.getMissValueData();
             table = new JTable(tableData, columnNames);
             this.setTableCell(table).setTableSorter(table, getSortColumn(size));

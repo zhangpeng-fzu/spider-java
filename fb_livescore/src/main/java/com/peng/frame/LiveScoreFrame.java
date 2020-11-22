@@ -1,8 +1,11 @@
 package com.peng.frame;
 
+import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.frame.panel.*;
+import com.peng.repository.LiveDataRepository;
 import com.peng.service.MatchDataService;
+import com.peng.util.DateUtil;
 import com.peng.util.SpringBeanUtils;
 import lombok.extern.java.Log;
 import org.springframework.core.task.TaskExecutor;
@@ -13,12 +16,14 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 @Log
 public class LiveScoreFrame extends JFrame {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final long serialVersionUID = 3218784607640603309L;
+    public static String selectDate = DATE_FORMAT.format(new Date());
     private static JTabbedPane jTabbedPane;
 
     public LiveScoreFrame() throws ParseException {
@@ -31,7 +36,7 @@ public class LiveScoreFrame extends JFrame {
         JPanel controlPanel = new JPanel();
         JLabel dateLabel = new JLabel("日期");
         JTextField selectedDateTxt = new JTextField(10);
-        selectedDateTxt.setText(DATE_FORMAT.format(new Date()));
+        selectedDateTxt.setText(selectDate);
 
         // 定义日历控件面板类
         CalendarPanel calendarPanel = new CalendarPanel(selectedDateTxt, "yyyy-MM-dd");
@@ -65,7 +70,6 @@ public class LiveScoreFrame extends JFrame {
         assert matchCascadePanelFactory != null;
 
         jTabbedPane = new JTabbedPane();
-        Date selectedDate = DATE_FORMAT.parse(selectedDateTxt.getText());
         jTabbedPane.add("当天赛事", new JScrollPane());
         jTabbedPane.add("串关分析", new JScrollPane());
         jTabbedPane.add("进球分析", new JScrollPane());
@@ -80,9 +84,12 @@ public class LiveScoreFrame extends JFrame {
 
 
             try {
-                Date date = DATE_FORMAT.parse(selectedDateTxt.getText());
+
+                String dateStr = selectedDateTxt.getText();
+                selectDate = dateStr;
+
                 int selectIndex = jTabbedPane.getSelectedIndex();
-                jTabbedPane.setComponentAt(selectIndex, paneFactories[selectIndex].showMatchPaneByDate(date));
+                jTabbedPane.setComponentAt(selectIndex, paneFactories[selectIndex].showMatchPaneByDate(dateStr));
 
                 paneFactories[selectIndex] = null;
 
@@ -96,7 +103,8 @@ public class LiveScoreFrame extends JFrame {
                     assert taskExecutor != null;
                     taskExecutor.execute(() -> {
                         try {
-                            jTabbedPane.setComponentAt(finalI, paneFactory.showMatchPaneByDate(date));
+                            jTabbedPane.setComponentAt(finalI, new JScrollPane());
+                            jTabbedPane.setComponentAt(finalI, paneFactory.showMatchPaneByDate(dateStr));
                         } catch (ParseException parseException) {
                             parseException.printStackTrace();
                         }
@@ -120,8 +128,7 @@ public class LiveScoreFrame extends JFrame {
                     }
                     JTable table = (JTable) viewport.getComponent(0);
                     if (Constants.COMPARE_TABLE.equals(table.getName())) {
-                        Date date = DATE_FORMAT.parse(selectedDateTxt.getText());
-                        jTabbedPane.setComponentAt(3, matchComparePanelFactory.showMatchDataPane(date, frame, table));
+                        jTabbedPane.setComponentAt(3, matchComparePanelFactory.showMatchDataPane(selectedDateTxt.getText(), frame, table));
                     }
 
                 } catch (ParseException ex) {
@@ -132,27 +139,59 @@ public class LiveScoreFrame extends JFrame {
     }
 
     public void syncMatchData() {
+
+
         MatchDataService matchDataService = SpringBeanUtils.getBean("matchDataService");
         MatchDataPanelFactory matchDataPanelFactory = SpringBeanUtils.getBean("matchDataPanelFactory");
+        LiveDataRepository liveDataRepository = SpringBeanUtils.getBean("liveDataRepository");
         assert matchDataService != null;
         assert matchDataPanelFactory != null;
+        assert liveDataRepository != null;
 
+        Calendar calendar = Calendar.getInstance();
+
+        String today = DATE_FORMAT.format(new Date());
 
         new Thread(() -> {
+
+
             boolean refresh = false;
 
             //当前不是今天，停止同步
             while (true) {
-                log.info(String.format("正在同步%s的数据", DATE_FORMAT.format(new Date())));
+
+                MatchBean matchBean = liveDataRepository.findFirstByOrderByLiveDateDesc();
+                if (matchBean == null) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
+
+                try {
+                    calendar.setTime(DATE_FORMAT.parse(matchBean.getLiveDate()));
+                    //需覆盖前两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
+                    calendar.add(Calendar.DATE, 1);
+                    if (calendar.getTime().before(DateUtil.getToday())) {
+                        continue;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                log.info(String.format("正在同步%s的数据", today));
 
                 try {
                     matchDataService.syncTodayMatch();
                     //第一次不刷新页面
-                    if (refresh) {
-                        jTabbedPane.setComponentAt(0, matchDataPanelFactory.showMatchPaneByDate(new Date()));
+                    if (refresh && today.equals(LiveScoreFrame.selectDate)) {
+                        jTabbedPane.setComponentAt(0, matchDataPanelFactory.showMatchPaneByDate(today));
                     } else {
                         refresh = true;
                     }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
