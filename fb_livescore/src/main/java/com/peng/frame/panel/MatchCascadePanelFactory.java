@@ -29,11 +29,12 @@ public class MatchCascadePanelFactory extends PaneFactory {
     /**
      * 按照日期获取串关数据
      *
-     * @param date 选择日期
+     * @param frame
+     * @param date  选择日期
      * @return
      */
     @Override
-    public JScrollPane showMatchPaneByDate(String date) throws ParseException {
+    public JScrollPane showMatchPaneByDate(JFrame frame, String date) throws ParseException {
         String[] columns = Constants.MATCH_CASCADE_COMMON;
         String[] columnNames = Constants.MATCH_CASCADE_OVERVIEW_COLUMNS;// 定义表格列名数组
         int size = columns.length;

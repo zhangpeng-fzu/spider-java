@@ -35,7 +35,7 @@ public abstract class PaneFactory {
     protected abstract void fillTableRow(String[] tableDatum, String[] missValues, MatchBean matchBean) throws ParseException;
 
     protected void fillLastRow(String deadline, String[] tableDatum, String[] columnNames, String[] curCompareData, int step, int offset) throws ParseException {
-        tableDatum[0] = deadline;
+        tableDatum[0] = deadline.replaceFirst("-", "年").replaceFirst("-", "月");
         for (int i = 1; i < columnNames.length; i++) {
             tableDatum[i] = "";
         }
@@ -43,7 +43,7 @@ public abstract class PaneFactory {
 
     public abstract String[] getColumns(int index, String[] columnNames, int offset, MatchBean matchBean, String[][] tableData, int row);
 
-    public abstract JScrollPane showMatchPaneByDate(String date) throws ParseException;
+    public abstract JScrollPane showMatchPaneByDate(JFrame frame, String date) throws ParseException;
 
     /**
      * 计算统计数据

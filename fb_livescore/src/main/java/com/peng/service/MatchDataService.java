@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -62,6 +63,9 @@ public class MatchDataService {
             }
             liveDataRepository.saveAndFlush(insertMatchBean);
         }
+
+        Constants.MATCH_CACHE_MAP = liveDataRepository.findAll().stream().collect(Collectors.groupingBy(MatchBean::getMatchNum));
+
     }
 
 

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import javax.swing.*;
 import java.awt.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -19,7 +18,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class MatchComparePanelFactory extends PaneFactory {
-    private static final SimpleDateFormat DATE_FORMAT_CN = new SimpleDateFormat("yyyy年MM月dd日");
     private final LiveDataRepository liveDataRepository;
 
     public MatchComparePanelFactory(LiveDataRepository liveDataRepository) {
@@ -92,7 +90,8 @@ public class MatchComparePanelFactory extends PaneFactory {
 
     @Override
     public void fillLastRow(String deadline, String[] tableRow, String[] columnNames, String[] compareData, int step, int offset) throws ParseException {
-        tableRow[0] = deadline;
+        tableRow[0] = deadline.replaceFirst("-", "年").replaceFirst("-", "月");
+        ;
         for (int i = 1; i < columnNames.length; i++) {
             if (i >= offset && i % step == 0) {
                 tableRow[i] = compareData[(i - offset) / step];
@@ -148,8 +147,8 @@ public class MatchComparePanelFactory extends PaneFactory {
     }
 
     @Override
-    public JScrollPane showMatchPaneByDate(String date) throws ParseException {
-        return this.showMatchDataPane(date, null, null);
+    public JScrollPane showMatchPaneByDate(JFrame frame, String date) throws ParseException {
+        return this.showMatchDataPane(date, frame, null);
     }
 
     /**

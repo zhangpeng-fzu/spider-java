@@ -88,11 +88,12 @@ public class MatchNumPanelFactory extends PaneFactory {
     /**
      * 按照日期获取进球数据
      *
-     * @param date 选择日期
+     * @param frame
+     * @param date  选择日期
      * @return
      */
     @Override
-    public JScrollPane showMatchPaneByDate(String date) throws ParseException {
+    public JScrollPane showMatchPaneByDate(JFrame frame, String date) throws ParseException {
         String[] columnNames = Constants.MATCH_NUM_OVERVIEW_COLUMNS;
         int size = columnNames.length;
         Map<String, MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(date).stream().collect(Collectors.toMap(MatchBean::getMatchNum, matchBean -> matchBean));

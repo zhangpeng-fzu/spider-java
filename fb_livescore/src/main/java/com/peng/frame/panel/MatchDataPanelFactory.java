@@ -20,7 +20,7 @@ public class MatchDataPanelFactory extends PaneFactory {
     }
 
     @Override
-    public JScrollPane showMatchPaneByDate(String date) {
+    public JScrollPane showMatchPaneByDate(JFrame frame, String date) {
 
         String[] columnNames = Constants.MATCH_COLUMNS;// 定义表格列名数组
         List<MatchBean> matchBeanList = liveDataRepository.findAllByLiveDate(date);
@@ -48,7 +48,7 @@ public class MatchDataPanelFactory extends PaneFactory {
                     result = "";
                     break;
             }
-            rowData[i] = new String[]{matchBean.getMatchNum(), matchBean.getLiveDate(), matchBean.getMatchGroup(), status, matchBean.getHostTeam(),
+            rowData[i] = new String[]{matchBean.getWeekNum() + matchBean.getMatchNum(), matchBean.getLiveDate(), matchBean.getMatchGroup(), status, matchBean.getHostTeam(),
                     matchBean.getGuestTeam(), String.valueOf(matchBean.getOdds()[0]), String.valueOf(matchBean.getOdds()[1]), String.valueOf(matchBean.getOdds()[2]),
                     status.equals("完") ? String.format("%s:%s", matchBean.getHostNum(), matchBean.getGuestNum()) : "", result};
         }

@@ -81,15 +81,12 @@ public class LiveScoreFrame extends JFrame {
         this.syncMatchData();
         btn.addActionListener(e -> {
             PaneFactory[] paneFactories = new PaneFactory[]{matchDataPanelFactory, matchCascadePanelFactory, matchNumPanelFactory, matchComparePanelFactory, matchHalfPanelFactory};
-
-
             try {
-
                 String dateStr = selectedDateTxt.getText();
                 selectDate = dateStr;
 
                 int selectIndex = jTabbedPane.getSelectedIndex();
-                jTabbedPane.setComponentAt(selectIndex, paneFactories[selectIndex].showMatchPaneByDate(dateStr));
+                jTabbedPane.setComponentAt(selectIndex, paneFactories[selectIndex].showMatchPaneByDate(frame, dateStr));
 
                 paneFactories[selectIndex] = null;
 
@@ -104,7 +101,9 @@ public class LiveScoreFrame extends JFrame {
                     taskExecutor.execute(() -> {
                         try {
                             jTabbedPane.setComponentAt(finalI, new JScrollPane());
-                            jTabbedPane.setComponentAt(finalI, paneFactory.showMatchPaneByDate(dateStr));
+
+                            jTabbedPane.setComponentAt(finalI, paneFactory.showMatchPaneByDate(frame, dateStr));
+
                         } catch (ParseException parseException) {
                             parseException.printStackTrace();
                         }
@@ -163,7 +162,7 @@ public class LiveScoreFrame extends JFrame {
                 MatchBean matchBean = liveDataRepository.findFirstByOrderByLiveDateDesc();
                 if (matchBean == null) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(60000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -175,6 +174,11 @@ public class LiveScoreFrame extends JFrame {
                     //需覆盖前两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
                     calendar.add(Calendar.DATE, 1);
                     if (calendar.getTime().before(DateUtil.getToday())) {
+                        try {
+                            Thread.sleep(60000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         continue;
                     }
                 } catch (ParseException e) {
@@ -187,7 +191,7 @@ public class LiveScoreFrame extends JFrame {
                     matchDataService.syncTodayMatch();
                     //第一次不刷新页面
                     if (refresh && today.equals(LiveScoreFrame.selectDate)) {
-                        jTabbedPane.setComponentAt(0, matchDataPanelFactory.showMatchPaneByDate(today));
+                        jTabbedPane.setComponentAt(0, matchDataPanelFactory.showMatchPaneByDate(null, today));
                     } else {
                         refresh = true;
                     }
