@@ -1,11 +1,8 @@
 package com.peng.frame;
 
-import com.peng.bean.MatchBean;
 import com.peng.constant.Constants;
 import com.peng.frame.panel.*;
-import com.peng.repository.LiveDataRepository;
 import com.peng.service.MatchDataService;
-import com.peng.util.DateUtil;
 import com.peng.util.SpringBeanUtils;
 import lombok.extern.java.Log;
 import org.springframework.core.task.TaskExecutor;
@@ -16,7 +13,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
 @Log
@@ -142,48 +138,16 @@ public class LiveScoreFrame extends JFrame {
 
         MatchDataService matchDataService = SpringBeanUtils.getBean("matchDataService");
         MatchDataPanelFactory matchDataPanelFactory = SpringBeanUtils.getBean("matchDataPanelFactory");
-        LiveDataRepository liveDataRepository = SpringBeanUtils.getBean("liveDataRepository");
         assert matchDataService != null;
         assert matchDataPanelFactory != null;
-        assert liveDataRepository != null;
-
-        Calendar calendar = Calendar.getInstance();
 
         String today = DATE_FORMAT.format(new Date());
 
         new Thread(() -> {
-
-
             boolean refresh = false;
 
             //当前不是今天，停止同步
             while (true) {
-
-                MatchBean matchBean = liveDataRepository.findFirstByOrderByLiveDateDesc();
-                if (matchBean == null) {
-                    try {
-                        Thread.sleep(60000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    continue;
-                }
-
-                try {
-                    calendar.setTime(DATE_FORMAT.parse(matchBean.getLiveDate()));
-                    //需覆盖前两天的数据，由于当天可能会获取到前天的数据，导致计算不准，需重新计算前2天的遗漏值
-                    calendar.add(Calendar.DATE, 1);
-                    if (calendar.getTime().before(DateUtil.getToday())) {
-                        try {
-                            Thread.sleep(60000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        continue;
-                    }
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
 
                 log.info(String.format("正在同步%s的数据", today));
 
@@ -200,7 +164,7 @@ public class LiveScoreFrame extends JFrame {
                     e.printStackTrace();
                 }
                 try {
-                    Thread.sleep(300000);
+                    Thread.sleep(60000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
