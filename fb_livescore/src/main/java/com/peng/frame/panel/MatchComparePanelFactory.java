@@ -194,10 +194,10 @@ public class MatchComparePanelFactory extends PaneFactory {
             System.arraycopy(rowData, 0, newRowData, 0, column);
             table = new JTable(newRowData, columnNames);
             table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            this.setTableCell(table).setTableClick(table).setTableSorter(table, getSortColumn(size));
+            this.setTableCell(table).setTableClick(table);
         }
         table.setName(Constants.COMPARE_TABLE);
-        this.setTableHeader(table, jFrame);
+        this.setTableHeader(table, jFrame).setTableSorter(table, getSortColumn(size));
         return new JScrollPane(table);
     }
 
@@ -210,13 +210,13 @@ public class MatchComparePanelFactory extends PaneFactory {
             MissValueDataBean missValueDataBean = this.getMissValueData(LiveScoreFrame.selectDate, matchNum, true, Constants.COMPARE_TABLE, 2, 4);
             String[][] tableData = missValueDataBean.getMissValueData();
             table = new JTable(tableData, columnNames);
-            this.setTableCell(table).setTableSorter(table, getSortColumn(size));
+            this.setTableCell(table);
         }
 
         table.setName(Constants.COMPARE_DETAIL_TABLE);
         table.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-        this.setTableHeader(table, jFrame);
+        this.setTableHeader(table, jFrame).setTableSorter(table, getSortColumn(size));;
         if (!isFirst) {
             JScrollPane scrollPane = ((JScrollPane) (jFrame.getContentPane().getComponent(0)));
             scrollPane.setViewportView(table);
