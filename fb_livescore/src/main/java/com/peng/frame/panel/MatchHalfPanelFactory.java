@@ -94,6 +94,9 @@ public class MatchHalfPanelFactory extends PaneFactory {
             MissValueDataBean missValueDataBean = this.getMissValueData(date, matchNum, true, Constants.HALF_TABLE, 1, 1);
 
             String[][] missValueData = missValueDataBean.getMissValueData();
+            if (missValueData.length < 6){
+                continue;
+            }
             //使用今天的预设数据和昨天的遗漏数据拼出概览数据
             String[] yesterdayMiss = missValueData[missValueData.length - 6];
             System.arraycopy(yesterdayMiss, 1, rowData[column], 1, yesterdayMiss.length - 1);

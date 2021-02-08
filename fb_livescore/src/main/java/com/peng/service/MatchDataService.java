@@ -3,36 +3,36 @@ package com.peng.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.peng.bean.MatchBean;
+import com.peng.bean.MatchResponse;
 import com.peng.constant.Constants;
 import com.peng.constant.MatchStatus;
 import com.peng.repository.LiveDataRepository;
 import com.peng.util.DateUtil;
 import com.peng.util.HttpClientUtil;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Semaphore;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
-@Log
+@Slf4j
+@Transactional(isolation = Isolation.READ_UNCOMMITTED)
 public class MatchDataService {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private final LiveDataRepository liveDataRepository;
     private final TaskExecutor spiderTaskExecutor;
-    private final Semaphore semaphore = new Semaphore(100);
+    private final Semaphore semaphore = new Semaphore(20);
 
     public MatchDataService(LiveDataRepository liveDataRepository, TaskExecutor spiderTaskExecutor) {
         this.liveDataRepository = liveDataRepository;
@@ -91,147 +91,148 @@ public class MatchDataService {
         matchBean = liveDataRepository.findFirstByOrderByLiveDateDesc();
         String beginDate = matchBean == null ? "2010-01-01" : matchBean.getLiveDate();
 
-        String totalResponse = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
-                1, beginDate, DATE_FORMAT.format(new Date())), "gb2312");
-        String total = totalResponse.substring(totalResponse.indexOf("查询结果：有"), totalResponse.indexOf("场赛事符合条件"))
-                .replace("查询结果：有<span class=\"u-org\">", "").replace("</span>", "");
+        calendar.setTime(DATE_FORMAT.parse(beginDate));
+        //加三个月
 
-        int page = Integer.parseInt(total) / 30 + 1;
+        calendar.add(Calendar.MONTH, 2);
 
-        Map<String, SimpleDateFormat> dateFormatMap = new HashMap<>();
+        Date today = new Date();
 
+        String endDate = calendar.getTime().after(today) ? DATE_FORMAT.format(today) : DATE_FORMAT.format(calendar.getTime());
 
-        for (; page > 0; page--) {
+        boolean isContinue = true;
+
+        Map<String, SimpleDateFormat> dateFormatMap = new HashMap<>(20);
+        while (isContinue) {
+            //加锁，方式过多请求到服务端
             semaphore.acquire();
-
-            int finalPage = page;
+            String finalBeginDate = beginDate;
+            String finalEndDate = endDate;
             spiderTaskExecutor.execute(() -> {
-
-
-                String key = Thread.currentThread().getName();
-                SimpleDateFormat dateFormat = dateFormatMap.get(key);
-                if (dateFormat == null) {
-                    dateFormatMap.put(key, new SimpleDateFormat("yyyy-MM-dd"));
-                    dateFormat = dateFormatMap.get(key);
-                }
-
-
                 try {
-                    String response = HttpClientUtil.doGet(String.format("https://info.sporttery.cn/football/match_result.php?page=%s&search_league=0&start_date=%s&end_date=%s&dan=0",
-                            finalPage, beginDate, dateFormat.format(new Date())), "gb2312");
-
-                    String matchListData = response.substring(response.indexOf("<div class=\"match_list\">"), response.indexOf("<div class=\"m-notice\">"));
-                    String[] matchData = matchListData.split("</tr>");
-
-                    for (String tr : matchData) {
-                        String[] tds = tr.split("\r\n|>VS<");
-                        StringBuilder tdData = new StringBuilder();
-                        for (String td : tds) {
-                            if (td.contains("class=\"u-detal\"")) {
-                                break;
-                            }
-                            if (!td.contains("<td") && !td.contains("</td>")) {
-                                continue;
-                            }
-                            Pattern pattern = Pattern.compile(">.*?</");
-                            Matcher matcher = pattern.matcher(td);
-                            if (!matcher.find()) {
-                                continue;
-                            }
-                            String text = matcher.group(0).replace(">", " ").replace("</", "");
-                            if (text.contains(" ")) {
-                                text = text.substring(text.lastIndexOf(" ")).replaceAll("title=\"|class=\"blue\"|font-size:13px;\"|class=", "")
-                                        .split("\"")[0];
-                                if (text.length() == 0) {
-                                    continue;
-                                }
-                                if (text.trim().equals("--")) {
-                                    text = "0";
-                                }
-                            }
-                            tdData.append(text.trim()).append(",");
-                        }
-                        if (tdData.length() < 10) {
-                            continue;
-                        }
-
-                        MatchBean insertMatchBean = transHistory(dateFormat, tdData.toString());
-
-                        MatchBean matchBeanDB = liveDataRepository.findFirstByMatchNumAndLiveDate(insertMatchBean.getMatchNum(), insertMatchBean.getLiveDate());
-                        if (matchBeanDB != null) {
-                            insertMatchBean.setId(matchBeanDB.getId());
-                        }
-                        liveDataRepository.saveAndFlush(insertMatchBean);
+                    String key = Thread.currentThread().getName();
+                    SimpleDateFormat dateFormat = dateFormatMap.get(key);
+                    if (dateFormat == null) {
+                        dateFormatMap.put(key, new SimpleDateFormat("yyyy-MM-dd"));
+                        dateFormat = dateFormatMap.get(key);
                     }
-                    log.info("已经抓取完成第" + finalPage + "页");
-
+                    queryHistoryByDate(finalBeginDate, finalEndDate, dateFormat);
                 } finally {
                     semaphore.release();
                 }
             });
+            //更新开始和结束时间
+            beginDate = endDate;
+            try {
+                calendar.setTime(DATE_FORMAT.parse(endDate));
+            } catch (ParseException ignore) {
+            }
+            calendar.add(Calendar.MONTH, 2);
+            endDate = calendar.getTime().after(today) ? DATE_FORMAT.format(today) : DATE_FORMAT.format(calendar.getTime());
+            if (beginDate.equals(DATE_FORMAT.format(today))) {
+                isContinue = false;
+            }
         }
     }
+
+
+    private void queryHistoryByDate(String beginDate, String endDate, SimpleDateFormat dateFormat) {
+        log.info("正在抓取数据，开始时间：{}，结束时间：{}", beginDate, endDate);
+        String response = HttpClientUtil.doGet(String.format("https://webapi.sporttery.cn/gateway/jc/football/getMatchResultV1.qry?matchPage=1&matchBeginDate=%s&matchEndDate=%s&pageNo=%s&isFix=0&pcOrWap=1",
+                beginDate, endDate, 1), "utf-8");
+
+        MatchResponse matchResponse = JSONObject.parseObject(response, MatchResponse.class);
+
+        int page = matchResponse.getValue().getPages();
+        if (page > 0) {
+
+            saveMatchHistory(new SimpleDateFormat("yyyy-MM-dd"), matchResponse.getValue().getMatchResult());
+            log.info("开始时间：{}，结束时间：{},已经抓取完成第1页", beginDate, endDate);
+            for (int i = 2; i <= page; i++) {
+                response = HttpClientUtil.doGet(String.format("https://webapi.sporttery.cn/gateway/jc/football/getMatchResultV1.qry?matchPage=1&matchBeginDate=%s&matchEndDate=%s&pageNo=%s&isFix=0&pcOrWap=1",
+                        beginDate, endDate, i), "utf-8");
+                matchResponse = JSONObject.parseObject(response, MatchResponse.class);
+                saveMatchHistory(dateFormat, matchResponse.getValue().getMatchResult());
+                log.info("开始时间：{}，结束时间：{},已经抓取完成第" + page + "页", beginDate, endDate);
+            }
+        }
+    }
+
 
     /**
      * 转换成matchBean
      *
      * @param dateFormat
-     * @param tdData
-     * @return
+     * @param matchResultBeans
      */
-    private MatchBean transHistory(SimpleDateFormat dateFormat, String tdData) {
+    private void saveMatchHistory(SimpleDateFormat dateFormat, List<MatchResponse.ValueBean.MatchResultBean> matchResultBeans) {
         Calendar calendar = Calendar.getInstance();
 
-        MatchBean matchBean = new MatchBean();
-        String[] tdDataArr = tdData.split(",");
+        matchResultBeans.forEach(matchResultBean -> {
+            MatchBean matchBean = new MatchBean();
 
-        matchBean.setWeekNum(tdDataArr[1].substring(0, 2));
-        matchBean.setMatchNum(tdDataArr[1].substring(2));
-        try {
-            Date liveDate = dateFormat.parse(tdDataArr[0]);
-            calendar.setTime(liveDate);
-            int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-            //如果赛事编号的星期与实际日期的星期不一致，修改日期
-            if (!matchBean.getWeekNum().contains(Constants.WEEK_DAYS.get(w))) {
-                calendar.add(Calendar.DAY_OF_WEEK, DateUtil.calculateDateOffset(Constants.WEEK_DAYS.indexOf(matchBean.getWeekNum()), w));
+            matchBean.setWeekNum(matchResultBean.getMatchNumStr().substring(0, 2));
+            matchBean.setMatchNum(matchResultBean.getMatchNumStr().substring(2));
+            try {
+                Date liveDate = dateFormat.parse(matchResultBean.getMatchDate());
+                calendar.setTime(liveDate);
+                int w = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+                //如果赛事编号的星期与实际日期的星期不一致，修改日期
+                if (!matchBean.getWeekNum().contains(Constants.WEEK_DAYS.get(w))) {
+                    calendar.add(Calendar.DAY_OF_WEEK, DateUtil.calculateDateOffset(Constants.WEEK_DAYS.indexOf(matchBean.getWeekNum()), w));
+                }
+                liveDate = calendar.getTime();
+                matchBean.setLiveDate(dateFormat.format(liveDate));
+
+            } catch (ParseException ignore) {
             }
-            liveDate = calendar.getTime();
-            matchBean.setLiveDate(dateFormat.format(liveDate));
+            matchBean.setMatchGroup(matchResultBean.getLeagueName());
+            matchBean.setHostTeam(matchResultBean.getHomeTeam());
+            matchBean.setGuestTeam(matchResultBean.getAwayTeam());
 
-        } catch (ParseException e) {
-            e.printStackTrace();
-            matchBean.setMatchGroup(tdDataArr[0]);
-        }
-        matchBean.setMatchGroup(tdDataArr[2]);
-        matchBean.setHostTeam(tdDataArr[3]);
-        matchBean.setGuestTeam(tdDataArr[4]);
 
-        Float[] odds = new Float[]{Float.valueOf(tdDataArr[7]), Float.valueOf(tdDataArr[8]), Float.valueOf(tdDataArr[9])};
-        matchBean.setOdds(odds);
-        String status = tdDataArr[10].equals("已完成") ? MatchStatus.FINISHED : MatchStatus.PLAYING;
+            Float[] odds = new Float[3];
+            try {
+                odds = new Float[]{Float.valueOf(matchResultBean.getH()), Float.valueOf(matchResultBean.getD()), Float.valueOf(matchResultBean.getA())};
+            } catch (NumberFormatException ignore) {
+            }
+            matchBean.setOdds(odds);
+            String status = matchResultBean.getPoolStatus().equals("Payout") ? MatchStatus.FINISHED : MatchStatus.PLAYING;
 
-        try {
-            if (tdDataArr[10].equals("取消") || tdDataArr[6].equals("无效场次") || tdDataArr[6].equals("取消")) {
+            try {
+                if (StringUtils.isBlank(matchResultBean.getPoolStatus()) || matchResultBean.getPoolStatus().equals("Refund") || matchResultBean.getPoolStatus().equals("OddsIn")) {
+                    status = MatchStatus.CANCELLED;
+                } else {
+                    if (StringUtils.isNotBlank(matchResultBean.getSectionsNo999())) {
+                        matchBean.setHostNum(Integer.parseInt(matchResultBean.getSectionsNo999().split(":")[0]));
+                        matchBean.setGuestNum(Integer.parseInt(matchResultBean.getSectionsNo999().split(":")[1]));
+                    }
+
+
+                    if (StringUtils.isNotBlank(matchResultBean.getSectionsNo1())) {
+                        matchBean.setHalfHostNum(Integer.parseInt(matchResultBean.getSectionsNo1().split(":")[0]));
+                        matchBean.setHalfGuestNum(Integer.parseInt(matchResultBean.getSectionsNo1().split(":")[1]));
+                    }
+                }
+            } catch (NumberFormatException e) {
+                log.error(JSON.toJSONString(matchResultBean), e);
                 status = MatchStatus.CANCELLED;
-            } else {
-                if (tdDataArr[6].length() > 0) {
-                    matchBean.setHostNum(Integer.parseInt(tdDataArr[6].split(":")[0]));
-                    matchBean.setGuestNum(Integer.parseInt(tdDataArr[6].split(":")[1]));
-                }
-
-                if (tdDataArr[5].length() > 0) {
-                    matchBean.setHalfHostNum(Integer.parseInt(tdDataArr[5].split(":")[0]));
-                    matchBean.setHalfGuestNum(Integer.parseInt(tdDataArr[5].split(":")[1]));
-                }
+                matchBean.setHostNum(0);
+                matchBean.setGuestNum(0);
             }
-        } catch (NumberFormatException e) {
-            status = MatchStatus.CANCELLED;
-            matchBean.setHostNum(0);
-            matchBean.setGuestNum(0);
-        }
 
-        matchBean.setStatus(status);
-        return matchBean;
+            matchBean.setStatus(status);
+            MatchBean matchBeanDB = liveDataRepository.findFirstByMatchNumAndLiveDate(matchBean.getMatchNum(), matchBean.getLiveDate());
+            if (matchBeanDB != null) {
+                Integer matchId = matchBeanDB.getId();
+                BeanUtils.copyProperties(matchBean, matchBeanDB);
+                matchBeanDB.setId(matchId);
+            } else {
+                matchBeanDB = matchBean;
+            }
+            liveDataRepository.saveAndFlush(matchBeanDB);
+        });
+
     }
 
     /**

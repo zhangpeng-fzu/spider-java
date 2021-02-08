@@ -113,6 +113,9 @@ public class MatchNumPanelFactory extends PaneFactory {
             String[][] missValueData = missValueDataBean.getMissValueData();
 
             //使用今天的预设数据和昨天的遗漏数据拼出概览数据
+            if (missValueData.length < 6){
+                continue;
+            }
             String[] yesterdayMiss = missValueData[missValueData.length - 6];
             System.arraycopy(yesterdayMiss, 1, rowData[column], 1, yesterdayMiss.length - 1);
             column++;

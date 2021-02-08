@@ -178,6 +178,9 @@ public class MatchComparePanelFactory extends PaneFactory {
                 String[][] missValueData = missValueDataBean.getMissValueData();
 
                 //合并今天和昨天的数据
+                if (missValueData.length < 6){
+                    continue;
+                }
                 String[] todayMiss = missValueData[missValueData.length - 5];
                 String[] yesterdayMiss = missValueData[missValueData.length - 6];
                 for (int i = 0; i < todayMiss.length; i++) {
