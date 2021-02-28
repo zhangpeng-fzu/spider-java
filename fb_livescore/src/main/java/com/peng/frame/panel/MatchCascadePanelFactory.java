@@ -14,12 +14,14 @@ import java.awt.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class MatchCascadePanelFactory extends PaneFactory {
-    private static final SimpleDateFormat DATE_FORMAT_CN = new SimpleDateFormat("yyyy年MM月dd日");
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private final LiveDataRepository liveDataRepository;
 
     public MatchCascadePanelFactory(LiveDataRepository liveDataRepository) {
@@ -52,27 +54,46 @@ public class MatchCascadePanelFactory extends PaneFactory {
         String[][] rowData = new String[cascadeMatchNums.size() * size][columnNames.length];
         int column = 0;
 
+        //获取今天所有的比赛
+        List<MatchBean> matchBeans = liveDataRepository.findAllByLiveDate(DATE_FORMAT.format(new Date()));
+        Map<String,MatchBean> matchBeanMap = matchBeans.stream().collect(Collectors.toMap(MatchBean::getMatchNum, matchBean -> matchBean));
+
         for (String matchCascadeNum : cascadeMatchNums) {
             MissValueDataBean missValueDataBean = this.getMissValueData(date, matchCascadeNum, true, Constants.CASCADE_TABLE, 1, 1);
             String[][] missValueData = missValueDataBean.getMissValueData();
             String[] yesterdayMiss = missValueData[missValueData.length - 6];
 
             //获取赔率
-            String[] odds = yesterdayMiss[yesterdayMiss.length - 1].replace("[", "").replace("]", "").split(",");
+            float[] odds = new float[9];
+            String[] showOdds = new String[9];
+            MatchBean matchBean = matchBeanMap.get(matchCascadeNum.split("串")[0]);
+            MatchBean nextMatch = matchBeanMap.get(matchCascadeNum.split("串")[1]);
+            if (matchBean != null && nextMatch != null){
+                odds[0] = matchBean.getOddsS() * nextMatch.getOddsS();
+                odds[1] = matchBean.getOddsS() * nextMatch.getOddsP();
+                odds[2] = matchBean.getOddsS() * nextMatch.getOddsF();
+                odds[3] = matchBean.getOddsP() * nextMatch.getOddsS();
+                odds[4] = matchBean.getOddsP() * nextMatch.getOddsP();
+                odds[5] = matchBean.getOddsP() * nextMatch.getOddsF();
+                odds[6] = matchBean.getOddsF() * nextMatch.getOddsS();
+                odds[7] = matchBean.getOddsF() * nextMatch.getOddsP();
+                odds[8] = matchBean.getOddsF() * nextMatch.getOddsF();
+            }
+
             for (int i = 0; i < odds.length; i++) {
-                String odd = odds[i];
-                if (odd != null && odd.trim().length() > 5) {
+                String odd = String.valueOf(odds[i]);
+                if (odd.trim().length() > 5) {
                     odd = odd.trim().substring(0, 4);
                 }
-                odds[i] = odd;
+                showOdds[i] = odd;
             }
             //获取遗漏值
             int j = column * size;
             for (int i = 0; i < Constants.MATCH_CASCADE_COMMON.length; i++) {
-                if (odds[i] == null) {
-                    odds[i] = "";
+                if (showOdds[i] == null) {
+                    showOdds[i] = "";
                 }
-                rowData[j + i] = new String[]{matchCascadeNum, columns[i], yesterdayMiss[i + 1], odds[i].trim()};
+                rowData[j + i] = new String[]{matchCascadeNum, columns[i], yesterdayMiss[i + 1], showOdds[i].trim()};
             }
             column++;
         }
@@ -137,18 +158,7 @@ public class MatchCascadePanelFactory extends PaneFactory {
         }
 
         //计算赔率
-        Float[] odds = new Float[9];
-        odds[0] = matchBean.getOddsS() * nextMatch.getOddsS();
-        odds[1] = matchBean.getOddsS() * nextMatch.getOddsP();
-        odds[2] = matchBean.getOddsS() * nextMatch.getOddsF();
-        odds[3] = matchBean.getOddsP() * nextMatch.getOddsS();
-        odds[4] = matchBean.getOddsP() * nextMatch.getOddsP();
-        odds[5] = matchBean.getOddsP() * nextMatch.getOddsF();
-        odds[6] = matchBean.getOddsF() * nextMatch.getOddsS();
-        odds[7] = matchBean.getOddsF() * nextMatch.getOddsP();
-        odds[8] = matchBean.getOddsF() * nextMatch.getOddsF();
-
-        missValues[lastMissValues.length - 1] = JSON.toJSONString(odds);
+        missValues[lastMissValues.length - 1] = JSON.toJSONString(new float[9]);
 
         return missValues;
     }

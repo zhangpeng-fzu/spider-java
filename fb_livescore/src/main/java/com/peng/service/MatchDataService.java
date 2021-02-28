@@ -191,27 +191,34 @@ public class MatchDataService {
             matchBean.setGuestTeam(matchResultBean.getAwayTeam());
 
 
-            Float[] odds = new Float[3];
+            Float[] odds = new Float[]{0F,0F,0F};
             try {
                 odds = new Float[]{Float.valueOf(matchResultBean.getH()), Float.valueOf(matchResultBean.getD()), Float.valueOf(matchResultBean.getA())};
             } catch (NumberFormatException ignore) {
+//                log.error("获取赔率失败！",ignore);
             }
             matchBean.setOdds(odds);
-            String status = matchResultBean.getPoolStatus().equals("Payout") ? MatchStatus.FINISHED : MatchStatus.PLAYING;
+            String status = "2".equals(matchResultBean.getMatchResultStatus()) ? MatchStatus.FINISHED : MatchStatus.PLAYING;
 
             try {
-                if (StringUtils.isBlank(matchResultBean.getPoolStatus()) || matchResultBean.getPoolStatus().equals("Refund") || matchResultBean.getPoolStatus().equals("OddsIn")) {
+                if ("0".equals(matchResultBean.getMatchResultStatus()) || "无效场次".equals(matchResultBean.getSectionsNo999())
+                        || "Refund".equals(matchResultBean.getPoolStatus()) || "OddsIn".equals(matchResultBean.getPoolStatus())) {
                     status = MatchStatus.CANCELLED;
+                    matchBean.setHostNum(0);
+                    matchBean.setGuestNum(0);
                 } else {
-                    if (StringUtils.isNotBlank(matchResultBean.getSectionsNo999())) {
-                        matchBean.setHostNum(Integer.parseInt(matchResultBean.getSectionsNo999().split(":")[0]));
-                        matchBean.setGuestNum(Integer.parseInt(matchResultBean.getSectionsNo999().split(":")[1]));
+                    //全场比分
+                    String sectionsNo999 = matchResultBean.getSectionsNo999();
+                    if (StringUtils.isNotBlank(sectionsNo999)) {
+                        matchBean.setHostNum(Integer.parseInt(sectionsNo999.split(":")[0]));
+                        matchBean.setGuestNum(Integer.parseInt(sectionsNo999.split(":")[1]));
                     }
 
-
-                    if (StringUtils.isNotBlank(matchResultBean.getSectionsNo1())) {
-                        matchBean.setHalfHostNum(Integer.parseInt(matchResultBean.getSectionsNo1().split(":")[0]));
-                        matchBean.setHalfGuestNum(Integer.parseInt(matchResultBean.getSectionsNo1().split(":")[1]));
+                    //半场比分
+                    String sectionsNo1 = matchResultBean.getSectionsNo1();
+                    if (StringUtils.isNotBlank(sectionsNo1)) {
+                        matchBean.setHalfHostNum(Integer.parseInt(sectionsNo1.split(":")[0]));
+                        matchBean.setHalfGuestNum(Integer.parseInt(sectionsNo1.split(":")[1]));
                     }
                 }
             } catch (NumberFormatException e) {
@@ -258,11 +265,11 @@ public class MatchDataService {
             matchBean.setOdds(new Float[]{0F, 0F, 0F});
 
         }
-        if (matchBean.getStatus().equals("Played")) {
+        if ("Played".equals(matchBean.getStatus())) {
             matchBean.setHostNum(match.getInteger("fs_h"));
             matchBean.setGuestNum(match.getInteger("fs_a"));
             matchBean.setStatus("1");
-        } else if (matchBean.getStatus().equals("Playing")) {
+        } else if ("Playing".equals(matchBean.getStatus())) {
             matchBean.setHostNum(0);
             matchBean.setGuestNum(0);
             matchBean.setStatus(match.getString("minute") + "分");
